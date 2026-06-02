@@ -10,18 +10,32 @@
   <div class="sidebar-mobile-header">
     <span class="sidebar-logo-text">Project Core</span>
   </div>
-  <div class="sidebar-mobile-nav">
-    @for (item of navItems; track item.label) {
-      <a
-        [routerLink]="item.routerLink"
-        routerLinkActive="p-menuitem-link-active"
-        class="sidebar-mobile-item"
-        (click)="mobileSidebarVisible.set(false)"
-      >
-        <i [class]="item.icon"></i>
-        <span>{{ item.label }}</span>
-      </a>
-    }
+  <div class="sidebar-mobile-nav">      @for (item of navItems; track item.label) {
+        @if (!item.separator && !item.items) {
+          <a
+            [routerLink]="item.routerLink"
+            routerLinkActive="p-menuitem-link-active"
+            class="sidebar-mobile-item"
+            (click)="mobileSidebarVisible.set(false)"
+          >
+            <i [class]="item.icon"></i>
+            <span>{{ item.label }}</span>
+          </a>
+        } @else if (item.items) {
+          <div class="sidebar-mobile-group-label">{{ item.label }}</div>
+          @for (child of item.items; track child.label) {
+            <a
+              [routerLink]="child.routerLink"
+              routerLinkActive="p-menuitem-link-active"
+              class="sidebar-mobile-item sidebar-mobile-item--child"
+              (click)="mobileSidebarVisible.set(false)"
+            >
+              <i [class]="child.icon"></i>
+              <span>{{ child.label }}</span>
+            </a>
+          }
+        }
+      }
   </div>
 </kp-drawer>
 
@@ -41,16 +55,41 @@
 
     <nav class="sidebar__nav">
       @for (item of navItems; track item.label) {
-        <a
-          [routerLink]="item.routerLink"
-          routerLinkActive="nav__item--active"
-          class="nav__item"
-          [pTooltip]="!sidebarVisible() ? item.label : ''"
-          tooltipPosition="right"
-        >
-          <i [class]="item.icon + ' nav__icon'"></i>
-          @if (sidebarVisible()) { <span class="nav__label">{{ item.label }}</span> }
-        </a>
+        @if (item.separator) {
+          <div class="nav__divider"></div>
+        } @else if (item.items && item.items.length > 0) {
+          <div class="nav__group">
+            <div class="nav__group-header">
+              @if (item.icon) { <i [class]="item.icon + ' nav__icon'"></i> }
+              @if (sidebarVisible()) { <span class="nav__group-label">{{ item.label }}</span> }
+            </div>
+            @if (sidebarVisible()) {
+              <div class="nav__group-items">
+                @for (child of item.items; track child.label) {
+                  <a
+                    [routerLink]="child.routerLink"
+                    routerLinkActive="nav__item--active"
+                    class="nav__item nav__item--child"
+                  >
+                    @if (child.icon) { <i [class]="child.icon + ' nav__icon'"></i> }
+                    <span class="nav__label">{{ child.label }}</span>
+                  </a>
+                }
+              </div>
+            }
+          </div>
+        } @else {
+          <a
+            [routerLink]="item.routerLink"
+            routerLinkActive="nav__item--active"
+            class="nav__item"
+            [pTooltip]="!sidebarVisible() ? item.label : ''"
+            tooltipPosition="right"
+          >
+            <i [class]="item.icon + ' nav__icon'"></i>
+            @if (sidebarVisible()) { <span class="nav__label">{{ item.label }}</span> }
+          </a>
+        }
       }
     </nav>
 

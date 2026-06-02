@@ -1,0 +1,141 @@
+<kp-toast />
+
+<kp-card styleClass="tt-editor">
+  <kp-breadcrumb [items]="breadcrumbs" />
+
+  <h2 class="tt-editor__title">
+    {{ isNew() ? 'Новый шаблон' : 'Редактирование шаблона' }}
+  </h2>
+
+  @if (loading()) {
+    <div class="tt-editor__loading">Загрузка...</div>
+  } @else {
+    <!-- Название шаблона -->
+    <div class="tt-editor__field">
+      <kp-input
+        label="Название шаблона"
+        placeholder="Например: Таблица товаров для КП"
+        [(ngModel)]="templateName"
+        [error]="nameError()"
+      />
+    </div>
+
+    <!-- Колонки -->
+    <div class="tt-editor__columns">
+      <div class="tt-editor__columns-header">
+        <h3 class="tt-editor__columns-title">Колонки таблицы</h3>
+        <kp-button
+          label="+ Добавить колонку"
+          icon="pi pi-plus"
+          size="small"
+          severity="secondary"
+          (buttonClick)="addColumn()"
+        />
+      </div>
+
+      @if (columns().length === 0) {
+        <div class="tt-editor__empty">
+          Нет колонок. Нажмите «+ Добавить колонку» чтобы начать.
+        </div>
+      }
+
+      @for (col of columns(); track $index; let i = $index) {
+        <div
+          class="tt-editor__column-card"
+          [class.tt-editor__column-card--error]="col.errors['tableName'] || col.errors['fieldName']"
+        >
+          <div class="tt-editor__column-row">
+            <!-- Выбор таблицы -->
+            <div class="tt-editor__column-select">
+              <kp-select
+                label="Таблица"
+                placeholder="Выберите таблицу"
+                [options]="tableOptions()"
+                [ngModel]="col.tableName"
+                (ngModelChange)="onTableChange(i, $event)"
+                [error]="col.errors['tableName'] || ''"
+              />
+            </div>
+
+            <!-- Выбор поля -->
+            <div class="tt-editor__column-select">
+              <kp-select
+                label="Поле"
+                placeholder="Выберите поле"
+                [options]="getFieldOptions(col.tableName)"
+                [ngModel]="col.fieldName"
+                (ngModelChange)="onFieldChange(i, $event)"
+                [disabled]="!col.tableName"
+                [error]="col.errors['fieldName'] || ''"
+              />
+            </div>
+
+            <!-- Заголовок -->
+            <div class="tt-editor__column-input">
+              <kp-input
+                label="Заголовок"
+                placeholder="Авто из поля"
+                [(ngModel)]="columns()[i].label"
+              />
+            </div>
+
+            <!-- Ширина -->
+            <div class="tt-editor__column-input" style="max-width: 100px">
+              <kp-input
+                label="Ширина"
+                placeholder="120px"
+                [(ngModel)]="columns()[i].width"
+              />
+            </div>
+
+            <!-- Действия -->
+            <div class="tt-editor__column-actions">
+              <kp-button
+                icon="pi pi-arrow-up"
+                severity="secondary"
+                [text]="true"
+                [rounded]="true"
+                size="small"
+                [disabled]="i === 0"
+                (buttonClick)="moveUp(i)"
+              />
+              <kp-button
+                icon="pi pi-arrow-down"
+                severity="secondary"
+                [text]="true"
+                [rounded]="true"
+                size="small"
+                [disabled]="i === columns().length - 1"
+                (buttonClick)="moveDown(i)"
+              />
+              <kp-button
+                icon="pi pi-trash"
+                severity="danger"
+                [text]="true"
+                [rounded]="true"
+                size="small"
+                (buttonClick)="removeColumn(i)"
+              />
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+
+    <!-- Футер -->
+    <div class="tt-editor__footer">
+      <kp-button
+        [label]="isNew() ? 'Создать шаблон' : 'Сохранить'"
+        icon="pi pi-check"
+        [loading]="saving()"
+        (buttonClick)="save()"
+      />
+      <kp-button
+        label="Отмена"
+        icon="pi pi-times"
+        severity="secondary"
+        (buttonClick)="cancel()"
+      />
+    </div>
+  }
+</kp-card>

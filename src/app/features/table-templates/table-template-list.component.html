@@ -1,0 +1,65 @@
+<kp-toast />
+
+<kp-card>
+  <kp-breadcrumb [items]="breadcrumbs" />
+
+  <div class="tt-list__header">
+    <h2 class="tt-list__title">Шаблоны таблиц</h2>
+    <kp-button
+      label="Создать шаблон"
+      icon="pi pi-plus"
+      routerLink="/admin/table-templates/new"
+    />
+  </div>
+
+  <div class="tt-list__table">
+    <table class="tt-list__data-table">
+      <thead>
+        <tr>
+          <th>Название</th>
+          <th class="tt-list__col-num">Колонок</th>
+          <th class="tt-list__col-date">Изменён</th>
+          <th class="tt-list__col-actions">Действия</th>
+        </tr>
+      </thead>
+      <tbody>
+        @if (loading()) {
+          <tr><td colspan="4" class="tt-list__empty">Загрузка...</td></tr>
+        } @else if (templates().length === 0) {
+          <tr><td colspan="4" class="tt-list__empty">Нет созданных шаблонов</td></tr>
+        } @else {
+          @for (tmpl of templates(); track tmpl.id) {
+            <tr>
+              <td>{{ tmpl.name }}</td>
+              <td>{{ tmpl.columnsCount }}</td>
+              <td>{{ tmpl.updatedAtDisplay }}</td>
+              <td class="tt-list__actions">
+                <kp-button
+                  icon="pi pi-pencil"
+                  severity="secondary"
+                  [text]="true"
+                  [rounded]="true"
+                  [routerLink]="['/admin/table-templates', tmpl.id, 'edit']"
+                />
+                <kp-button
+                  icon="pi pi-copy"
+                  severity="info"
+                  [text]="true"
+                  [rounded]="true"
+                  (buttonClick)="onClone(tmpl)"
+                />
+                <kp-button
+                  icon="pi pi-trash"
+                  severity="danger"
+                  [text]="true"
+                  [rounded]="true"
+                  (buttonClick)="onDelete(tmpl)"
+                />
+              </td>
+            </tr>
+          }
+        }
+      </tbody>
+    </table>
+  </div>
+</kp-card>

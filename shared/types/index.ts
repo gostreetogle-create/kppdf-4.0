@@ -37,3 +37,40 @@ export interface LoginResponse {
 export interface RefreshResponse {
   accessToken: string;
 }
+
+// ========================================
+// Таблицы и шаблоны (kppdf-4.0)
+// ========================================
+
+/** Метаданные таблицы/справочника */
+export interface TableMeta {
+  name: string;
+  label: string;
+  collection: string;
+  fields: TableField[];
+}
+
+/** Поле таблицы */
+export interface TableField {
+  name: string;
+  label: string;
+  type: 'string' | 'number' | 'boolean' | 'date';
+}
+
+/** Сохранённый шаблон таблицы */
+export interface TableTemplate {
+  id: string;
+  name: string;
+  columns: TemplateColumn[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** Колонка внутри шаблона */
+export interface TemplateColumn {
+  tableName: string;
+  fieldName: string;
+  label: string;
+  width?: string;
+  order: number;
+}

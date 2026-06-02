@@ -13,6 +13,18 @@ export const routes: Routes = [
       {
         path: 'ui-kit',
         loadComponent: () => import('./features/ui-kit/ui-kit.component').then(m => m.UiKitComponent)
+      },
+      {
+        path: 'admin/table-templates',
+        loadComponent: () => import('./features/table-templates/table-template-list.component').then(m => m.TableTemplateListComponent)
+      },
+      {
+        path: 'admin/table-templates/new',
+        loadComponent: () => import('./features/table-templates/table-template-editor.component').then(m => m.TableTemplateEditorComponent)
+      },
+      {
+        path: 'admin/table-templates/:id/edit',
+        loadComponent: () => import('./features/table-templates/table-template-editor.component').then(m => m.TableTemplateEditorComponent)
       }
     ]
   },

@@ -1,8 +1,30 @@
 # CHANGELOG
 
-Все значимые изменения в project-core.
+Все значимые изменения в kppdf-4.0.
 
 Формат основан на [Keep a Changelog](https://keepachangelog.com/).
+
+---
+
+## [0.1.0] — 2026-06-03
+
+### Added
+- **Шаблоны таблиц (Этап 0-5):** конструктор шаблонов таблиц — основа для всех документов
+  - `TableRegistryService` — реестр таблиц с мок-данными (Товары, Клиенты)
+  - `TableTemplateService` — CRUD сервис шаблонов с хранением в памяти
+  - Страница списка шаблонов (`/admin/table-templates`) — редактировать, клонировать, удалить
+  - Страница редактора шаблона — выбор таблицы → поля → заголовок → ширина → порядок
+  - Валидация: название обязательно, минимум 1 колонка, таблица и поле обязательны
+- **Типы:** `TableMeta`, `TableField`, `TableTemplate`, `TemplateColumn` в `shared/types/index.ts`
+- **Боковое меню:** группа «Администрирование» с вложенным пунктом «Шаблоны таблиц»
+- **Маршруты:** lazy loading для `/admin/table-templates`, `/new`, `/:id/edit`
+- **Тесты:** 12 новых тестов (table-registry 5 + table-template 7)
+
+### Changed
+- `.env`: обновлён c `project-core` на `kppdf-4.0`
+- `backend/.env.example`: `MONGODB_URI` → `kppdf-4.0`
+- `admin-layout`: sidebar поддерживает вложенные группы пунктов
+- `BUSINESS_LOGIC_RU.md`: v2.0 — добавлена Часть 0 (Шаблоны таблиц, Реестр, Контракты, Mock Data)
 
 ---
 

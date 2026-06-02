@@ -39,7 +39,15 @@ export class AdminLayoutComponent {
 
   navItems: MenuItem[] = [
     { label: 'Главная', icon: 'pi pi-home', routerLink: '/dashboard' },
-    { label: 'UI Kit', icon: 'pi pi-palette', routerLink: '/ui-kit' }
+    { label: 'UI Kit', icon: 'pi pi-palette', routerLink: '/ui-kit' },
+    { separator: true },
+    {
+      label: 'Администрирование',
+      icon: 'pi pi-cog',
+      items: [
+        { label: 'Шаблоны таблиц', icon: 'pi pi-table', routerLink: '/admin/table-templates' }
+      ]
+    }
   ];
 
   userMenuItems: MenuItem[] = [
