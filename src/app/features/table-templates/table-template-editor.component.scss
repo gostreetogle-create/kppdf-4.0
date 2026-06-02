@@ -15,7 +15,14 @@
 
 .tt-editor__field {
   margin-bottom: var(--space-4);
-  max-width: 500px;
+  min-width: 240px;
+  flex: 1;
+}
+
+.tt-editor__top-row {
+  display: flex;
+  gap: var(--space-4);
+  flex-wrap: wrap;
 }
 
 .tt-editor__columns {

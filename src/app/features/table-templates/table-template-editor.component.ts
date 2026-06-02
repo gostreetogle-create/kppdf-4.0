@@ -1,4 +1,4 @@
-import { Component, inject, signal, OnInit, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, signal, computed, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
@@ -14,10 +14,9 @@ import { KpToastComponent } from '../../shared/ui/kp-toast.component';
 import { NotificationService } from '../../core/notification.service';
 import { TableRegistryService } from '../../core/table-registry.service';
 import { TableTemplateService } from '../../core/table-template.service';
-import type { TableMeta, TableField, TableTemplate, TemplateColumn } from '../../../../shared/types/index.js';
+import type { TableMeta, TemplateColumn } from '../../../../shared/types/index.js';
 
 interface EditableColumn {
-  tableName: string;
   fieldName: string;
   label: string;
   width: string;
@@ -50,10 +49,20 @@ export class TableTemplateEditorComponent implements OnInit {
   nameError = signal('');
 
   tables = signal<TableMeta[]>([]);
+  selectedTable = signal('');
+  tableError = signal('');
   columns = signal<EditableColumn[]>([]);
   loading = signal(false);
   saving = signal(false);
-  tableOptions = signal<SelectOption[]>([]);
+
+  tableOptions = computed<SelectOption[]>(() =>
+    this.tables().map(t => ({ value: t.name, label: t.label }))
+  );
+
+  fieldOptions = computed<SelectOption[]>(() => {
+    const table = this.tables().find(t => t.name === this.selectedTable());
+    return table?.fields.map(f => ({ value: f.name, label: f.label })) ?? [];
+  });
 
   breadcrumbs: MenuItem[] = [
     { label: 'Администрирование', routerLink: '/admin' },
@@ -66,7 +75,6 @@ export class TableTemplateEditorComponent implements OnInit {
     try {
       const tables = await firstValueFrom(this.registry.getTables());
       this.tables.set(tables);
-      this.tableOptions.set(tables.map(t => ({ value: t.name, label: t.label })));
 
       const id = this.route.snapshot.paramMap.get('id');
       if (id) {
@@ -74,9 +82,14 @@ export class TableTemplateEditorComponent implements OnInit {
         this.templateId.set(id);
         const result = await firstValueFrom(this.templateService.getTemplate(id));
         if (result.success && result.data) {
-          this.templateName.set(result.data.name);
-          this.columns.set(result.data.columns.map((c, i) => this.columnToEditable(c, i)));
-          this.breadcrumbs[2] = { label: result.data.name };
+          const tmpl = result.data;
+          this.templateName.set(tmpl.name);
+          // Берём tableName из первой колонки (все колонки одного шаблона от одной таблицы)
+          if (tmpl.columns.length > 0) {
+            this.selectedTable.set(tmpl.columns[0].tableName);
+          }
+          this.columns.set(tmpl.columns.map((c, i) => this.columnToEditable(c, i)));
+          this.breadcrumbs[2] = { label: tmpl.name };
         } else {
           this.notification.error('Шаблон не найден');
           this.router.navigate(['/admin/table-templates']);
@@ -89,7 +102,6 @@ export class TableTemplateEditorComponent implements OnInit {
 
   private columnToEditable(c: TemplateColumn, index: number): EditableColumn {
     return {
-      tableName: c.tableName,
       fieldName: c.fieldName,
       label: c.label,
       width: c.width ?? '',
@@ -98,18 +110,31 @@ export class TableTemplateEditorComponent implements OnInit {
     };
   }
 
-  /** Получить список полей для выбранной таблицы */
-  getFieldOptions(tableName: string): SelectOption[] {
-    const table = this.tables().find(t => t.name === tableName);
-    return table?.fields.map(f => ({ value: f.name, label: f.label })) ?? [];
+  /** Выбор таблицы — сбрасываем все колонки (новая таблица = новые поля) */
+  onTableSelect(tableName: string) {
+    this.selectedTable.set(tableName);
+    this.tableError.set('');
+    // При смене таблицы в новом шаблоне — очищаем колонки
+    if (this.isNew()) {
+      this.columns.set([]);
+    }
+  }
+
+  /** Получить label поля по имени */
+  private getFieldLabel(fieldName: string): string {
+    const table = this.tables().find(t => t.name === this.selectedTable());
+    return table?.fields.find(f => f.name === fieldName)?.label ?? fieldName;
   }
 
   /** Добавить новую колонку */
   addColumn() {
+    if (!this.selectedTable()) {
+      this.tableError.set('Сначала выберите таблицу');
+      return;
+    }
     this.columns.update(cols => [
       ...cols,
       {
-        tableName: '',
         fieldName: '',
         label: '',
         width: '',
@@ -144,31 +169,14 @@ export class TableTemplateEditorComponent implements OnInit {
     });
   }
 
-  /** При выборе таблицы — очищаем поле */
-  onTableChange(index: number, tableName: string) {
-    this.columns.update(cols => {
-      const updated = [...cols];
-      updated[index] = {
-        ...updated[index],
-        tableName,
-        fieldName: '',
-        label: '',
-        errors: { ...updated[index].errors, tableName: '', fieldName: '' },
-      };
-      return updated;
-    });
-  }
-
   /** При выборе поля — авто-заполняем заголовок */
   onFieldChange(index: number, fieldName: string) {
     this.columns.update(cols => {
       const updated = [...cols];
-      const table = this.tables().find(t => t.name === updated[index].tableName);
-      const field = table?.fields.find(f => f.name === fieldName);
       updated[index] = {
         ...updated[index],
         fieldName,
-        label: field?.label ?? updated[index].label,
+        label: this.getFieldLabel(fieldName),
         errors: { ...updated[index].errors, fieldName: '' },
       };
       return updated;
@@ -186,17 +194,20 @@ export class TableTemplateEditorComponent implements OnInit {
       this.nameError.set('');
     }
 
+    if (!this.selectedTable()) {
+      this.tableError.set('Выберите таблицу');
+      valid = false;
+    } else {
+      this.tableError.set('');
+    }
+
     if (this.columns().length === 0) {
       this.notification.error('Добавьте хотя бы одну колонку');
       valid = false;
     }
 
-    this.columns.update(cols => cols.map((col, i) => {
+    this.columns.update(cols => cols.map(col => {
       const errors: Record<string, string> = {};
-      if (!col.tableName) {
-        errors['tableName'] = 'Выберите таблицу';
-        valid = false;
-      }
       if (!col.fieldName) {
         errors['fieldName'] = 'Выберите поле';
         valid = false;
@@ -213,12 +224,13 @@ export class TableTemplateEditorComponent implements OnInit {
 
     this.saving.set(true);
     try {
+      const tableName = this.selectedTable();
       const data = {
         name: this.templateName().trim(),
         columns: this.columns().map((c, i) => ({
-          tableName: c.tableName,
+          tableName,
           fieldName: c.fieldName,
-          label: c.label || this.getFieldLabel(c.tableName, c.fieldName),
+          label: c.label || this.getFieldLabel(c.fieldName),
           width: c.width || undefined,
           order: i,
         })),
@@ -238,11 +250,6 @@ export class TableTemplateEditorComponent implements OnInit {
     } finally {
       this.saving.set(false);
     }
-  }
-
-  private getFieldLabel(tableName: string, fieldName: string): string {
-    const table = this.tables().find(t => t.name === tableName);
-    return table?.fields.find(f => f.name === fieldName)?.label ?? fieldName;
   }
 
   cancel() {

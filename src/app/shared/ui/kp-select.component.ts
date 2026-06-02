@@ -1,7 +1,6 @@
 import { Component, input, forwardRef, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule, NG_VALUE_ACCESSOR, ControlValueAccessor } from '@angular/forms';
 import { SelectModule } from 'primeng/select';
-import { FloatLabelModule } from 'primeng/floatlabel';
 import { CommonModule } from '@angular/common';
 
 export interface SelectOption {
@@ -12,41 +11,26 @@ export interface SelectOption {
 @Component({
   selector: 'kp-select',
   standalone: true,
-  imports: [CommonModule, FormsModule, SelectModule, FloatLabelModule],
+  imports: [CommonModule, FormsModule, SelectModule],
   template: `
     <div class="kp-select-field" [class.kp-select-field--error]="!!error()">
-      @if (label()) { <p-floatlabel>
-        <p-select
-          [inputId]="inputId()"
-          [options]="options()"
-          [(ngModel)]="value"
-          (ngModelChange)="onValueChange($event)"
-          [optionLabel]="optionLabel()"
-          [optionValue]="optionValue()"
-          [placeholder]="placeholder()"
-          [disabled]="disabled()"
-          [showClear]="showClear()"
-          [class.ng-invalid]="!!error()"
-          [attr.aria-label]="label() || 'Выпадающий список'"
-          [attr.aria-describedby]="error() ? inputId() + '-error' : null"
-        />
-        <label [for]="inputId()">{{ label() }}</label>
-      </p-floatlabel> }
-
-      @if (!label()) {
-        <p-select
-          [options]="options()"
-          [(ngModel)]="value"
-          (ngModelChange)="onValueChange($event)"
-          [optionLabel]="optionLabel()"
-          [optionValue]="optionValue()"
-          [placeholder]="placeholder()"
-          [disabled]="disabled()"
-          [showClear]="showClear()"
-          [class.ng-invalid]="!!error()"
-        />
+      @if (label()) {
+        <label class="kp-select__label" [for]="inputId()">{{ label() }}</label>
       }
-
+      <p-select
+        [inputId]="inputId()"
+        [options]="options()"
+        [(ngModel)]="value"
+        (ngModelChange)="onValueChange($event)"
+        [optionLabel]="optionLabel()"
+        [optionValue]="optionValue()"
+        [placeholder]="placeholder()"
+        [disabled]="disabled()"
+        [showClear]="showClear()"
+        [class.ng-invalid]="!!error()"
+        [attr.aria-label]="label() || placeholder() || 'Выпадающий список'"
+        [attr.aria-describedby]="error() ? inputId() + '-error' : null"
+      />
       @if (error()) {
         <small class="kp-select__error" [id]="inputId() + '-error'">{{ error() }}</small>
       }
@@ -55,6 +39,7 @@ export interface SelectOption {
   styles: [`
     .kp-select-field { display: flex; flex-direction: column; gap: var(--space-2); }
     .kp-select-field--error :host ::ng-deep .p-select { border-color: var(--color-error); }
+    .kp-select__label { font-size: var(--font-size-sm); font-weight: var(--font-weight-medium); color: var(--color-text); }
     .kp-select__error { color: var(--color-error); font-size: var(--font-size-xs); margin-top: var(--space-1); }
   `],
   providers: [
