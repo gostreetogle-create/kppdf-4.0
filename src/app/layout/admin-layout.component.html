@@ -1,0 +1,110 @@
+<kp-toast />
+
+<!-- Mobile sidebar overlay -->
+<kp-drawer
+  [(visible)]="mobileSidebarVisible"
+  position="left"
+  width="260px"
+  [closable]="true"
+>
+  <div class="sidebar-mobile-header">
+    <span class="sidebar-logo-text">Project Core</span>
+  </div>
+  <div class="sidebar-mobile-nav">
+    @for (item of navItems; track item.label) {
+      <a
+        [routerLink]="item.routerLink"
+        routerLinkActive="p-menuitem-link-active"
+        class="sidebar-mobile-item"
+        (click)="mobileSidebarVisible.set(false)"
+      >
+        <i [class]="item.icon"></i>
+        <span>{{ item.label }}</span>
+      </a>
+    }
+  </div>
+</kp-drawer>
+
+<div class="layout" [class.layout--collapsed]="!sidebarVisible()">
+  <!-- Desktop sidebar -->
+  <aside class="layout__sidebar" [class.sidebar--hidden]="!sidebarVisible()">
+    <div class="sidebar__header">
+      @if (sidebarVisible()) { <span class="sidebar__logo">Project Core</span> }
+      <kp-button
+        [text]="true"
+        size="small"
+        [icon]="sidebarVisible() ? 'pi pi-angle-left' : 'pi pi-angle-right'"
+        styleClass="sidebar__toggle"
+        (buttonClick)="toggleSidebar()"
+      />
+    </div>
+
+    <nav class="sidebar__nav">
+      @for (item of navItems; track item.label) {
+        <a
+          [routerLink]="item.routerLink"
+          routerLinkActive="nav__item--active"
+          class="nav__item"
+          [pTooltip]="!sidebarVisible() ? item.label : ''"
+          tooltipPosition="right"
+        >
+          <i [class]="item.icon + ' nav__icon'"></i>
+          @if (sidebarVisible()) { <span class="nav__label">{{ item.label }}</span> }
+        </a>
+      }
+    </nav>
+
+    <div class="sidebar__footer">
+      <kp-button
+        [text]="true"
+        size="small"
+        [icon]="isDark() ? 'pi pi-sun' : 'pi pi-moon'"
+        styleClass="sidebar__theme-btn"
+        [pTooltip]="isDark() ? 'Светлая тема' : 'Тёмная тема'"
+        tooltipPosition="right"
+        (buttonClick)="toggleTheme()"
+      />
+    </div>
+  </aside>
+
+  <!-- Main content area -->
+  <div class="layout__main-area">
+    <!-- Top bar -->
+    <header class="topbar">
+      <div class="topbar__left">
+        <kp-button
+          [text]="true"
+          size="small"
+          icon="pi pi-bars"
+          styleClass="topbar__mobile-menu"
+          (buttonClick)="toggleMobileSidebar()"
+        />
+      </div>
+
+      <div class="topbar__right">
+        <kp-button
+          [text]="true"
+          size="small"
+          icon="pi pi-bell"
+          (buttonClick)="onNotificationsClick()"
+        />
+
+        <kp-tiered-menu #userMenu [model]="userMenuItems" />
+        <div class="topbar__user" (click)="openUserMenu($event)">
+          <kp-avatar
+            [label]="(currentUser()?.displayName || 'U').charAt(0)"
+            styleClass="p-avatar-sm"
+          />
+          @if (sidebarVisible()) { <span class="topbar__username">
+            {{ currentUser()?.displayName || 'Пользователь' }}
+          </span> }
+        </div>
+      </div>
+    </header>
+
+    <!-- Page content -->
+    <main class="layout__main">
+      <router-outlet />
+    </main>
+  </div>
+</div>
