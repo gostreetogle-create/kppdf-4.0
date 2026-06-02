@@ -272,6 +272,7 @@ python scripts/seed_chromadb.py
 | 2026-06-03 | Чек-лист kppdf-4.0 | Создан CHECKLIST_KPPDF40.md с планом Этапов 0-7 |
 | 2026-06-03 | Бизнес-логика v2.0 | Добавлена Часть 0 (Шаблоны таблиц, Реестр, Контракты, Mock Data) |
 | 2026-06-03 | Реализация Этапов 0-5 для kppdf-4.0 | TableRegistry + TableTemplate сервисы, страницы списка/редактора, боковое меню, lazy routes |
+| 2026-06-03 | Анализ шаблонов документов | Изучены kppdf-3.0 и portable_kits. Создан DOC_TEMPLATES_ANALYSIS.md и CHECKLIST_DOC_TEMPLATES.md |
 
 ---
 

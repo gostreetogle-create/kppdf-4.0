@@ -45,7 +45,8 @@ export class AdminLayoutComponent {
       label: 'Администрирование',
       icon: 'pi pi-cog',
       items: [
-        { label: 'Шаблоны таблиц', icon: 'pi pi-table', routerLink: '/admin/table-templates' }
+        { label: 'Шаблоны таблиц', icon: 'pi pi-table', routerLink: '/admin/table-templates' },
+        { label: 'Шаблоны документов', icon: 'pi pi-file', routerLink: '/admin/document-templates' }
       ]
     }
   ];
