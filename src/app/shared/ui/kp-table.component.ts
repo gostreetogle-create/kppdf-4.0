@@ -40,7 +40,7 @@ export interface TableColumn {
             </th>
           }
           @if (showActions()) {
-            <th style="width: 120px">Действия</th>
+            <th class="kp-table__actions-header">Действия</th>
           }
         </tr>
       </ng-template>
@@ -68,6 +68,15 @@ export interface TableColumn {
                 [rounded]="true"
                 (buttonClick)="rowEdit.emit(rowData)"
               />
+              @if (showClone()) {
+                <kp-button
+                  icon="pi pi-copy"
+                  severity="info"
+                  [text]="true"
+                  [rounded]="true"
+                  (buttonClick)="rowClone.emit(rowData)"
+                />
+              }
               <kp-button
                 icon="pi pi-trash"
                 severity="danger"
@@ -90,6 +99,7 @@ export interface TableColumn {
     </p-table>
   `,
   styles: [`
+    .kp-table__actions-header { width: 140px; }
     .kp-table__actions {
       display: flex;
       gap: 4px;
@@ -113,8 +123,10 @@ export class KpTableComponent {
   sortOrder = input(1);
   searchFields = input<string[]>([]);
   showActions = input(true);
+  showClone = input(false);
   emptyMessage = input('Нет данных');
 
   readonly rowEdit = output<unknown>();
   readonly rowDelete = output<unknown>();
+  readonly rowClone = output<unknown>();
 }

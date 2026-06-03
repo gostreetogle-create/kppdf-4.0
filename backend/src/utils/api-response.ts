@@ -1,6 +1,9 @@
 // ========================================
 // API Response — единый формат ответов
 // ========================================
+// Примечание: типы дублируют shared/types/index.ts,
+// т.к. backend tsconfig (rootDir: ./src) не видит файлы за пределами backend/.
+// При изменении — обновлять оба файла.
 
 export interface ApiResponse<T = unknown> {
   success: boolean;

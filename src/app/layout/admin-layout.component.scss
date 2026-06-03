@@ -1,5 +1,5 @@
 // ========================================
-// Admin Layout
+// Admin Layout — улучшенный дизайн
 // ========================================
 
 .layout {
@@ -10,45 +10,51 @@
 
 // === Sidebar ===
 .layout__sidebar {
-  width: 240px;
-  min-width: 240px;
-  background: var(--color-surface);
-  border-right: 1px solid var(--color-border);
+  width: 256px;
+  min-width: 256px;
+  background: var(--gradient-sidebar);
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
   display: flex;
   flex-direction: column;
-  transition: width 0.25s ease, min-width 0.25s ease;
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), min-width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   overflow: hidden;
   z-index: 100;
+  box-shadow: 2px 0 12px rgba(0, 0, 0, 0.08);
 }
 
 .sidebar--hidden {
-  width: 56px;
-  min-width: 56px;
+  width: 60px;
+  min-width: 60px;
 }
 
 .layout--collapsed .layout__sidebar {
-  width: 56px;
-  min-width: 56px;
+  width: 60px;
+  min-width: 60px;
 }
 
 .sidebar__header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: var(--space-4) var(--space-3);
-  border-bottom: 1px solid var(--color-border-light);
-  height: 52px;
+  padding: var(--space-5) var(--space-4);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  height: 60px;
 }
 
 .sidebar__logo {
   font-size: var(--font-size-lg);
   font-weight: var(--font-weight-bold);
-  color: var(--color-primary);
+  color: #ffffff;
   white-space: nowrap;
+  letter-spacing: -0.02em;
 }
 
 .sidebar__toggle {
   flex-shrink: 0;
+  color: rgba(255, 255, 255, 0.6) !important;
+  &:hover {
+    color: #ffffff !important;
+  }
 }
 
 .sidebar__nav {
@@ -56,7 +62,7 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
-  padding: var(--space-2);
+  padding: var(--space-3);
   overflow-y: auto;
 }
 
@@ -64,35 +70,49 @@
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  padding: var(--space-2) var(--space-3);
+  padding: 10px var(--space-3);
   border-radius: var(--radius-md);
-  color: var(--color-text-secondary);
+  color: rgba(255, 255, 255, 0.6);
   text-decoration: none;
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
-  transition: background 0.15s ease, color 0.15s ease;
+  transition: all var(--transition-fast);
   white-space: nowrap;
   cursor: pointer;
+  position: relative;
 
   &:hover {
-    background: var(--color-surface-hover);
-    color: var(--color-text);
+    background: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.95);
   }
 
   &--active {
-    background: var(--color-primary-light);
-    color: var(--color-primary);
+    background: rgba(37, 99, 235, 0.2);
+    color: #60a5fa;
+    font-weight: var(--font-weight-semibold);
+
+    &::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 3px;
+      height: 20px;
+      background: #60a5fa;
+      border-radius: 0 2px 2px 0;
+    }
   }
 
   &--child {
-    padding-left: var(--space-5);
+    padding-left: var(--space-6);
     font-size: var(--font-size-xs);
   }
 }
 
 .nav__divider {
   height: 1px;
-  background: var(--color-border-light);
+  background: rgba(255, 255, 255, 0.06);
   margin: var(--space-2) var(--space-1);
 }
 
@@ -104,12 +124,12 @@
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  padding: var(--space-2) var(--space-3);
-  color: var(--color-text-muted);
-  font-size: var(--font-size-xs);
+  padding: var(--space-3) var(--space-3) var(--space-1);
+  color: rgba(255, 255, 255, 0.3);
+  font-size: 0.6875rem;
   font-weight: var(--font-weight-semibold);
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.08em;
   white-space: nowrap;
 }
 
@@ -135,8 +155,8 @@
 }
 
 .sidebar__footer {
-  padding: var(--space-2);
-  border-top: 1px solid var(--color-border-light);
+  padding: var(--space-3);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
   display: flex;
   justify-content: center;
 }
@@ -144,6 +164,11 @@
 .sidebar__theme-btn {
   width: 100%;
   justify-content: center;
+  color: rgba(255, 255, 255, 0.5) !important;
+  &:hover {
+    color: #ffffff !important;
+    background: rgba(255, 255, 255, 0.08) !important;
+  }
 }
 
 // === Main area ===
@@ -160,11 +185,12 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 52px;
-  padding: 0 var(--space-4);
+  height: 56px;
+  padding: 0 var(--space-6);
   background: var(--color-surface);
   border-bottom: 1px solid var(--color-border-light);
   flex-shrink: 0;
+  box-shadow: var(--shadow-xs);
 }
 
 .topbar__left {
@@ -180,20 +206,22 @@
 .topbar__right {
   display: flex;
   align-items: center;
-  gap: var(--space-2);
+  gap: var(--space-3);
 }
 
 .topbar__user {
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  padding: var(--space-1) var(--space-2);
-  border-radius: var(--radius-md);
+  padding: var(--space-1) var(--space-3) var(--space-1) var(--space-1);
+  border-radius: var(--radius-lg);
   cursor: pointer;
-  transition: background 0.15s ease;
+  transition: all var(--transition-fast);
+  border: 1px solid transparent;
 
   &:hover {
     background: var(--color-surface-hover);
+    border-color: var(--color-border-light);
   }
 }
 
@@ -223,7 +251,9 @@
 
 // === Sidebar mobile ===
 .sidebar-mobile-header {
-  padding: var(--space-2) 0;
+  padding: var(--space-4) 0;
+  border-bottom: 1px solid var(--color-border-light);
+  margin-bottom: var(--space-2);
 }
 
 .sidebar-logo-text {
@@ -240,11 +270,11 @@
 
 .sidebar-mobile-group-label {
   padding: var(--space-4) var(--space-3) var(--space-1);
-  font-size: var(--font-size-xs);
+  font-size: 0.6875rem;
   font-weight: var(--font-weight-semibold);
   color: var(--color-text-muted);
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.08em;
 }
 
 .sidebar-mobile-item {
@@ -257,7 +287,7 @@
   text-decoration: none;
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
-  transition: background 0.15s ease;
+  transition: all var(--transition-fast);
 
   &:hover {
     background: var(--color-surface-hover);

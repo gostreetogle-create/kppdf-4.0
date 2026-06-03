@@ -22,8 +22,8 @@ import { ToggleSwitchModule, ToggleSwitchChangeEvent } from 'primeng/toggleswitc
     </div>
   `,
   styles: [`
-    .kp-toggle-wrap { display: flex; align-items: center; gap: var(--space-2, 8px); }
-    .kp-toggle__label { font-size: var(--font-size-sm, 12px); font-weight: 500; cursor: pointer; }
+    .kp-toggle-wrap { display: flex; align-items: center; gap: var(--space-2); }
+    .kp-toggle__label { font-size: var(--font-size-sm); font-weight: var(--font-weight-medium); cursor: pointer; }
   `],
 })
 export class KpToggleComponent {

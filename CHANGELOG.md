@@ -28,6 +28,34 @@
 
 ---
 
+## [1.1.0] — 2026-06-03 — Аудит, очистка и дизайн
+
+### Fixed
+- **Dashboard:** добавлен `changeDetection: OnPush` (нарушение AGENTS.md)
+- **UiKit:** добавлен `changeDetection: OnPush` (нарушение AGENTS.md)
+- **Table template list:** raw HTML `<table>` заменён на `<kp-table>` компонент (нарушение AGENTS.md)
+- **Login:** добавлен `takeUntilDestroyed()` — устранена утечка Observable
+- **CSS токены:** `kp-datepicker`, `kp-file-upload`, `kp-toggle` использовали несуществующий `--kp-color-text-secondary` → заменён на `--color-text-secondary`
+- **package.json:** имя `project-core` → `kppdf-4.0`
+- **docker-compose:** container names `project-core-*` → `kppdf-*`
+- **Backend start:backend:** скрипт ссылался на несуществующий `dev.js` → `npm run dev`
+
+### Added
+- **kp-table:** `showClone` input + `rowClone` output — кнопка клонирования в таблице
+- **Дизайн-токены:** градиенты (`--gradient-primary`, `--gradient-sidebar`), усиленные тени, transition-токены, `--radius-xl`, `--space-12`
+- **Sidebar:** тёмный градиентный фон, индикатор активного пункта (синяя полоска слева)
+- **Dashboard:** hero-секция с градиентным фоном, карточки с цветными иконками, блок статистики (16 компонентов / 108 тестов / 0 ошибок)
+- **Login:** радиальный градиентный фон, логотип-иконка, подсказка логина/пароля
+- **Глобальные стили:** улучшены PrimeNG компоненты (p-card, p-dialog, p-toast, p-tag, p-breadcrumb)
+
+### Changed
+- Радиусы увеличены: `--radius-sm` 4→6px, `--radius-md` 6→8px, `--radius-lg` 8→12px
+- Фон страницы: `#f8f9fa` → `#f0f2f5`
+- Sidebar: 240px → 256px, 56px collapsed → 60px
+- Topbar: 52px → 56px
+
+---
+
 ## [1.0.1] — 2026-06-03
 
 ### Added

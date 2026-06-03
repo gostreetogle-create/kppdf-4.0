@@ -8,7 +8,7 @@ services:
   # База данных MongoDB
   mongodb:
     image: mongo:7
-    container_name: project-core-mongodb
+    container_name: kppdf-mongodb
     restart: unless-stopped
     ports:
       - "27017:27017"
@@ -27,7 +27,7 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: project-core-backend
+    container_name: kppdf-backend
     restart: unless-stopped
     ports:
       - "3000:3000"
@@ -44,6 +44,6 @@ services:
 
 volumes:
   mongodb_data:
-    name: project-core-mongodb-data
+    name: kppdf-mongodb-data
   backend_uploads:
-    name: project-core-uploads
+    name: kppdf-uploads

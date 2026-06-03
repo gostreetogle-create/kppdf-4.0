@@ -1,4 +1,4 @@
-import { Component, signal } from '@angular/core';
+import { Component, signal, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { KpButtonComponent } from '../../shared/ui/kp-button.component';
@@ -26,6 +26,7 @@ import { inject } from '@angular/core';
     KpBadgeComponent, KpBreadcrumbComponent,
     KpToastComponent, KpConfirmDialogComponent
   ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <kp-toast />
     <kp-confirm-dialog />

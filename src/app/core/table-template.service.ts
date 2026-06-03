@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Observable, of, delay, map } from 'rxjs';
+import { Observable, of, delay } from 'rxjs';
 import type { ApiResponse, TableTemplate } from '../../../shared/types/index.js';
 
 function generateId(): string {

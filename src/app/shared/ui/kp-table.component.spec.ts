@@ -26,6 +26,7 @@ describe('KpTableComponent', () => {
     expect(c.rows()).toBe(20);
     expect(c.paginator()).toBe(true);
     expect(c.showActions()).toBe(true);
+    expect(c.showClone()).toBe(false);
     expect(c.emptyMessage()).toBe('Нет данных');
     expect(c.data()).toEqual([]);
     expect(c.columns()).toEqual([]);
@@ -46,5 +47,14 @@ describe('KpTableComponent', () => {
     c.rowDelete.emit(data[0]);
     expect(edited).toBe(data[0]);
     expect(deleted).toBe(data[0]);
+  });
+
+  it('rowClone — output сигнал', () => {
+    const c = TestBed.createComponent(KpTableComponent).componentInstance;
+    const data = { name: 'Шаблон 1' };
+    let cloned: unknown = null;
+    c.rowClone.subscribe((r) => (cloned = r));
+    c.rowClone.emit(data);
+    expect(cloned).toBe(data);
   });
 });

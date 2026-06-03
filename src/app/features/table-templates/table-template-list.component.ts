@@ -1,5 +1,5 @@
 import { Component, inject, signal, OnInit, ChangeDetectionStrategy } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { MenuItem } from 'primeng/api';
 import { firstValueFrom } from 'rxjs';
@@ -7,9 +7,12 @@ import { firstValueFrom } from 'rxjs';
 import { KpButtonComponent } from '../../shared/ui/kp-button.component';
 import { KpBreadcrumbComponent } from '../../shared/ui/kp-breadcrumb.component';
 import { KpCardComponent } from '../../shared/ui/kp-card.component';
+import { KpTableComponent, TableColumn } from '../../shared/ui/kp-table.component';
 import { KpToastComponent } from '../../shared/ui/kp-toast.component';
+import { KpConfirmDialogComponent } from '../../shared/ui/kp-confirm-dialog.component';
 import { NotificationService } from '../../core/notification.service';
 import { TableTemplateService } from '../../core/table-template.service';
+import { ConfirmationService } from 'primeng/api';
 import type { TableTemplate } from '../../../../shared/types/index.js';
 
 interface TableTemplateRow extends TableTemplate {
@@ -24,15 +27,17 @@ interface TableTemplateRow extends TableTemplate {
     CommonModule, RouterLink,
     KpButtonComponent,
     KpBreadcrumbComponent, KpCardComponent,
-    KpToastComponent,
+    KpTableComponent, KpToastComponent, KpConfirmDialogComponent,
   ],
   templateUrl: './table-template-list.component.html',
   styleUrls: ['./table-template-list.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TableTemplateListComponent implements OnInit {
+  private router = inject(Router);
   private templateService = inject(TableTemplateService);
   private notification = inject(NotificationService);
+  private confirmationService = inject(ConfirmationService);
 
   templates = signal<TableTemplateRow[]>([]);
   loading = signal(false);
@@ -40,6 +45,12 @@ export class TableTemplateListComponent implements OnInit {
   breadcrumbs: MenuItem[] = [
     { label: 'Администрирование', routerLink: '/admin' },
     { label: 'Шаблоны таблиц' },
+  ];
+
+  tableColumns: TableColumn[] = [
+    { field: 'name', header: 'Название', sortable: true },
+    { field: 'columnsCount', header: 'Колонок', width: '100px', type: 'number', sortable: true },
+    { field: 'updatedAtDisplay', header: 'Изменён', width: '200px', sortable: true },
   ];
 
   async ngOnInit() {
@@ -60,18 +71,33 @@ export class TableTemplateListComponent implements OnInit {
     }
   }
 
-  async onDelete(row: TableTemplateRow) {
-    const result = await firstValueFrom(this.templateService.deleteTemplate(row.id));
-    if (result.success) {
-      this.notification.success('Шаблон удалён');
-      await this.loadTemplates();
-    } else {
-      this.notification.error(result.message || 'Ошибка удаления');
-    }
+  onDelete(row: unknown) {
+    const tmpl = row as TableTemplateRow;
+    KpConfirmDialogComponent.confirm(this.confirmationService, {
+      header: 'Удаление шаблона',
+      message: `Вы уверены, что хотите удалить шаблон «${tmpl.name}»?`,
+      acceptLabel: 'Удалить',
+      rejectLabel: 'Отмена',
+      accept: async () => {
+        const result = await firstValueFrom(this.templateService.deleteTemplate(tmpl.id));
+        if (result.success) {
+          this.notification.success('Шаблон удалён');
+          await this.loadTemplates();
+        } else {
+          this.notification.error(result.message || 'Ошибка удаления');
+        }
+      },
+    });
   }
 
-  async onClone(row: TableTemplateRow) {
-    const result = await firstValueFrom(this.templateService.cloneTemplate(row.id));
+  onEditRow(row: unknown) {
+    const tmpl = row as TableTemplateRow;
+    this.router.navigate(['/admin/table-templates', tmpl.id, 'edit']);
+  }
+
+  async onClone(row: unknown) {
+    const tmpl = row as TableTemplateRow;
+    const result = await firstValueFrom(this.templateService.cloneTemplate(tmpl.id));
     if (result.success) {
       this.notification.success('Шаблон склонирован');
       await this.loadTemplates();

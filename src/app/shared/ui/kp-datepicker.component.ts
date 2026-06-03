@@ -28,7 +28,7 @@ import { DatePickerModule } from 'primeng/datepicker';
   `,
   styles: [`
     .kp-field { display: flex; flex-direction: column; gap: var(--space-2, 8px); }
-    .kp-field__label { font-size: var(--font-size-sm, 12px); font-weight: 600; color: var(--kp-color-text-secondary, #6b7280); }
+    .kp-field__label { font-size: var(--font-size-sm); font-weight: var(--font-weight-semibold); color: var(--color-text-secondary); }
   `],
 })
 export class KpDatepickerComponent {

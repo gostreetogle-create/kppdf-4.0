@@ -1,12 +1,12 @@
 {
-  "name": "project-core",
+  "name": "kppdf-4.0",
   "version": "1.0.0",
   "private": true,
   "description": "Универсальное ядро для создания веб-приложений",
   "scripts": {
     "ng": "ng",
     "start": "ng serve --port 4200",
-    "start:backend": "cd backend && node dev.js",
+    "start:backend": "cd backend && npm run dev",
     "build": "ng build",
     "test": "vitest run",
     "test:watch": "vitest",
