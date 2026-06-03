@@ -26,8 +26,18 @@ export const routes: Routes = [
         path: 'admin/table-templates/:id/edit',
         loadComponent: () => import('./features/table-templates/table-template-editor.component').then(m => m.TableTemplateEditorComponent)
       },
-      // 🚧 Заглушка — будет реализовано завтра (Этапы 3-8 CHECKLIST_DOC_TEMPLATES.md)
-      { path: 'admin/document-templates', redirectTo: 'admin' }
+      {
+        path: 'admin/document-templates',
+        loadComponent: () => import('./features/document-templates/document-template-list.component').then(m => m.DocumentTemplateListComponent)
+      },
+      {
+        path: 'admin/document-templates/new',
+        redirectTo: 'admin/document-templates'
+      },
+      {
+        path: 'admin/document-templates/:id/edit',
+        redirectTo: 'admin/document-templates'
+      }
     ]
   },
   {

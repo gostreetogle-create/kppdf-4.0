@@ -1,0 +1,31 @@
+<kp-toast />
+<kp-confirm-dialog />
+
+<kp-card>
+  <kp-breadcrumb [items]="breadcrumbs" />
+
+  <div class="dt-list__header">
+    <h2 class="dt-list__title">Шаблоны документов</h2>
+    <kp-button
+      label="Создать шаблон"
+      icon="pi pi-plus"
+      routerLink="/admin/document-templates/new"
+    />
+  </div>
+
+  <kp-table
+    [data]="templates()"
+    [columns]="tableColumns"
+    [rows]="20"
+    [paginator]="true"
+    [loading]="loading()"
+    [sortField]="'name'"
+    [sortOrder]="1"
+    [searchFields]="['name']"
+    [showClone]="true"
+    emptyMessage="Нет созданных шаблонов документов"
+    (rowEdit)="onEditRow($event)"
+    (rowClone)="onClone($event)"
+    (rowDelete)="onDelete($event)"
+  />
+</kp-card>

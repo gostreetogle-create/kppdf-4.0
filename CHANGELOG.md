@@ -28,6 +28,17 @@
 
 ---
 
+## [1.2.0] — 2026-06-03 — Шаблоны документов (Этапы 1-3)
+
+### Added
+- **Типы документов:** `DocType`, `DocBlockType`, `DocBlockSettings`, `DocTextColumn`, `DocBlock`, `DocumentTemplate` в `shared/types/index.ts`
+- **DocumentTemplateService:** CRUD + клонирование с глубоким копированием блоков. 2 мок-шаблона (КП и Договор)
+- **document-template.service.spec.ts:** 10 тестов (CRUD, клонирование, ошибки для несуществующих)
+- **DocumentTemplateListComponent:** страница списка шаблонов документов с kp-table, хлебными крошками, clone/delete
+- **Маршрут:** `/admin/document-templates` → DocumentTemplateListComponent (замена заглушки)
+
+---
+
 ## [1.1.0] — 2026-06-03 — Аудит, очистка и дизайн
 
 ### Fixed

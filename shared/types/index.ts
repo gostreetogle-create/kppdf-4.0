@@ -74,3 +74,59 @@ export interface TemplateColumn {
   width?: string;
   order: number;
 }
+
+// ========================================
+// Шаблоны документов (Document Templates)
+// ========================================
+
+/** Тип документа */
+export type DocType = 'quotation' | 'contract' | 'invoice' | 'shipping';
+
+/** Тип блока документа */
+export type DocBlockType = 'text' | 'table' | 'separator';
+
+/** Настройки блока */
+export interface DocBlockSettings {
+  padding?: string;
+  fontSize?: string;
+  align?: 'left' | 'center' | 'right';
+}
+
+/** Колонка текстового блока */
+export interface DocTextColumn {
+  id: string;
+  content: string;
+  width?: string;
+  textAlign?: 'left' | 'center' | 'right';
+  fontWeight?: 'normal' | 'bold';
+  fontStyle?: 'normal' | 'italic';
+  textDecoration?: 'none' | 'underline';
+  color?: string;
+}
+
+/** Блок документа */
+export interface DocBlock {
+  id: string;
+  type: DocBlockType;
+  order: number;
+  title?: string;
+  content?: string;
+  columns?: DocTextColumn[];
+  tableTemplateId?: string;
+  height?: number;
+  showLine?: boolean;
+  settings?: DocBlockSettings;
+}
+
+/** Шаблон документа */
+export interface DocumentTemplate {
+  id: string;
+  name: string;
+  description?: string;
+  docType: DocType;
+  pageSize?: 'A4' | 'A5' | 'letter';
+  backgroundImage?: string;
+  blocks: DocBlock[];
+  createdAt: string;
+  updatedAt: string;
+}
