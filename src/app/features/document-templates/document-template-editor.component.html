@@ -1,0 +1,79 @@
+<kp-toast />
+
+<!-- Text editor dialog -->
+<kp-doc-text-editor-dialog (saved)="onTextBlockSave($event)" />
+
+<kp-card styleClass="dt-editor">
+  <kp-breadcrumb [items]="breadcrumbs" />
+
+  <h2 class="dt-editor__title">
+    {{ isNew() ? 'Новый шаблон документа' : 'Редактирование шаблона' }}
+  </h2>
+
+  @if (loading()) {
+    <div class="dt-editor__loading">Загрузка...</div>
+  } @else {
+    <!-- Top fields -->
+    <div class="dt-editor__top-row">
+      <div class="dt-editor__field">
+        <kp-input
+          label="Название шаблона"
+          placeholder="Например: Коммерческое предложение"
+          [(ngModel)]="templateName"
+          [error]="nameError()"
+        />
+      </div>
+      <div class="dt-editor__field">
+        <kp-select
+          label="Тип документа"
+          [options]="docTypeOptions"
+          [ngModel]="docType()"
+          (ngModelChange)="docType.set($event)"
+        />
+      </div>
+    </div>
+
+    <div class="dt-editor__field dt-editor__field--desc">
+      <kp-input
+        label="Описание"
+        placeholder="Необязательное описание шаблона"
+        [(ngModel)]="description"
+      />
+    </div>
+
+    <!-- Block toolbar -->
+    <div class="dt-editor__toolbar">
+      <span class="dt-editor__toolbar-label">Добавить блок:</span>
+      <kp-button label="+ Текст" icon="pi pi-align-left" size="small" severity="secondary" (buttonClick)="addBlock('text')" />
+      <kp-button label="+ Таблица" icon="pi pi-table" size="small" severity="secondary" (buttonClick)="addBlock('table')" />
+      <kp-button label="+ Разделитель" icon="pi pi-minus" size="small" severity="secondary" (buttonClick)="addBlock('separator')" />
+    </div>
+
+    <!-- A4 Canvas -->
+    <kp-doc-canvas
+      [blocks]="blocks()"
+      [selectedBlockId]="selectedBlockId()"
+      (blockSelect)="selectedBlockId.set($event)"
+      (blockEdit)="onBlockEdit($event)"
+      (blockRemove)="removeBlock($event)"
+      (blockMoveUp)="moveBlockUp($event)"
+      (blockMoveDown)="moveBlockDown($event)"
+    />
+
+    <!-- Footer -->
+    <div class="dt-editor__footer">
+      <kp-button
+        [label]="isNew() ? 'Создать шаблон' : 'Сохранить'"
+        icon="pi pi-check"
+        [loading]="saving()"
+        (buttonClick)="save()"
+      />
+      <kp-button
+        label="Отмена"
+        icon="pi pi-times"
+        severity="secondary"
+        (buttonClick)="cancel()"
+      />
+    </div>
+  }
+</kp-card>

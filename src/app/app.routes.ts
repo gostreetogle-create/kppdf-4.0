@@ -32,11 +32,11 @@ export const routes: Routes = [
       },
       {
         path: 'admin/document-templates/new',
-        redirectTo: 'admin/document-templates'
+        loadComponent: () => import('./features/document-templates/document-template-editor.component').then(m => m.DocumentTemplateEditorComponent)
       },
       {
         path: 'admin/document-templates/:id/edit',
-        redirectTo: 'admin/document-templates'
+        loadComponent: () => import('./features/document-templates/document-template-editor.component').then(m => m.DocumentTemplateEditorComponent)
       }
     ]
   },

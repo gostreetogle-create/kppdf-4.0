@@ -16,3 +16,8 @@ export { KpTieredMenuComponent } from './kp-tiered-menu.component';
 export { KpDatepickerComponent } from './kp-datepicker.component';
 export { KpFileUploadComponent } from './kp-file-upload.component';
 export { KpToggleComponent } from './kp-toggle.component';
+export { KpDocCanvasComponent } from './kp-doc-canvas.component';
+export { KpDocBlockTextComponent } from './kp-doc-block-text.component';
+export { KpDocBlockTableComponent } from './kp-doc-block-table.component';
+export { KpDocBlockSeparatorComponent } from './kp-doc-block-separator.component';
+export { KpDocTextEditorDialogComponent } from './kp-doc-text-editor-dialog.component';
