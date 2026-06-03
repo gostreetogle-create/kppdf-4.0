@@ -28,6 +28,20 @@
 
 ---
 
+## [1.5.0] — 2026-06-03 — Тесты компонентов документов
+
+### Added
+- **kp-doc-block-separator.spec.ts:** 6 тестов (создание, дефолты, DOM)
+- **kp-doc-block-text.spec.ts:** 4 теста (создание, columnsGrid, outputs, inputs)
+- **kp-doc-block-table.spec.ts:** 4 теста (создание, tmpl, outputs, mock-сервис)
+- **kp-doc-canvas.spec.ts:** 7 тестов (создание, дефолты всех inputs, outputs)
+- **kp-doc-text-editor-dialog.spec.ts:** 12 тестов (open, columns, save, форматирование)
+- **document-template-editor.spec.ts:** 17 тестов (addBlock, removeBlock, moveBlock, validate, onTextBlockSave)
+- Итого 50 новых тестов (134→184)
+- Паттерн `runInInjectionContext` для компонентов с `input.required` (обход JIT-бага Angular 21)
+
+---
+
 ## [1.4.0] — 2026-06-03 — Предпросмотр и печать документов
 
 ### Added
