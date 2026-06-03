@@ -21,3 +21,4 @@ export { KpDocBlockTextComponent } from './kp-doc-block-text.component';
 export { KpDocBlockTableComponent } from './kp-doc-block-table.component';
 export { KpDocBlockSeparatorComponent } from './kp-doc-block-separator.component';
 export { KpDocTextEditorDialogComponent } from './kp-doc-text-editor-dialog.component';
+export { KpDocPreviewDialogComponent } from './kp-doc-preview-dialog.component';

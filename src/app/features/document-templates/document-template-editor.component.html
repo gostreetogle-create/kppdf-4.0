@@ -3,6 +3,9 @@
 <!-- Text editor dialog -->
 <kp-doc-text-editor-dialog (saved)="onTextBlockSave($event)" />
 
+<!-- Preview dialog -->
+<kp-doc-preview-dialog />
+
 <kp-card styleClass="dt-editor">
   <kp-breadcrumb [items]="breadcrumbs" />
 
@@ -47,6 +50,8 @@
       <kp-button label="+ Текст" icon="pi pi-align-left" size="small" severity="secondary" (buttonClick)="addBlock('text')" />
       <kp-button label="+ Таблица" icon="pi pi-table" size="small" severity="secondary" (buttonClick)="addBlock('table')" />
       <kp-button label="+ Разделитель" icon="pi pi-minus" size="small" severity="secondary" (buttonClick)="addBlock('separator')" />
+      <span class="dt-editor__toolbar-spacer"></span>
+      <kp-button label="Предпросмотр" icon="pi pi-eye" size="small" severity="info" [disabled]="blocks().length === 0" (buttonClick)="preview()" />
     </div>
 
     <!-- A4 Canvas -->

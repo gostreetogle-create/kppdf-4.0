@@ -43,6 +43,10 @@
   margin-right: var(--space-1);
 }
 
+.dt-editor__toolbar-spacer {
+  flex: 1;
+}
+
 .dt-editor__footer {
   display: flex;
   gap: var(--space-3);

@@ -13,6 +13,7 @@ import { KpCardComponent } from '../../shared/ui/kp-card.component';
 import { KpToastComponent } from '../../shared/ui/kp-toast.component';
 import { KpDocCanvasComponent } from '../../shared/ui/kp-doc-canvas.component';
 import { KpDocTextEditorDialogComponent } from '../../shared/ui/kp-doc-text-editor-dialog.component';
+import { KpDocPreviewDialogComponent } from '../../shared/ui/kp-doc-preview-dialog.component';
 import { NotificationService } from '../../core/notification.service';
 import { DocumentTemplateService } from '../../core/document-template.service';
 import type { DocBlock, DocBlockType, DocumentTemplate } from '../../../../shared/types/index.js';
@@ -35,7 +36,7 @@ const DOC_TYPE_OPTIONS: SelectOption[] = [
     CommonModule, FormsModule,
     KpInputComponent, KpSelectComponent, KpButtonComponent,
     KpBreadcrumbComponent, KpCardComponent, KpToastComponent,
-    KpDocCanvasComponent, KpDocTextEditorDialogComponent,
+    KpDocCanvasComponent, KpDocTextEditorDialogComponent, KpDocPreviewDialogComponent,
   ],
   templateUrl: './document-template-editor.component.html',
   styleUrls: ['./document-template-editor.component.scss'],
@@ -139,6 +140,7 @@ export class DocumentTemplateEditorComponent implements OnInit {
   }
 
   textEditor = viewChild.required(KpDocTextEditorDialogComponent);
+  previewDialog = viewChild.required(KpDocPreviewDialogComponent);
 
   validate(): boolean {
     let valid = true;
@@ -179,6 +181,14 @@ export class DocumentTemplateEditorComponent implements OnInit {
     } finally {
       this.saving.set(false);
     }
+  }
+
+  preview() {
+    this.previewDialog().open(
+      this.templateName() || 'Без названия',
+      this.docType(),
+      this.blocks(),
+    );
   }
 
   cancel() {

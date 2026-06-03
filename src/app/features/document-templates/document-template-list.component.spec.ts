@@ -8,7 +8,6 @@ import { NotificationService } from '../../core/notification.service';
 import { ConfirmationService, MessageService } from 'primeng/api';
 
 describe('DocumentTemplateListComponent', () => {
-  let service: DocumentTemplateService;
   let notification: NotificationService;
   let confirmService: ConfirmationService;
 
@@ -24,7 +23,6 @@ describe('DocumentTemplateListComponent', () => {
       ],
     });
 
-    service = TestBed.inject(DocumentTemplateService);
     notification = TestBed.inject(NotificationService);
     confirmService = TestBed.inject(ConfirmationService);
   });
