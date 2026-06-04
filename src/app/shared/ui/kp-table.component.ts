@@ -100,11 +100,63 @@ export interface TableColumn {
   `,
   styles: [`
     .kp-table__actions-header { width: 140px; }
+
     .kp-table__actions {
       display: flex;
-      gap: 4px;
+      gap: 6px;
       white-space: nowrap;
     }
+
+    /* Кнопки действий — всегда видимый фон по severity */
+    .kp-table__actions ::ng-deep .p-button.p-button-text {
+      width: 32px;
+      height: 32px;
+      border-radius: var(--radius-md);
+      transition: background var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast);
+    }
+
+    /* secondary (редактировать) */
+    .kp-table__actions ::ng-deep .p-button.p-button-text.p-button-secondary {
+      color: var(--color-text-secondary);
+      background: var(--color-surface-alt);
+      border: 1px solid var(--color-border-light);
+    }
+    .kp-table__actions ::ng-deep .p-button.p-button-text.p-button-secondary:hover {
+      color: var(--color-primary);
+      background: var(--color-primary-subtle);
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-primary) 15%, transparent);
+      transform: scale(1.08);
+    }
+
+    /* info (клонировать) */
+    .kp-table__actions ::ng-deep .p-button.p-button-text.p-button-info {
+      color: var(--color-text-muted);
+      background: var(--color-surface-alt);
+      border: 1px solid var(--color-border-light);
+    }
+    .kp-table__actions ::ng-deep .p-button.p-button-text.p-button-info:hover {
+      color: var(--color-info);
+      background: var(--color-info-bg);
+      border-color: var(--color-info);
+      box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-info) 15%, transparent);
+      transform: scale(1.08);
+    }
+
+    /* danger (удалить) */
+    .kp-table__actions ::ng-deep .p-button.p-button-text.p-button-danger {
+      color: var(--color-text-muted);
+      background: var(--color-surface-alt);
+      border: 1px solid var(--color-border-light);
+    }
+    .kp-table__actions ::ng-deep .p-button.p-button-text.p-button-danger:hover {
+      color: var(--color-error);
+      background: var(--color-error-bg);
+      border-color: var(--color-error);
+      box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-error) 15%, transparent);
+      transform: scale(1.08);
+    }
+
     .kp-table__empty {
       text-align: center;
       padding: var(--space-8) !important;

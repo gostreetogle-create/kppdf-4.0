@@ -10,6 +10,7 @@ type BadgeSeverity = 'success' | 'info' | 'warn' | 'danger' | 'secondary' | 'con
   imports: [CommonModule, TagModule],
   template: `
     <p-tag
+      [icon]="icon()"
       [value]="value()"
       [severity]="severity()"
       [rounded]="rounded()"
@@ -20,6 +21,7 @@ type BadgeSeverity = 'success' | 'info' | 'warn' | 'danger' | 'secondary' | 'con
 })
 export class KpBadgeComponent {
   value = input('');
+  icon = input('');
   severity = input<BadgeSeverity>('info');
   rounded = input(false);
   styleClass = input('');

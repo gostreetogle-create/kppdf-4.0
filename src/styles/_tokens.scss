@@ -30,6 +30,9 @@
   --color-error: #dc2626;
   --color-error-bg: #fee2e2;
 
+  --color-info: #0ea5e9;
+  --color-info-bg: #e0f2fe;
+
   // === Градиенты ===
   --gradient-primary: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
   --gradient-sidebar: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
@@ -102,4 +105,7 @@
 
   --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(255, 255, 255, 0.05);
   --shadow-card-hover: 0 8px 24px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(37, 99, 235, 0.2);
+
+  --color-info: #38bdf8;
+  --color-info-bg: #0c2d48;
 }

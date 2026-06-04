@@ -1,11 +1,16 @@
-import { Component, input, model, ChangeDetectionStrategy } from '@angular/core';
+import { Component, input, model, inject, LOCALE_ID, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DatePickerModule } from 'primeng/datepicker';
+import { CommonModule, registerLocaleData } from '@angular/common';
+import localeRu from '@angular/common/locales/ru';
+
+registerLocaleData(localeRu);
 
 @Component({
   selector: 'kp-datepicker',
   standalone: true,
-  imports: [DatePickerModule, FormsModule],
+  imports: [DatePickerModule, FormsModule, CommonModule],
+  providers: [{ provide: LOCALE_ID, useValue: 'ru' }],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="kp-field">
@@ -14,6 +19,7 @@ import { DatePickerModule } from 'primeng/datepicker';
       }
       <p-datepicker
         [(ngModel)]="selectedDate"
+        locale="ru"
         [showIcon]="showIcon()"
         [iconDisplay]="iconDisplay()"
         [dateFormat]="dateFormat()"

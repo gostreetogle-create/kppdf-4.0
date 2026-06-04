@@ -15,6 +15,7 @@ import { CommonModule } from '@angular/common';
       [draggable]="draggable()"
       [resizable]="resizable()"
       [style]="{ width: width() }"
+      [contentStyle]="{ 'max-height': maxHeight(), 'overflow-y': 'auto' }"
       [breakpoints]="{ '600px': '90vw' }"
       (visibleChange)="visibleChange.emit($event)"
       (onHide)="dialogHide.emit()"
@@ -32,6 +33,7 @@ export class KpDialogComponent {
   draggable = input(false);
   resizable = input(false);
   width = input('500px');
+  maxHeight = input('70vh');
 
   readonly dialogHide = output<void>();
   readonly visibleChange = output<boolean>();

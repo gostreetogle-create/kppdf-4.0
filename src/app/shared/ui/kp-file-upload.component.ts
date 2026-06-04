@@ -1,5 +1,5 @@
 import { Component, input, output, ChangeDetectionStrategy } from '@angular/core';
-import { FileUploadModule, FileUploadEvent } from 'primeng/fileupload';
+import { FileUploadModule, FileUploadEvent, FileUploadErrorEvent } from 'primeng/fileupload';
 
 @Component({
   selector: 'kp-file-upload',
@@ -32,6 +32,19 @@ import { FileUploadModule, FileUploadEvent } from 'primeng/fileupload';
   styles: [`
     .kp-field { display: flex; flex-direction: column; gap: var(--space-2); }
     .kp-field__label { font-size: var(--font-size-sm); font-weight: var(--font-weight-semibold); color: var(--color-text-secondary); }
+
+    :host ::ng-deep .p-fileupload-content {
+      border: 2px dashed var(--color-border-light);
+      border-radius: var(--radius-lg);
+      background: var(--color-surface-alt);
+      transition: border-color var(--transition-fast), background var(--transition-fast);
+      padding: var(--space-6);
+      text-align: center;
+    }
+    :host ::ng-deep .p-fileupload-content.p-fileupload-highlight {
+      border-color: var(--color-primary);
+      background: var(--color-primary-subtle);
+    }
   `],
 })
 export class KpFileUploadComponent {
@@ -49,5 +62,5 @@ export class KpFileUploadComponent {
   mode = input<'basic' | 'advanced'>('advanced');
   styleClass = input('');
   fileUpload = output<FileUploadEvent>();
-  fileError = output<FileUploadEvent>();
+  fileError = output<FileUploadErrorEvent>();
 }

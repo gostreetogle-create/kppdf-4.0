@@ -27,6 +27,8 @@ export interface SelectOption {
         [placeholder]="placeholder()"
         [disabled]="disabled()"
         [showClear]="showClear()"
+        [filter]="filter()"
+        [filterBy]="filterBy()"
         [class.ng-invalid]="!!error()"
         [attr.aria-label]="label() || placeholder() || 'Выпадающий список'"
         [attr.aria-describedby]="error() ? inputId() + '-error' : null"
@@ -56,6 +58,8 @@ export class KpSelectComponent implements ControlValueAccessor {
   disabled = input(false);
   error = input('');
   showClear = input(false);
+  filter = input(false);
+  filterBy = input('label');
   inputId = input(`kp-select-${Math.random().toString(36).slice(2, 8)}`);
 
   value: unknown = null;

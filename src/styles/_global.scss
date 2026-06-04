@@ -50,6 +50,11 @@ a, button, input, select, textarea {
   transition: box-shadow var(--transition-normal), transform var(--transition-normal) !important;
 }
 
+.p-dialog-mask {
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
 .p-dialog {
   border-radius: var(--radius-xl) !important;
   box-shadow: var(--shadow-xl) !important;

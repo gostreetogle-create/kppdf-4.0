@@ -11,6 +11,10 @@ import { KpBadgeComponent } from '../../shared/ui/kp-badge.component';
 import { KpBreadcrumbComponent } from '../../shared/ui/kp-breadcrumb.component';
 import { KpToastComponent } from '../../shared/ui/kp-toast.component';
 import { KpConfirmDialogComponent } from '../../shared/ui/kp-confirm-dialog.component';
+import { KpAvatarComponent } from '../../shared/ui/kp-avatar.component';
+import { KpToggleComponent } from '../../shared/ui/kp-toggle.component';
+import { KpFileUploadComponent } from '../../shared/ui/kp-file-upload.component';
+import { KpDatepickerComponent } from '../../shared/ui/kp-datepicker.component';
 import { NotificationService } from '../../core/notification.service';
 import { ConfirmationService } from 'primeng/api';
 import { MenuItem } from 'primeng/api';
@@ -24,7 +28,9 @@ import { inject } from '@angular/core';
     KpButtonComponent, KpInputComponent, KpSelectComponent,
     KpCardComponent, KpTableComponent, KpDialogComponent,
     KpBadgeComponent, KpBreadcrumbComponent,
-    KpToastComponent, KpConfirmDialogComponent
+    KpToastComponent, KpConfirmDialogComponent,
+    KpAvatarComponent, KpToggleComponent,
+    KpFileUploadComponent, KpDatepickerComponent
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -79,12 +85,12 @@ import { inject } from '@angular/core';
           <span class="uikit__code">KP-IPT</span>
           Поле ввода &middot; <code>&lt;kp-input&gt;</code>
         </h2>
-        <p class="uikit__section-desc">Текст, число, пароль, email. С лейблом и без. С ошибкой.</p>
+        <p class="uikit__section-desc">Текст, число, пароль, email. С лейблом и без. С ошибкой. Кнопка очистки и переключатель видимости пароля.</p>
         <div class="uikit__demo uikit__demo--grid">
           <kp-input label="Имя" type="text" placeholder="Введите имя" />
           <kp-input label="Email" type="email" placeholder="email@example.com" />
           <kp-input label="Пароль" type="password" placeholder="••••••" />
-          <kp-input label="Количество" type="number" placeholder="0" />
+          <kp-input label="С очисткой" type="text" placeholder="Наберите текст..." [showClear]="true" />
           <kp-input label="С ошибкой" [error]="'Поле обязательно'" />
           <kp-input placeholder="Без лейбла" />
         </div>
@@ -98,10 +104,10 @@ import { inject } from '@angular/core';
           <span class="uikit__code">KP-SEL</span>
           Выпадающий список &middot; <code>&lt;kp-select&gt;</code>
         </h2>
-        <p class="uikit__section-desc">Выбор из списка, с поиском, очисткой. Поддержка ngModel.</p>
+        <p class="uikit__section-desc">Выбор из списка, с поиском, очисткой. Поддержка ngModel. Фильтрация для длинных списков.</p>
         <div class="uikit__demo uikit__demo--grid">
           <kp-select label="Статус" [options]="statusOptions" placeholder="Выберите статус" />
-          <kp-select label="Город" [options]="cityOptions" placeholder="Выберите город" [showClear]="true" />
+          <kp-select label="Город (с фильтром)" [options]="cityOptions" placeholder="Начните ввод..." [filter]="true" [showClear]="true" />
           <kp-select [options]="cityOptions" placeholder="Без лейбла" />
           <kp-select label="С ошибкой" [options]="statusOptions" [error]="'Выберите значение'" />
         </div>
@@ -115,13 +121,16 @@ import { inject } from '@angular/core';
           <span class="uikit__code">KP-CRD</span>
           Карточка &middot; <code>&lt;kp-card&gt;</code>
         </h2>
-        <p class="uikit__section-desc">Блок с заголовком и подзаголовком. Содержимое через ng-content.</p>
+        <p class="uikit__section-desc">Блок с заголовком и подзаголовком. Hover lift-эффект. Скелетон для загрузки.</p>
+        <div class="uikit__demo-row" style="margin-bottom:var(--space-4)">
+          <kp-toggle label="Показать скелетон" [(checked)]="cardLoading" />
+        </div>
         <div class="uikit__demo uikit__demo--grid">
-          <kp-card header="Заголовок карточки">
+          <kp-card header="Заголовок карточки" [loading]="cardLoading()">
             <p style="margin:0;color:var(--color-text-muted)">Содержимое карточки. Здесь может быть любой контент: текст, таблицы, формы.</p>
           </kp-card>
-          <kp-card header="С подзаголовком" subheader="Дополнительная информация">
-            <p style="margin:0;color:var(--color-text-muted)">Карточка с подзаголовком для контекста.</p>
+          <kp-card header="С подзаголовком" subheader="Дополнительная информация" [loading]="cardLoading()">
+            <p style="margin:0;color:var(--color-text-muted)">Карточка с подзаголовком для контекста. Наведи — увидишь lift.</p>
           </kp-card>
         </div>
       </section>
@@ -134,7 +143,7 @@ import { inject } from '@angular/core';
           <span class="uikit__code">KP-TBL</span>
           Таблица &middot; <code>&lt;kp-table&gt;</code>
         </h2>
-        <p class="uikit__section-desc">CRUD-таблица с пагинацией, сортировкой, поиском. Кнопки редактирования и удаления.</p>
+        <p class="uikit__section-desc">CRUD-таблица с пагинацией, сортировкой, поиском. Кнопки действий всегда видны — с фоном и hover-эффектом.</p>
         <div class="uikit__demo">
           <kp-table
             [data]="tableData()"
@@ -144,7 +153,9 @@ import { inject } from '@angular/core';
             [sortField]="'name'"
             [sortOrder]="1"
             [searchFields]="['name', 'client', 'status']"
+            [showClone]="true"
             (rowEdit)="onTableEdit($event)"
+            (rowClone)="onTableClone($event)"
             (rowDelete)="onTableDelete($event)"
           />
         </div>
@@ -158,7 +169,7 @@ import { inject } from '@angular/core';
           <span class="uikit__code">KP-DLG</span>
           Диалог &middot; <code>&lt;kp-dialog&gt;</code>
         </h2>
-        <p class="uikit__section-desc">Модальное окно. Настраиваемая ширина, перетаскивание, закрытие.</p>
+        <p class="uikit__section-desc">Модальное окно с backdrop-blur, maxHeight и прокруткой длинного контента.</p>
         <div class="uikit__demo">
           <kp-button label="Открыть диалог" icon="pi pi-window-maximize" (buttonClick)="dialogVisible.set(true)" />
           <kp-dialog
@@ -168,6 +179,8 @@ import { inject } from '@angular/core';
           >
             <p>Это содержимое диалога.</p>
             <p style="color:var(--color-text-muted)">Здесь можно разместить форму, текст или любой другой контент.</p>
+            <p style="color:var(--color-text-muted)">При длинном содержимом — автоматическая прокрутка (maxHeight: 70vh).</p>
+            <p style="color:var(--color-text-muted)">Фон за диалогом размыт (backdrop-filter: blur).</p>
             <div style="margin-top:var(--space-4);display:flex;gap:var(--space-2);justify-content:flex-end">
               <kp-button label="Закрыть" severity="secondary" (buttonClick)="dialogVisible.set(false)" />
               <kp-button label="Сохранить" (buttonClick)="dialogVisible.set(false)" />
@@ -184,7 +197,7 @@ import { inject } from '@angular/core';
           <span class="uikit__code">KP-BDG</span>
           Бейдж &middot; <code>&lt;kp-badge&gt;</code>
         </h2>
-        <p class="uikit__section-desc">Цветная метка статуса. Все severity: success, info, warn, danger, secondary, contrast.</p>
+        <p class="uikit__section-desc">Цветная метка статуса с поддержкой иконок. Все severity: success, info, warn, danger, secondary, contrast.</p>
         <div class="uikit__demo uikit__demo--row">
           <kp-badge value="Активен" severity="success" />
           <kp-badge value="В ожидании" severity="warn" />
@@ -192,7 +205,86 @@ import { inject } from '@angular/core';
           <kp-badge value="Инфо" severity="info" />
           <kp-badge value="Черновик" severity="secondary" />
           <kp-badge value="Контраст" severity="contrast" />
+        </div>
+        <div class="uikit__demo-row" style="margin-top:var(--space-4)">
+          <kp-badge value="Активен" icon="pi pi-check" severity="success" />
+          <kp-badge value="В ожидании" icon="pi pi-clock" severity="warn" />
+          <kp-badge value="Ошибка" icon="pi pi-times" severity="danger" />
+          <kp-badge value="Инфо" icon="pi pi-info-circle" severity="info" />
           <kp-badge value="Rounded" severity="success" [rounded]="true" />
+        </div>
+      </section>
+
+      <!-- ============================================ -->
+      <!-- KP-AVT: Аватар -->
+      <!-- ============================================ -->
+      <section class="uikit__section" id="kp-avatar">
+        <h2 class="uikit__section-title">
+          <span class="uikit__code">KP-AVT</span>
+          Аватар &middot; <code>&lt;kp-avatar&gt;</code>
+        </h2>
+        <p class="uikit__section-desc">Аватар с инициалами, иконкой или фото. Индикатор статуса (онлайн/офлайн/занят/отошёл).</p>
+        <div class="uikit__demo uikit__demo--row">
+          <kp-avatar label="АИ" status="online" />
+          <kp-avatar label="МП" status="offline" />
+          <kp-avatar icon="pi pi-user" status="busy" size="large" />
+          <kp-avatar icon="pi pi-user" status="away" size="large" />
+          <kp-avatar label="АИ" size="xlarge" status="online" />
+          <kp-avatar icon="pi pi-user" />
+        </div>
+      </section>
+
+      <!-- ============================================ -->
+      <!-- KP-TGL: Переключатель -->
+      <!-- ============================================ -->
+      <section class="uikit__section" id="kp-toggle">
+        <h2 class="uikit__section-title">
+          <span class="uikit__code">KP-TGL</span>
+          Переключатель &middot; <code>&lt;kp-toggle&gt;</code>
+        </h2>
+        <p class="uikit__section-desc">Toggle switch с тремя размерами: small, normal, large.</p>
+        <div class="uikit__demo uikit__demo--row">
+          <kp-toggle label="Small" toggleSize="small" />
+          <kp-toggle label="Normal" />
+          <kp-toggle label="Large" toggleSize="large" />
+          <kp-toggle label="Disabled" [disabled]="true" />
+        </div>
+      </section>
+
+      <!-- ============================================ -->
+      <!-- KP-DAT: Выбор даты -->
+      <!-- ============================================ -->
+      <section class="uikit__section" id="kp-datepicker">
+        <h2 class="uikit__section-title">
+          <span class="uikit__code">KP-DAT</span>
+          Выбор даты &middot; <code>&lt;kp-datepicker&gt;</code>
+        </h2>
+        <p class="uikit__section-desc">Календарь с русской локализацией (месяцы и дни на русском).</p>
+        <div class="uikit__demo uikit__demo--grid">
+          <kp-datepicker label="Дата" placeholder="дд.мм.гг" [showIcon]="true" />
+          <kp-datepicker label="Дата и время" placeholder="дд.мм.гг" [showTime]="true" [showIcon]="true" />
+          <kp-datepicker label="Disabled" [disabled]="true" />
+        </div>
+      </section>
+
+      <!-- ============================================ -->
+      <!-- KP-UPL: Загрузка файлов -->
+      <!-- ============================================ -->
+      <section class="uikit__section" id="kp-file-upload">
+        <h2 class="uikit__section-title">
+          <span class="uikit__code">KP-UPL</span>
+          Загрузка файлов &middot; <code>&lt;kp-file-upload&gt;</code>
+        </h2>
+        <p class="uikit__section-desc">Drag-and-drop зона с подсветкой при наведении файла.</p>
+        <div class="uikit__demo">
+          <kp-file-upload
+            label="Загрузите файл"
+            accept=".pdf,.docx,.xlsx"
+            chooseLabel="Выбрать файл"
+            uploadLabel="Загрузить"
+            cancelLabel="Отмена"
+            mode="basic"
+          />
         </div>
       </section>
 
@@ -204,7 +296,7 @@ import { inject } from '@angular/core';
           <span class="uikit__code">KP-BRD</span>
           Хлебные крошки &middot; <code>&lt;kp-breadcrumb&gt;</code>
         </h2>
-        <p class="uikit__section-desc">Навигационный путь. Принимает массив MenuItem.</p>
+        <p class="uikit__section-desc">Навигационный путь с кастомным разделителем ›.</p>
         <div class="uikit__demo">
           <kp-breadcrumb [items]="breadcrumbItems" />
         </div>
@@ -218,7 +310,7 @@ import { inject } from '@angular/core';
           <span class="uikit__code">KP-TST</span>
           Уведомления &middot; <code>&lt;kp-toast&gt;</code> + <code>NotificationService</code>
         </h2>
-        <p class="uikit__section-desc">Всплывающие сообщения. 4 типа: success, info, warn, error.</p>
+        <p class="uikit__section-desc">Всплывающие сообщения с прогресс-баром. 4 типа: success, info, warn, error.</p>
         <div class="uikit__demo uikit__demo--row">
           <kp-button label="Успешно" severity="success" (buttonClick)="notify.success('Операция выполнена успешно')" />
           <kp-button label="Инфо" severity="info" (buttonClick)="notify.info('Информационное сообщение')" />
@@ -343,6 +435,7 @@ export class UiKitComponent {
   private confirmationService = inject(ConfirmationService);
 
   dialogVisible = signal(false);
+  cardLoading = signal(false);
 
   // KP-SEL: sample options
   statusOptions: SelectOption[] = [
@@ -357,7 +450,12 @@ export class UiKitComponent {
     { label: 'Санкт-Петербург', value: 'spb' },
     { label: 'Новосибирск', value: 'nsk' },
     { label: 'Екатеринбург', value: 'ekb' },
-    { label: 'Казань', value: 'kzn' }
+    { label: 'Казань', value: 'kzn' },
+    { label: 'Краснодар', value: 'krd' },
+    { label: 'Владивосток', value: 'vlv' },
+    { label: 'Самара', value: 'sam' },
+    { label: 'Ростов-на-Дону', value: 'rnd' },
+    { label: 'Уфа', value: 'ufa' }
   ];
 
   // KP-TBL: sample data
@@ -393,6 +491,10 @@ export class UiKitComponent {
 
   onTableEdit(row: unknown) {
     this.notify.info(`Редактирование: ${(row as { name: string }).name}`);
+  }
+
+  onTableClone(row: unknown) {
+    this.notify.success(`Клонирование: ${(row as { name: string }).name}`);
   }
 
   onTableDelete(row: unknown) {
