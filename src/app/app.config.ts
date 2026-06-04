@@ -9,6 +9,7 @@ import Aura from '@primeuix/themes/aura';
 import { routes } from './app.routes';
 import { GlobalErrorHandler } from './core/global-error-handler';
 import { authInterceptor } from './core/auth.interceptor';
+import { API_URL } from './core/api-url.token';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -24,6 +25,7 @@ export const appConfig: ApplicationConfig = {
         preset: Aura,
         options: { darkModeSelector: '[data-theme="dark"]' }
       }
-    })
+    }),
+    { provide: API_URL, useValue: '/api/v1' }
   ]
 };

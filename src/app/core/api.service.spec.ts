@@ -3,6 +3,7 @@ import { TestBed } from '@angular/core/testing';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { ApiService } from './api.service';
+import { API_URL } from './api-url.token';
 
 describe('ApiService', () => {
   let service: ApiService;
@@ -10,7 +11,7 @@ describe('ApiService', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [provideHttpClient(), provideHttpClientTesting()],
+      providers: [provideHttpClient(), provideHttpClientTesting(), { provide: API_URL, useValue: '/api/v1' }],
     });
     service = TestBed.inject(ApiService);
     httpMock = TestBed.inject(HttpTestingController);
@@ -20,8 +21,11 @@ describe('ApiService', () => {
     expect(service).toBeTruthy();
   });
 
-  it('baseUrl по умолчанию /api/v1', () => {
-    expect(service.baseUrl).toBe('/api/v1');
+  it('использует API_URL для построения запросов', () => {
+    service.get('/users').subscribe();
+    const req = httpMock.expectOne('/api/v1/users');
+    expect(req.request.url).toBe('/api/v1/users');
+    req.flush({ success: true, data: [] });
   });
 
   describe('get()', () => {
