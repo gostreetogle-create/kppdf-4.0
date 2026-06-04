@@ -6,6 +6,26 @@
 
 ---
 
+## [1.7.0] — 2026-06-04 — Фазы 2, 3, 6 (Архитектура, Производительность, Бэкенд)
+
+### Added
+- **Фаза 2.4:** `api-url.token.ts` — `API_URL` InjectionToken, внедрён в `ApiService` вместо хардкода
+
+### Verified (без изменений — всё уже было на месте)
+- **Фаза 2.1:** 31/31 компонентов Standalone, 0 NgModules ✅
+- **Фаза 2.2:** `authInterceptor` — функциональный `HttpInterceptorFn` ✅
+- **Фаза 2.3:** `provideHttpClient(withInterceptors([...]))` ✅
+- **Фаза 3.1:** 30/30 компонентов с `OnPush` ChangeDetection ✅
+- **Фаза 3.2:** 0 `*ngFor`, 5 `@for` с `track` ✅
+- **Фаза 3.3:** 0 кастомных pipes ✅
+- **Фаза 3.4:** 10/10 маршрутов с `loadComponent()` (lazy) ✅
+- **Фаза 3.5:** 0 `<img>` в шаблонах (не требуется) ✅
+- **Фаза 6.1:** Pino logger с `pino-pretty`, `logger.child()` ✅
+- **Фаза 6.2:** Swagger `/api/docs`, `crudPaths()` helper ✅
+- **Фаза 6.3:** Dockerfile с `CMD ["npx", "tsx", "src/index.ts"]` ✅
+
+---
+
 ## [1.6.0] — 2026-06-04 — База знаний, ChromaDB, безопасность
 
 ### Added
