@@ -47,13 +47,14 @@
       <kp-button
         [text]="true"
         size="small"
+        [label]="sidebarVisible() ? 'Свернуть меню' : 'Развернуть меню'"
         [icon]="sidebarVisible() ? 'pi pi-angle-left' : 'pi pi-angle-right'"
         styleClass="sidebar__toggle"
         (buttonClick)="toggleSidebar()"
       />
     </div>
 
-    <nav class="sidebar__nav">
+    <nav class="sidebar__nav" role="navigation" aria-label="Главное меню">
       @for (item of navItems; track item.label) {
         @if (item.separator) {
           <div class="nav__divider"></div>
@@ -70,6 +71,7 @@
                     [routerLink]="child.routerLink"
                     routerLinkActive="nav__item--active"
                     class="nav__item nav__item--child"
+                    [attr.aria-label]="child.label"
                   >
                     @if (child.icon) { <i [class]="child.icon + ' nav__icon'"></i> }
                     <span class="nav__label">{{ child.label }}</span>
@@ -85,6 +87,7 @@
             class="nav__item"
             [pTooltip]="!sidebarVisible() ? item.label : ''"
             tooltipPosition="right"
+            [attr.aria-label]="item.label"
           >
             <i [class]="item.icon + ' nav__icon'"></i>
             @if (sidebarVisible()) { <span class="nav__label">{{ item.label }}</span> }
@@ -97,6 +100,7 @@
       <kp-button
         [text]="true"
         size="small"
+        [label]="isDark() ? 'Светлая тема' : 'Тёмная тема'"
         [icon]="isDark() ? 'pi pi-sun' : 'pi pi-moon'"
         styleClass="sidebar__theme-btn"
         [pTooltip]="isDark() ? 'Светлая тема' : 'Тёмная тема'"
@@ -111,13 +115,14 @@
     <!-- Top bar -->
     <header class="topbar">
       <div class="topbar__left">
-        <kp-button
-          [text]="true"
-          size="small"
-          icon="pi pi-bars"
-          styleClass="topbar__mobile-menu"
-          (buttonClick)="toggleMobileSidebar()"
-        />
+      <kp-button
+        [text]="true"
+        size="small"
+        label="Меню"
+        icon="pi pi-bars"
+        styleClass="topbar__mobile-menu"
+        (buttonClick)="toggleMobileSidebar()"
+      />
       </div>
 
       <div class="topbar__right">

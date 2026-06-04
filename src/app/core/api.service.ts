@@ -5,7 +5,7 @@ import type { ApiResponse, PaginatedResponse } from '../../../shared/types/index
 import { API_URL } from './api-url.token.js';
 
 const DEFAULT_TIMEOUT = 30_000;
-const DEFAULT_RETRIES = 0;
+const DEFAULT_RETRIES = 1;
 
 @Injectable({ providedIn: 'root' })
 export class ApiService {
