@@ -14,6 +14,9 @@ dist/
 tmp/
 out-tsc/
 
+# Books (heavy files, not for git)
+angular/
+
 # Backend
 backend/dist/
 backend/node_modules/
@@ -33,6 +36,9 @@ backend/node_modules/
 .DS_Store
 Thumbs.db
 *.log
+
+# Knowledge base cache (chromadb binary files)
+база-знаний/chroma_db/
 
 # Uploads (user data!)
 backend/uploads/*

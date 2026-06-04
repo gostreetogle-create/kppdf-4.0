@@ -28,10 +28,10 @@ app.use(cors({ origin: env.CORS_ORIGIN, credentials: true }));
 app.use(cookieParser());
 app.use(express.json({ limit: '1mb' }));
 
-// Rate limiting for auth routes
+// Rate limiting for auth routes (5 попыток за 15 минут)
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 минут
-  max: 10,                   // не больше 10 запросов за окно
+  max: 5,                   // не больше 5 запросов за окно
   standardHeaders: true,
   legacyHeaders: false,
   message: { success: false, data: null, message: 'Слишком много запросов. Попробуйте позже.' },
@@ -40,8 +40,9 @@ const authLimiter = rateLimit({
 // Static files (uploads)
 app.use('/uploads', express.static(path.resolve(__dirname, '../uploads')));
 
-// Routes
-app.use('/api/v1/auth', authLimiter, authRoutes);
+// Routes — rate-limit только на логин
+app.use('/api/v1/auth/login', authLimiter);
+app.use('/api/v1/auth', authRoutes);
 
 // Swagger docs
 setupSwagger(app);

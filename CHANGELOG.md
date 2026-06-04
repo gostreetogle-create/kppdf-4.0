@@ -6,6 +6,24 @@
 
 ---
 
+## [1.6.0] — 2026-06-04 — База знаний, ChromaDB, безопасность
+
+### Added
+- **Извлечение знаний из книг:** `scripts/extract_books.mjs` — Node.js-скрипт извлечения знаний из 35 Angular/TypeScript/Node.js книг (EPUB/PDF/HTML). Создано **35 структурированных .md файлов** в `база-знаний/извлечённое/`
+- **ChromaDB индексация:** `scripts/seed_chromadb.py` — Python-скрипт векторизации знаний. **2 560 документов** в **35 коллекциях** (по одной на книгу). Установлен Python 3.12.3 embeddable (`C:/python312/`)
+- **Чек-лист улучшений:** `CHECKLIST_IMPROVEMENTS_v2.md` — **35 пунктов** по 9 фазам на основе анализа книг (Ninja Squad 2026, Vardanyan 2025, etc.)
+- **Python:** Установлен Python 3.12.3 embeddable (портативный, без прав админа) + chromadb 1.5.9
+
+### Changed
+- **Rate-limit:** `10→5 запросов/15 мин`, применяется только к `/api/v1/auth/login` (не на весь `/auth`)
+- **.gitignore:** добавлены `angular/` (книги), `база-знаний/chroma_db/` (бинарные файлы ChromaDB)
+
+### Fixed
+- **seed_chromadb.py:** HNSW index error на >2000 документов → разбивка на коллекции по книгам (~70 док/коллекцию). Путь к chroma_db через `Path.resolve()`
+- **seed_chromadb.py:** имя коллекции экранирует недопустимые символы (кириллица, пробелы)
+
+---
+
 ## [0.1.0] — 2026-06-03
 
 ### Added
