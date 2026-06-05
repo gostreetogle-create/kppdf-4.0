@@ -1,6 +1,7 @@
 import { Component, input, output, ChangeDetectionStrategy } from '@angular/core';
 import { ButtonModule } from 'primeng/button';
 import { TooltipModule } from 'primeng/tooltip';
+import { LucideDynamicIcon } from '@lucide/angular';
 
 type ButtonSeverity = 'primary' | 'secondary' | 'success' | 'danger' | 'warn' | 'info' | 'contrast';
 type ButtonSize = 'small' | 'large';
@@ -8,11 +9,11 @@ type ButtonSize = 'small' | 'large';
 @Component({
   selector: 'kp-button',
   standalone: true,
-  imports: [ButtonModule, TooltipModule],
+  imports: [ButtonModule, TooltipModule, LucideDynamicIcon],
   template: `
     <p-button
       [label]="label()"
-      [icon]="icon()"
+      [icon]="lucideIcon() ? '' : icon()"
       [iconPos]="iconPos()"
       [severity]="severity()"
       [size]="size()"
@@ -28,13 +29,26 @@ type ButtonSize = 'small' | 'large';
       [tooltipPosition]="tooltipPosition()"
       [attr.aria-label]="label() || pTooltip() || 'Кнопка'"
       (onClick)="buttonClick.emit($event)"
-    />
+    >
+      @if (lucideIcon()) {
+        <ng-template pTemplate="icon">
+          <svg [lucideIcon]="lucideIcon()" class="kp-btn__lucide"></svg>
+        </ng-template>
+      }
+    </p-button>
   `,
+  styles: [`
+    .kp-btn__lucide {
+      width: 1rem;
+      height: 1rem;
+    }
+  `],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class KpButtonComponent {
   label = input('');
   icon = input('');
+  lucideIcon = input('');
   iconPos = input<'left' | 'right' | 'top' | 'bottom'>('left');
   severity = input<ButtonSeverity>('primary');
   size = input<ButtonSize>('small');

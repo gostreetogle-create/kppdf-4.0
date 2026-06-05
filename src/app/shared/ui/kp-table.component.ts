@@ -64,7 +64,7 @@ export interface TableColumn {
             <td class="kp-table__actions">
               @if (showView()) {
                 <kp-button
-                  icon="pi pi-eye"
+                  lucideIcon="eye"
                   severity="info"
                   [text]="true"
                   [rounded]="true"
@@ -74,7 +74,7 @@ export interface TableColumn {
                 />
               }
               <kp-button
-                icon="pi pi-pencil"
+                lucideIcon="pencil"
                 severity="secondary"
                 [text]="true"
                 [rounded]="true"
@@ -84,7 +84,7 @@ export interface TableColumn {
               />
               @if (showClone()) {
                 <kp-button
-                  icon="pi pi-copy"
+                  lucideIcon="copy"
                   severity="info"
                   [text]="true"
                   [rounded]="true"
@@ -94,7 +94,7 @@ export interface TableColumn {
                 />
               }
               <kp-button
-                icon="pi pi-trash"
+                lucideIcon="trash-2"
                 severity="danger"
                 [text]="true"
                 [rounded]="true"

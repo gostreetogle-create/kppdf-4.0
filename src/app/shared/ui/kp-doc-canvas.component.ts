@@ -1,6 +1,7 @@
 import { Component, input, output, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { CdkDragDrop, DragDropModule } from '@angular/cdk/drag-drop';
+import { LucideDynamicIcon } from '@lucide/angular';
 import type { DocBlock } from '../../../../shared/types/index.js';
 import { KpDocBlockTextComponent } from './kp-doc-block-text.component.js';
 import { KpDocBlockTableComponent } from './kp-doc-block-table.component.js';
@@ -8,9 +9,9 @@ import { KpDocBlockSeparatorComponent } from './kp-doc-block-separator.component
 import { KpButtonComponent } from './kp-button.component.js';
 
 const BLOCK_TYPE_ICONS: Record<string, string> = {
-  text: 'pi pi-align-left',
-  table: 'pi pi-table',
-  separator: 'pi pi-minus',
+  text: 'align-left',
+  table: 'table',
+  separator: 'minus',
 };
 
 const BLOCK_TYPE_LABELS: Record<string, string> = {
@@ -23,7 +24,7 @@ const BLOCK_TYPE_LABELS: Record<string, string> = {
   selector: 'kp-doc-canvas',
   standalone: true,
   imports: [
-    CommonModule, DragDropModule,
+    CommonModule, DragDropModule, LucideDynamicIcon,
     KpDocBlockTextComponent, KpDocBlockTableComponent,
     KpDocBlockSeparatorComponent, KpButtonComponent,
   ],
@@ -55,7 +56,7 @@ const BLOCK_TYPE_LABELS: Record<string, string> = {
               <!-- Кастомный превью — компактная плашка с иконкой и названием -->
               <ng-template cdkDragPreview>
                 <div class="canvas__drag-preview">
-                  <i [class]="getBlockIcon(block.type)"></i>
+                  <svg [lucideIcon]="getBlockIcon(block.type)" class="canvas__drag-preview-icon"></svg>
                   <span>{{ getBlockLabel(block) }}</span>
                 </div>
               </ng-template>
@@ -63,13 +64,13 @@ const BLOCK_TYPE_LABELS: Record<string, string> = {
               <!-- Кастомный placeholder — видимая пунктирная зона -->
               <ng-template cdkDragPlaceholder>
                 <div class="canvas__drag-placeholder">
-                  <i class="pi pi-arrows-v canvas__drag-placeholder-icon"></i>
+                  <svg lucideIcon="arrow-up-down" class="canvas__drag-placeholder-icon"></svg>
                 </div>
               </ng-template>
 
               <!-- Drag handle (visible on hover) -->
               <div class="canvas__drag-handle">
-                <i class="pi pi-grip-vertical"></i>
+                <svg lucideIcon="grip-vertical"></svg>
               </div>
 
               @switch (block.type) {
@@ -87,7 +88,7 @@ const BLOCK_TYPE_LABELS: Record<string, string> = {
               @if (editable()) {
                 <div class="canvas__block-actions">
                   <kp-button
-                    icon="pi pi-chevron-up"
+                    lucideIcon="chevron-up"
                     size="small"
                     [text]="true"
                     [rounded]="true"
@@ -97,7 +98,7 @@ const BLOCK_TYPE_LABELS: Record<string, string> = {
                     (buttonClick)="blockMoveUp.emit(block.id)"
                   />
                   <kp-button
-                    icon="pi pi-chevron-down"
+                    lucideIcon="chevron-down"
                     size="small"
                     [text]="true"
                     [rounded]="true"
@@ -107,7 +108,7 @@ const BLOCK_TYPE_LABELS: Record<string, string> = {
                     (buttonClick)="blockMoveDown.emit(block.id)"
                   />
                   <kp-button
-                    icon="pi pi-pencil"
+                    lucideIcon="pencil"
                     size="small"
                     [text]="true"
                     [rounded]="true"
@@ -117,7 +118,7 @@ const BLOCK_TYPE_LABELS: Record<string, string> = {
                     (buttonClick)="blockEdit.emit(block)"
                   />
                   <kp-button
-                    icon="pi pi-trash"
+                    lucideIcon="trash-2"
                     size="small"
                     [text]="true"
                     [rounded]="true"
@@ -188,8 +189,9 @@ const BLOCK_TYPE_LABELS: Record<string, string> = {
       pointer-events: none;
       transform: scale(1.03);
     }
-    .canvas__drag-preview i {
-      font-size: 1rem;
+    .canvas__drag-preview-icon {
+      width: 1rem;
+      height: 1rem;
       color: var(--color-primary);
     }
 
@@ -205,7 +207,8 @@ const BLOCK_TYPE_LABELS: Record<string, string> = {
       animation: canvas-placeholder-pulse 1.2s ease-in-out infinite;
     }
     .canvas__drag-placeholder-icon {
-      font-size: 1.25rem;
+      width: 1.25rem;
+      height: 1.25rem;
       color: var(--color-primary);
       opacity: 0.6;
     }
@@ -299,8 +302,10 @@ export class KpDocCanvasComponent {
   blockMoveDown = output<string>();
   blocksReorder = output<{ previousIndex: number; currentIndex: number }>();
 
+  private fallbackIcon = 'box';
+
   getBlockIcon(type: string): string {
-    return BLOCK_TYPE_ICONS[type] || 'pi pi-box';
+    return BLOCK_TYPE_ICONS[type] || this.fallbackIcon;
   }
 
   getBlockLabel(block: DocBlock): string {

@@ -4,6 +4,12 @@ import { provideAnimationsAsync } from '@angular/platform-browser/animations/asy
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { providePrimeNG } from 'primeng/config';
 import { MessageService, ConfirmationService } from 'primeng/api';
+import {
+  provideLucideIcons,
+  LucidePencil, LucideTrash2, LucideEye, LucideCopy, LucideGripVertical,
+  LucideChevronUp, LucideChevronDown, LucideAlignLeft, LucideTable, LucideMinus,
+  LucideArrowUpDown, LucideBox,
+} from '@lucide/angular';
 import Aura from '@primeuix/themes/aura';
 
 import { routes } from './app.routes';
@@ -26,6 +32,11 @@ export const appConfig: ApplicationConfig = {
         options: { darkModeSelector: '[data-theme="dark"]' }
       }
     }),
-    { provide: API_URL, useValue: '/api/v1' }
+    { provide: API_URL, useValue: '/api/v1' },
+    provideLucideIcons(
+      LucidePencil, LucideTrash2, LucideEye, LucideCopy, LucideGripVertical,
+      LucideChevronUp, LucideChevronDown, LucideAlignLeft, LucideTable, LucideMinus,
+      LucideArrowUpDown, LucideBox,
+    ),
   ]
 };
