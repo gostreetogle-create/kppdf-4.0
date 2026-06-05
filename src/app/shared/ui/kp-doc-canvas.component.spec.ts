@@ -59,8 +59,7 @@ describe('KpDocCanvasComponent', () => {
       expect(comp.blockSelect).toBeDefined();
       expect(comp.blockEdit).toBeDefined();
       expect(comp.blockRemove).toBeDefined();
-      expect(comp.blockMoveUp).toBeDefined();
-      expect(comp.blockMoveDown).toBeDefined();
+      expect(comp.blocksReorder).toBeDefined();
     });
   });
 });

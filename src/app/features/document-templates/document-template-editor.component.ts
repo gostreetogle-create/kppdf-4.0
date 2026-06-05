@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { MenuItem } from 'primeng/api';
 import { firstValueFrom } from 'rxjs';
+import { DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
 
 import { KpInputComponent } from '../../shared/ui/kp-input.component';
 import { KpSelectComponent, SelectOption } from '../../shared/ui/kp-select.component';
@@ -33,7 +34,7 @@ const DOC_TYPE_OPTIONS: SelectOption[] = [
   selector: 'app-document-template-editor',
   standalone: true,
   imports: [
-    CommonModule, FormsModule,
+    CommonModule, FormsModule, DragDropModule,
     KpInputComponent, KpSelectComponent, KpButtonComponent,
     KpBreadcrumbComponent, KpCardComponent, KpToastComponent,
     KpDocCanvasComponent, KpDocTextEditorDialogComponent, KpDocPreviewDialogComponent,
@@ -109,20 +110,11 @@ export class DocumentTemplateEditorComponent implements OnInit {
     if (this.selectedBlockId() === blockId) this.selectedBlockId.set('');
   }
 
-  moveBlockUp(index: number) {
-    if (index === 0) return;
+  /** Drag-and-drop переупорядочивание блоков */
+  onBlocksReorder(event: { previousIndex: number; currentIndex: number }) {
     this.blocks.update(b => {
       const arr = [...b];
-      [arr[index - 1], arr[index]] = [arr[index], arr[index - 1]];
-      return arr;
-    });
-  }
-
-  moveBlockDown(index: number) {
-    if (index >= this.blocks().length - 1) return;
-    this.blocks.update(b => {
-      const arr = [...b];
-      [arr[index], arr[index + 1]] = [arr[index + 1], arr[index]];
+      moveItemInArray(arr, event.previousIndex, event.currentIndex);
       return arr;
     });
   }

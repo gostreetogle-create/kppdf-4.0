@@ -1,4 +1,4 @@
-import { Component, input, model, inject, LOCALE_ID, ChangeDetectionStrategy } from '@angular/core';
+import { Component, input, model, LOCALE_ID, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DatePickerModule } from 'primeng/datepicker';
 import { CommonModule, registerLocaleData } from '@angular/common';

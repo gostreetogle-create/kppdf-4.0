@@ -1,5 +1,5 @@
 .tt-editor {
-  max-width: 900px;
+  max-width: 800px;
 }
 
 .tt-editor__header {
@@ -23,6 +23,7 @@
   display: flex;
   gap: var(--space-4);
   flex-wrap: wrap;
+  align-items: flex-end;
 }
 
 .tt-editor__columns {
@@ -43,16 +44,71 @@
   margin: 0;
 }
 
+.tt-editor__columns-header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.tt-editor__columns-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
 .tt-editor__column-card {
   background: var(--color-surface);
   border: 1px solid var(--color-border-light);
   border-radius: var(--radius-md);
   padding: var(--space-3);
-  margin-bottom: var(--space-2);
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  transition: box-shadow var(--transition-fast), border-color var(--transition-fast);
+  cursor: default;
 }
 
 .tt-editor__column-card--error {
   border-color: var(--color-error);
+}
+
+/* CDK Drag styles */
+.tt-editor__column-card.cdk-drag-preview {
+  box-shadow: var(--shadow-xl);
+  border-color: var(--color-primary);
+  background: var(--color-surface);
+  border-radius: var(--radius-md);
+  opacity: 0.95;
+}
+
+.tt-editor__column-card.cdk-drag-placeholder {
+  opacity: 0.35;
+  border-style: dashed;
+  border-color: var(--color-primary-light);
+  background: var(--color-primary-subtle);
+}
+
+.cdk-drop-list-dragging .tt-editor__column-card:not(.cdk-drag-placeholder) {
+  transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
+}
+
+.tt-editor__drag-handle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-top: var(--space-5);
+  color: var(--color-text-muted);
+  cursor: grab;
+  flex-shrink: 0;
+  transition: color var(--transition-fast);
+
+  &:hover {
+    color: var(--color-primary);
+  }
+
+  i {
+    font-size: 1rem;
+  }
 }
 
 .tt-editor__column-row {
@@ -60,6 +116,8 @@
   align-items: flex-start;
   gap: var(--space-3);
   flex-wrap: wrap;
+  flex: 1;
+  min-width: 0;
 }
 
 .tt-editor__column-select {
@@ -105,4 +163,42 @@
   display: flex;
   justify-content: center;
   padding: var(--space-12);
+}
+
+/* === Предпросмотр таблицы === */
+.tt-editor__preview-wrap {
+  overflow-x: auto;
+  margin-bottom: var(--space-4);
+}
+
+.tt-editor__preview-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-size-sm);
+}
+
+.tt-editor__preview-table th {
+  background: var(--color-surface-alt);
+  border: 1px solid var(--color-border);
+  padding: var(--space-2) var(--space-3);
+  text-align: left;
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+  white-space: nowrap;
+}
+
+.tt-editor__preview-table td {
+  border: 1px solid var(--color-border-light);
+  padding: var(--space-2) var(--space-3);
+  color: var(--color-text-secondary);
+}
+
+.tt-editor__preview-cell {
+  color: var(--color-text-muted);
+  font-style: italic;
+}
+
+.tt-editor__preview-footer {
+  display: flex;
+  justify-content: flex-end;
 }

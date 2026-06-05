@@ -112,44 +112,45 @@ describe('DocumentTemplateEditorComponent', () => {
     expect(c.selectedBlockId()).toBe('');
   });
 
-  it('moveBlockUp перемещает блок вверх', () => {
+  it('onBlocksReorder перемещает блок вверх', () => {
     const c = createComponent();
     c.addBlock('text');
     c.addBlock('separator');
     const first = c.blocks()[0];
     const second = c.blocks()[1];
-    c.moveBlockUp(1);
+    c.onBlocksReorder({ previousIndex: 1, currentIndex: 0 });
     expect(c.blocks()[0]).toEqual(second);
     expect(c.blocks()[1]).toEqual(first);
   });
 
-  it('moveBlockUp не делает ничего для index=0', () => {
+  it('onBlocksReorder не делает ничего для одинаковых индексов', () => {
     const c = createComponent();
     c.addBlock('text');
     c.addBlock('separator');
     const snapshot = [...c.blocks()];
-    c.moveBlockUp(0);
+    c.onBlocksReorder({ previousIndex: 0, currentIndex: 0 });
     expect(c.blocks()).toEqual(snapshot);
   });
 
-  it('moveBlockDown перемещает блок вниз', () => {
+  it('onBlocksReorder перемещает блок вниз', () => {
     const c = createComponent();
     c.addBlock('text');
     c.addBlock('separator');
     const first = c.blocks()[0];
     const second = c.blocks()[1];
-    c.moveBlockDown(0);
+    c.onBlocksReorder({ previousIndex: 0, currentIndex: 1 });
     expect(c.blocks()[0]).toEqual(second);
     expect(c.blocks()[1]).toEqual(first);
   });
 
-  it('moveBlockDown не делает ничего для последнего', () => {
+  it('onBlocksReorder корректно для последнего элемента', () => {
     const c = createComponent();
     c.addBlock('text');
     c.addBlock('separator');
-    const snapshot = [...c.blocks()];
-    c.moveBlockDown(1);
-    expect(c.blocks()).toEqual(snapshot);
+    c.addBlock('text');
+    // Перемещаем последний (index 2) в середину (index 1)
+    c.onBlocksReorder({ previousIndex: 2, currentIndex: 1 });
+    expect(c.blocks().length).toBe(3);
   });
 
   it('validate возвращает false если имя пустое', () => {

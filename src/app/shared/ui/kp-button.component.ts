@@ -1,5 +1,6 @@
 import { Component, input, output, ChangeDetectionStrategy } from '@angular/core';
 import { ButtonModule } from 'primeng/button';
+import { TooltipModule } from 'primeng/tooltip';
 
 type ButtonSeverity = 'primary' | 'secondary' | 'success' | 'danger' | 'warn' | 'info' | 'contrast';
 type ButtonSize = 'small' | 'large';
@@ -7,7 +8,7 @@ type ButtonSize = 'small' | 'large';
 @Component({
   selector: 'kp-button',
   standalone: true,
-  imports: [ButtonModule],
+  imports: [ButtonModule, TooltipModule],
   template: `
     <p-button
       [label]="label()"
@@ -23,7 +24,9 @@ type ButtonSize = 'small' | 'large';
       [loading]="loading()"
       [disabled]="disabled()"
       [styleClass]="styleClass()"
-      [attr.aria-label]="label() || 'Кнопка'"
+      [pTooltip]="pTooltip()"
+      [tooltipPosition]="tooltipPosition()"
+      [attr.aria-label]="label() || pTooltip() || 'Кнопка'"
       (onClick)="buttonClick.emit($event)"
     />
   `,
@@ -43,6 +46,8 @@ export class KpButtonComponent {
   loading = input(false);
   disabled = input(false);
   styleClass = input('');
+  pTooltip = input('');
+  tooltipPosition = input<'top' | 'bottom' | 'left' | 'right'>('top');
 
   readonly buttonClick = output<MouseEvent>();
 }

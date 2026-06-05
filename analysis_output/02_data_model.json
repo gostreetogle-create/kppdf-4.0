@@ -1,0 +1,1998 @@
+﻿{
+    "meta":  {
+                 "project":  "CRM/PLM для группы компаний СпортИН-ЮГ",
+                 "date":  "2026-06-04",
+                 "description":  "Модель данных на основе анализа файлов: bulk-organizations-data.json, bulk-clients-data.json, номенклатуры, договоров, паспортов оборудования Дополнено 04.06.2026 из D:\\invSportiN.",
+                 "notes":  "Поля, помеченные [гипотеза], не обнаружены напрямую в файлах, но логически вытекают из контекста"
+             },
+    "tables":  [
+                   {
+                       "name":  "organizations",
+                       "description":  "Контрагенты-организации (юридические лица): поставщики, заказчики, подрядчики, госучреждения",
+                       "fields":  [
+                                      {
+                                          "name":  "id",
+                                          "type":  "uuid",
+                                          "nullable":  false,
+                                          "unique":  true,
+                                          "primary_key":  true,
+                                          "description":  "Уникальный идентификатор организации",
+                                          "constraints":  "DEFAULT gen_random_uuid()"
+                                      },
+                                      {
+                                          "name":  "name",
+                                          "type":  "text",
+                                          "nullable":  false,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Полное наименование организации (например, \u0027ООО СПОРТИН-ЮГ\u0027)",
+                                          "constraints":  ""
+                                      },
+                                      {
+                                          "name":  "short_name",
+                                          "type":  "text",
+                                          "nullable":  true,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Краткое наименование (например, \u0027СПОРТИН-ЮГ\u0027)",
+                                          "constraints":  ""
+                                      },
+                                      {
+                                          "name":  "legal_form",
+                                          "type":  "text",
+                                          "nullable":  true,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Организационно-правовая форма: ООО, ИП, АО, ГБУ, МБУ, ГУП, ЮЛ",
+                                          "constraints":  ""
+                                      },
+                                      {
+                                          "name":  "inn",
+                                          "type":  "text",
+                                          "nullable":  true,
+                                          "unique":  true,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "ИНН организации (10 цифр для ЮЛ, 12 для ИП)",
+                                          "constraints":  "CHECK (length(inn) IN (10, 12))"
+                                      },
+                                      {
+                                          "name":  "kpp",
+                                          "type":  "text",
+                                          "nullable":  true,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "КПП организации (9 цифр), null для ИП",
+                                          "constraints":  ""
+                                      },
+                                      {
+                                          "name":  "ogrn",
+                                          "type":  "text",
+                                          "nullable":  true,
+                                          "unique":  true,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "ОГРН организации",
+                                          "constraints":  ""
+                                      },
+                                      {
+                                          "name":  "okpo",
+                                          "type":  "text",
+                                          "nullable":  true,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Код ОКПО",
+                                          "constraints":  ""
+                                      },
+                                      {
+                                          "name":  "phone",
+                                          "type":  "text",
+                                          "nullable":  true,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Номер телефона",
+                                          "constraints":  ""
+                                      },
+                                      {
+                                          "name":  "email",
+                                          "type":  "text",
+                                          "nullable":  true,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Адрес электронной почты",
+                                          "constraints":  ""
+                                      },
+                                      {
+                                          "name":  "website",
+                                          "type":  "text",
+                                          "nullable":  true,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Веб-сайт организации",
+                                          "constraints":  ""
+                                      },
+                                      {
+                                          "name":  "legal_address",
+                                          "type":  "text",
+                                          "nullable":  true,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Юридический адрес",
+                                          "constraints":  ""
+                                      },
+                                      {
+                                          "name":  "postal_address",
+                                          "type":  "text",
+                                          "nullable":  true,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Почтовый адрес",
+                                          "constraints":  ""
+                                      },
+                                      {
+                                          "name":  "country",
+                                          "type":  "text",
+                                          "nullable":  true,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Страна (по умолчанию \u0027РОССИЯ\u0027)",
+                                          "constraints":  "DEFAULT \u0027РОССИЯ\u0027"
+                                      },
+                                      {
+                                          "name":  "bank_name",
+                                          "type":  "text",
+                                          "nullable":  true,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Наименование банка (например, \u0027КРАСНОДАРСКОЕ ОТДЕЛЕНИЕ N8619 ПАО СБЕРБАНК\u0027)",
+                                          "constraints":  ""
+                                      },
+                                      {
+                                          "name":  "bank_bik",
+                                          "type":  "text",
+                                          "nullable":  true,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "БИК банка",
+                                          "constraints":  ""
+                                      },
+                                      {
+                                          "name":  "bank_account",
+                                          "type":  "text",
+                                          "nullable":  true,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Расчётный счёт (20 цифр)",
+                                          "constraints":  ""
+                                      },
+                                      {
+                                          "name":  "bank_corr_account",
+                                          "type":  "text",
+                                          "nullable":  true,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Корреспондентский счёт банка",
+                                          "constraints":  ""
+                                      },
+                                      {
+                                          "name":  "signer_name",
+                                          "type":  "text",
+                                          "nullable":  true,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "ФИО подписанта (руководителя организации)",
+                                          "constraints":  ""
+                                      },
+                                      {
+                                          "name":  "signer_position",
+                                          "type":  "text",
+                                          "nullable":  true,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Должность подписанта (например, \u0027Генеральный директор\u0027, \u0027Директор\u0027)",
+                                          "constraints":  ""
+                                      },
+                                      {
+                                          "name":  "parent_counterparty_id",
+                                          "type":  "uuid",
+                                          "nullable":  true,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  {
+                                                              "table":  "organizations",
+                                                              "field":  "id"
+                                                          },
+                                          "description":  "ID головной организации (для филиалов и дочерних структур)",
+                                          "constraints":  ""
+                                      },
+                                      {
+                                          "name":  "is_branch",
+                                          "type":  "boolean",
+                                          "nullable":  false,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Флаг филиала (true — филиал/подразделение)",
+                                          "constraints":  "DEFAULT false"
+                                      },
+                                      {
+                                          "name":  "is_government_body",
+                                          "type":  "boolean",
+                                          "nullable":  false,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Флаг госоргана или бюджетного учреждения",
+                                          "constraints":  "DEFAULT false"
+                                      },
+                                      {
+                                          "name":  "government_body_type",
+                                          "type":  "text",
+                                          "nullable":  true,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Тип госоргана [гипотеза]",
+                                          "constraints":  ""
+                                      },
+                                      {
+                                          "name":  "registration_date",
+                                          "type":  "date",
+                                          "nullable":  true,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Дата государственной регистрации организации",
+                                          "constraints":  ""
+                                      },
+                                      {
+                                          "name":  "created_at_source",
+                                          "type":  "date",
+                                          "nullable":  true,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Дата добавления организации в справочник (из исходного файла)",
+                                          "constraints":  ""
+                                      },
+                                      {
+                                          "name":  "is_active",
+                                          "type":  "boolean",
+                                          "nullable":  false,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Признак активности контрагента",
+                                          "constraints":  "DEFAULT true"
+                                      },
+                                      {
+                                          "name":  "notes",
+                                          "type":  "text",
+                                          "nullable":  true,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Примечания, служебные пометки",
+                                          "constraints":  ""
+                                      },
+                                      {
+                                          "name":  "created_at",
+                                          "type":  "datetime",
+                                          "nullable":  false,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Дата создания записи в системе",
+                                          "constraints":  "DEFAULT CURRENT_TIMESTAMP"
+                                      },
+                                      {
+                                          "name":  "updated_at",
+                                          "type":  "datetime",
+                                          "nullable":  false,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Дата последнего обновления записи",
+                                          "constraints":  "DEFAULT CURRENT_TIMESTAMP"
+                                      }
+                                  ],
+                       "indexes":  [
+                                       "inn",
+                                       "short_name",
+                                       "legal_form"
+                                   ]
+                   },
+                   {
+                       "name":  "clients",
+                       "description":  "Клиенты — физические лица (контактные лица, ИП как физлица)",
+                       "fields":  [
+                                      {
+                                          "name":  "id",
+                                          "type":  "uuid",
+                                          "nullable":  false,
+                                          "unique":  true,
+                                          "primary_key":  true,
+                                          "description":  "Уникальный идентификатор клиента",
+                                          "constraints":  "DEFAULT gen_random_uuid()"
+                                      },
+                                      {
+                                          "name":  "last_name",
+                                          "type":  "text",
+                                          "nullable":  false,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Фамилия (например, \u0027Иванов\u0027)",
+                                          "constraints":  ""
+                                      },
+                                      {
+                                          "name":  "first_name",
+                                          "type":  "text",
+                                          "nullable":  false,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Имя (например, \u0027Сергей\u0027). Может быть сокращено до инициала",
+                                          "constraints":  ""
+                                      },
+                                      {
+                                          "name":  "patronymic",
+                                          "type":  "text",
+                                          "nullable":  true,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Отчество (например, \u0027Николаевич\u0027). Может быть пустым или инициалом",
+                                          "constraints":  ""
+                                      },
+                                      {
+                                          "name":  "phone",
+                                          "type":  "text",
+                                          "nullable":  true,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Номер телефона",
+                                          "constraints":  ""
+                                      },
+                                      {
+                                          "name":  "email",
+                                          "type":  "text",
+                                          "nullable":  true,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Адрес электронной почты",
+                                          "constraints":  ""
+                                      },
+                                      {
+                                          "name":  "address",
+                                          "type":  "text",
+                                          "nullable":  true,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Адрес регистрации/проживания",
+                                          "constraints":  ""
+                                      },
+                                      {
+                                          "name":  "inn",
+                                          "type":  "text",
+                                          "nullable":  true,
+                                          "unique":  true,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "ИНН физического лица (12 цифр)",
+                                          "constraints":  "CHECK (length(inn) = 12 OR inn IS NULL)"
+                                      },
+                                      {
+                                          "name":  "passport_series",
+                                          "type":  "text",
+                                          "nullable":  true,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Серия паспорта (4 цифры)",
+                                          "constraints":  ""
+                                      },
+                                      {
+                                          "name":  "passport_number",
+                                          "type":  "text",
+                                          "nullable":  true,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Номер паспорта (6 цифр)",
+                                          "constraints":  ""
+                                      },
+                                      {
+                                          "name":  "passport_issued_by",
+                                          "type":  "text",
+                                          "nullable":  true,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Кем выдан паспорт",
+                                          "constraints":  ""
+                                      },
+                                      {
+                                          "name":  "passport_issued_date",
+                                          "type":  "date",
+                                          "nullable":  true,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Дата выдачи паспорта",
+                                          "constraints":  ""
+                                      },
+                                      {
+                                          "name":  "organization_id",
+                                          "type":  "uuid",
+                                          "nullable":  true,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  {
+                                                              "table":  "organizations",
+                                                              "field":  "id"
+                                                          },
+                                          "description":  "ID организации, к которой привязан клиент (если является представителем/сотрудником)",
+                                          "constraints":  ""
+                                      },
+                                      {
+                                          "name":  "client_markup_percent",
+                                          "type":  "float",
+                                          "nullable":  true,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Персональная наценка для клиента (в процентах)",
+                                          "constraints":  ""
+                                      },
+                                      {
+                                          "name":  "is_active",
+                                          "type":  "boolean",
+                                          "nullable":  false,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Признак активности записи о клиенте",
+                                          "constraints":  "DEFAULT true"
+                                      },
+                                      {
+                                          "name":  "notes",
+                                          "type":  "text",
+                                          "nullable":  true,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Примечания, история взаимодействия",
+                                          "constraints":  ""
+                                      },
+                                      {
+                                          "name":  "created_at",
+                                          "type":  "datetime",
+                                          "nullable":  false,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Дата создания записи",
+                                          "constraints":  "DEFAULT CURRENT_TIMESTAMP"
+                                      },
+                                      {
+                                          "name":  "updated_at",
+                                          "type":  "datetime",
+                                          "nullable":  false,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Дата последнего обновления",
+                                          "constraints":  "DEFAULT CURRENT_TIMESTAMP"
+                                      }
+                                  ],
+                       "indexes":  [
+                                       "inn",
+                                       "last_name",
+                                       "organization_id"
+                                   ]
+                   },
+                   {
+                       "name":  "product_categories",
+                       "description":  "Категории продукции (спортивное оборудование, тренажёры, покрытия и т.д.)",
+                       "fields":  [
+                                      {
+                                          "name":  "id",
+                                          "type":  "uuid",
+                                          "nullable":  false,
+                                          "unique":  true,
+                                          "primary_key":  true,
+                                          "description":  "Уникальный идентификатор категории",
+                                          "constraints":  "DEFAULT gen_random_uuid()"
+                                      },
+                                      {
+                                          "name":  "name",
+                                          "type":  "text",
+                                          "nullable":  false,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Наименование категории (например, \u0027Баскетбол\u0027, \u0027Воркаут\u0027, \u0027Тренажёры\u0027, \u0027Трибуны\u0027)",
+                                          "constraints":  ""
+                                      },
+                                      {
+                                          "name":  "parent_category_id",
+                                          "type":  "uuid",
+                                          "nullable":  true,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  {
+                                                              "table":  "product_categories",
+                                                              "field":  "id"
+                                                          },
+                                          "description":  "ID родительской категории (для иерархии)",
+                                          "constraints":  ""
+                                      },
+                                      {
+                                          "name":  "description",
+                                          "type":  "text",
+                                          "nullable":  true,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Описание категории",
+                                          "constraints":  ""
+                                      },
+                                      {
+                                          "name":  "sort_order",
+                                          "type":  "integer",
+                                          "nullable":  true,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Порядок сортировки",
+                                          "constraints":  "DEFAULT 0"
+                                      },
+                                      {
+                                          "name":  "created_at",
+                                          "type":  "datetime",
+                                          "nullable":  false,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Дата создания",
+                                          "constraints":  "DEFAULT CURRENT_TIMESTAMP"
+                                      }
+                                  ],
+                       "indexes":  [
+                                       "name",
+                                       "parent_category_id"
+                                   ]
+                   },
+                   {
+                       "name":  "products",
+                       "description":  "Номенклатура — спортивное оборудование (товары и услуги)",
+                       "fields":  [
+                                      {
+                                          "name":  "id",
+                                          "type":  "uuid",
+                                          "nullable":  false,
+                                          "unique":  true,
+                                          "primary_key":  true,
+                                          "description":  "Уникальный идентификатор товара",
+                                          "constraints":  "DEFAULT gen_random_uuid()"
+                                      },
+                                      {
+                                          "name":  "sku",
+                                          "type":  "text",
+                                          "nullable":  true,
+                                          "unique":  true,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Артикул (например, \u0027БСФП-120\u0027, \u0027БСФФ-225\u0027, \u0027BC-836\u0027)",
+                                          "constraints":  ""
+                                      },
+                                      {
+                                          "name":  "name",
+                                          "type":  "text",
+                                          "nullable":  false,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Наименование товара (например, \u0027Стойка баскетбольная БСФП-120\u0027)",
+                                          "constraints":  ""
+                                      },
+                                      {
+                                          "name":  "description",
+                                          "type":  "text",
+                                          "nullable":  true,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Описание товара, характеристики",
+                                          "constraints":  ""
+                                      },
+                                      {
+                                          "name":  "category_id",
+                                          "type":  "uuid",
+                                          "nullable":  true,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  {
+                                                              "table":  "product_categories",
+                                                              "field":  "id"
+                                                          },
+                                          "description":  "ID категории товара",
+                                          "constraints":  ""
+                                      },
+                                      {
+                                          "name":  "unit",
+                                          "type":  "text",
+                                          "nullable":  true,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Единица измерения (шт, комплект, кв.м., м.п.)",
+                                          "constraints":  ""
+                                      },
+                                      {
+                                          "name":  "base_price",
+                                          "type":  "float",
+                                          "nullable":  true,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Базовая цена (себестоимость или прайс-лист)",
+                                          "constraints":  ""
+                                      },
+                                      {
+                                          "name":  "default_markup_percent",
+                                          "type":  "float",
+                                          "nullable":  true,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Стандартная наценка в процентах [гипотеза]",
+                                          "constraints":  ""
+                                      },
+                                      {
+                                          "name":  "weight_kg",
+                                          "type":  "float",
+                                          "nullable":  true,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Вес изделия в кг [гипотеза]",
+                                          "constraints":  ""
+                                      },
+                                      {
+                                          "name":  "dimensions",
+                                          "type":  "text",
+                                          "nullable":  true,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Габариты (ДхШхВ в мм) [гипотеза]",
+                                          "constraints":  ""
+                                      },
+                                      {
+                                          "name":  "material",
+                                          "type":  "text",
+                                          "nullable":  true,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Материал изготовления (сталь, профильная труба, и т.д.) [гипотеза]",
+                                          "constraints":  ""
+                                      },
+                                      {
+                                          "name":  "has_passport",
+                                          "type":  "boolean",
+                                          "nullable":  false,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Наличие паспорта качества (сертификата) на изделие",
+                                          "constraints":  "DEFAULT false"
+                                      },
+                                      {
+                                          "name":  "has_drawing",
+                                          "type":  "boolean",
+                                          "nullable":  false,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Наличие чертежа (DWG) на изделие",
+                                          "constraints":  "DEFAULT false"
+                                      },
+                                      {
+                                          "name":  "is_active",
+                                          "type":  "boolean",
+                                          "nullable":  false,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Признак активности товара в номенклатуре",
+                                          "constraints":  "DEFAULT true"
+                                      },
+                                      {
+                                          "name":  "created_at",
+                                          "type":  "datetime",
+                                          "nullable":  false,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Дата создания записи",
+                                          "constraints":  "DEFAULT CURRENT_TIMESTAMP"
+                                      },
+                                      {
+                                          "name":  "updated_at",
+                                          "type":  "datetime",
+                                          "nullable":  false,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Дата обновления записи",
+                                          "constraints":  "DEFAULT CURRENT_TIMESTAMP"
+                                      }
+                                  ],
+                       "indexes":  [
+                                       "sku",
+                                       "name",
+                                       "category_id"
+                                   ]
+                   },
+                   {
+                       "name":  "product_specifications",
+                       "description":  "Технические характеристики изделий (из паспортов качества и описаний)",
+                       "fields":  [
+                                      {
+                                          "name":  "id",
+                                          "type":  "uuid",
+                                          "nullable":  false,
+                                          "unique":  true,
+                                          "primary_key":  true,
+                                          "description":  "Уникальный идентификатор",
+                                          "constraints":  "DEFAULT gen_random_uuid()"
+                                      },
+                                      {
+                                          "name":  "product_id",
+                                          "type":  "uuid",
+                                          "nullable":  false,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  {
+                                                              "table":  "products",
+                                                              "field":  "id"
+                                                          },
+                                          "description":  "ID товара",
+                                          "constraints":  "NOT NULL"
+                                      },
+                                      {
+                                          "name":  "spec_key",
+                                          "type":  "text",
+                                          "nullable":  false,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Наименование характеристики (например, \u0027Высота стойки\u0027, \u0027Диаметр трубы\u0027, \u0027Материал\u0027)",
+                                          "constraints":  ""
+                                      },
+                                      {
+                                          "name":  "spec_value",
+                                          "type":  "text",
+                                          "nullable":  false,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Значение характеристики (например, \u00273050 мм\u0027, \u002789х34\u0027, \u0027Сталь Ст3\u0027)",
+                                          "constraints":  ""
+                                      },
+                                      {
+                                          "name":  "sort_order",
+                                          "type":  "integer",
+                                          "nullable":  true,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Порядок отображения",
+                                          "constraints":  "DEFAULT 0"
+                                      },
+                                      {
+                                          "name":  "created_at",
+                                          "type":  "datetime",
+                                          "nullable":  false,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Дата создания",
+                                          "constraints":  "DEFAULT CURRENT_TIMESTAMP"
+                                      }
+                                  ],
+                       "indexes":  [
+                                       "product_id",
+                                       "spec_key"
+                                   ]
+                   },
+                   {
+                       "name":  "product_documents",
+                       "description":  "Документы, связанные с товаром (паспорта качества, чертежи, сертификаты, инструкции)",
+                       "fields":  [
+                                      {
+                                          "name":  "id",
+                                          "type":  "uuid",
+                                          "nullable":  false,
+                                          "unique":  true,
+                                          "primary_key":  true,
+                                          "description":  "Уникальный идентификатор документа",
+                                          "constraints":  "DEFAULT gen_random_uuid()"
+                                      },
+                                      {
+                                          "name":  "product_id",
+                                          "type":  "uuid",
+                                          "nullable":  true,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  {
+                                                              "table":  "products",
+                                                              "field":  "id"
+                                                          },
+                                          "description":  "ID товара (если документ привязан к конкретному изделию)",
+                                          "constraints":  ""
+                                      },
+                                      {
+                                          "name":  "name",
+                                          "type":  "text",
+                                          "nullable":  false,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Наименование документа (например, \u0027Паспорт Брусья двойные разноуровневые Юниэф-юг\u0027)",
+                                          "constraints":  ""
+                                      },
+                                      {
+                                          "name":  "document_type",
+                                          "type":  "text",
+                                          "nullable":  false,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Тип документа: passport, certificate, drawing, instruction, other",
+                                          "constraints":  ""
+                                      },
+                                      {
+                                          "name":  "file_path",
+                                          "type":  "text",
+                                          "nullable":  false,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Путь к файлу документа (локальный или сетевой)",
+                                          "constraints":  ""
+                                      },
+                                      {
+                                          "name":  "file_format",
+                                          "type":  "text",
+                                          "nullable":  true,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Формат файла: pdf, doc, docx, dwg, dxf, jpg, png",
+                                          "constraints":  ""
+                                      },
+                                      {
+                                          "name":  "file_size_bytes",
+                                          "type":  "integer",
+                                          "nullable":  true,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Размер файла в байтах",
+                                          "constraints":  ""
+                                      },
+                                      {
+                                          "name":  "is_active",
+                                          "type":  "boolean",
+                                          "nullable":  false,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Признак актуальности документа",
+                                          "constraints":  "DEFAULT true"
+                                      },
+                                      {
+                                          "name":  "created_at",
+                                          "type":  "datetime",
+                                          "nullable":  false,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Дата загрузки",
+                                          "constraints":  "DEFAULT CURRENT_TIMESTAMP"
+                                      }
+                                  ],
+                       "indexes":  [
+                                       "product_id",
+                                       "document_type"
+                                   ]
+                   },
+                   {
+                       "name":  "commercial_proposals",
+                       "description":  "Коммерческие предложения (КП) — сформированные предложения для клиентов",
+                       "fields":  [
+                                      {
+                                          "name":  "id",
+                                          "type":  "uuid",
+                                          "nullable":  false,
+                                          "unique":  true,
+                                          "primary_key":  true,
+                                          "description":  "Уникальный идентификатор КП",
+                                          "constraints":  "DEFAULT gen_random_uuid()"
+                                      },
+                                      {
+                                          "name":  "number",
+                                          "type":  "text",
+                                          "nullable":  true,
+                                          "unique":  true,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Номер КП (например, \u0027КП 19.03.24\u0027)",
+                                          "constraints":  ""
+                                      },
+                                      {
+                                          "name":  "organization_id",
+                                          "type":  "uuid",
+                                          "nullable":  true,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  {
+                                                              "table":  "organizations",
+                                                              "field":  "id"
+                                                          },
+                                          "description":  "ID организации-клиента (заказчика)",
+                                          "constraints":  ""
+                                      },
+                                      {
+                                          "name":  "client_id",
+                                          "type":  "uuid",
+                                          "nullable":  true,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  {
+                                                              "table":  "clients",
+                                                              "field":  "id"
+                                                          },
+                                          "description":  "ID клиента (физ.лица-контактного лица)",
+                                          "constraints":  ""
+                                      },
+                                      {
+                                          "name":  "project_name",
+                                          "type":  "text",
+                                          "nullable":  true,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Наименование проекта/объекта (например, \u0027ЖК Югге\u0027)",
+                                          "constraints":  ""
+                                      },
+                                      {
+                                          "name":  "status",
+                                          "type":  "text",
+                                          "nullable":  false,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Статус: draft, sent, approved, rejected",
+                                          "constraints":  "DEFAULT \u0027draft\u0027"
+                                      },
+                                      {
+                                          "name":  "total_amount",
+                                          "type":  "float",
+                                          "nullable":  true,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Общая сумма КП",
+                                          "constraints":  ""
+                                      },
+                                      {
+                                          "name":  "valid_until",
+                                          "type":  "date",
+                                          "nullable":  true,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Срок действия КП",
+                                          "constraints":  ""
+                                      },
+                                      {
+                                          "name":  "notes",
+                                          "type":  "text",
+                                          "nullable":  true,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Примечания, условия",
+                                          "constraints":  ""
+                                      },
+                                      {
+                                          "name":  "created_by",
+                                          "type":  "uuid",
+                                          "nullable":  true,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  {
+                                                              "table":  "users",
+                                                              "field":  "id"
+                                                          },
+                                          "description":  "ID создателя (менеджера) [гипотеза]",
+                                          "constraints":  ""
+                                      },
+                                      {
+                                          "name":  "created_at",
+                                          "type":  "datetime",
+                                          "nullable":  false,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Дата создания",
+                                          "constraints":  "DEFAULT CURRENT_TIMESTAMP"
+                                      },
+                                      {
+                                          "name":  "updated_at",
+                                          "type":  "datetime",
+                                          "nullable":  false,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Дата обновления",
+                                          "constraints":  "DEFAULT CURRENT_TIMESTAMP"
+                                      }
+                                  ],
+                       "indexes":  [
+                                       "organization_id",
+                                       "client_id",
+                                       "status",
+                                       "number"
+                                   ]
+                   },
+                   {
+                       "name":  "commercial_proposal_items",
+                       "description":  "Позиции коммерческого предложения (товары/услуги с количеством и ценой)",
+                       "fields":  [
+                                      {
+                                          "name":  "id",
+                                          "type":  "uuid",
+                                          "nullable":  false,
+                                          "unique":  true,
+                                          "primary_key":  true,
+                                          "description":  "Уникальный идентификатор позиции",
+                                          "constraints":  "DEFAULT gen_random_uuid()"
+                                      },
+                                      {
+                                          "name":  "proposal_id",
+                                          "type":  "uuid",
+                                          "nullable":  false,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  {
+                                                              "table":  "commercial_proposals",
+                                                              "field":  "id"
+                                                          },
+                                          "description":  "ID КП",
+                                          "constraints":  "NOT NULL"
+                                      },
+                                      {
+                                          "name":  "product_id",
+                                          "type":  "uuid",
+                                          "nullable":  true,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  {
+                                                              "table":  "products",
+                                                              "field":  "id"
+                                                          },
+                                          "description":  "ID товара из номенклатуры",
+                                          "constraints":  ""
+                                      },
+                                      {
+                                          "name":  "description",
+                                          "type":  "text",
+                                          "nullable":  true,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Описание позиции (если товар не из номенклатуры)",
+                                          "constraints":  ""
+                                      },
+                                      {
+                                          "name":  "quantity",
+                                          "type":  "float",
+                                          "nullable":  false,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Количество",
+                                          "constraints":  "DEFAULT 1"
+                                      },
+                                      {
+                                          "name":  "unit_price",
+                                          "type":  "float",
+                                          "nullable":  false,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Цена за единицу",
+                                          "constraints":  ""
+                                      },
+                                      {
+                                          "name":  "markup_percent",
+                                          "type":  "float",
+                                          "nullable":  true,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Процент наценки на данную позицию",
+                                          "constraints":  ""
+                                      },
+                                      {
+                                          "name":  "total",
+                                          "type":  "float",
+                                          "nullable":  false,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Сумма по позиции (quantity * unit_price)",
+                                          "constraints":  ""
+                                      },
+                                      {
+                                          "name":  "sort_order",
+                                          "type":  "integer",
+                                          "nullable":  true,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Порядок отображения",
+                                          "constraints":  "DEFAULT 0"
+                                      }
+                                  ],
+                       "indexes":  [
+                                       "proposal_id",
+                                       "product_id"
+                                   ]
+                   },
+                   {
+                       "name":  "contracts",
+                       "description":  "Договоры (поставки, подряда, оказания услуг)",
+                       "fields":  [
+                                      {
+                                          "name":  "id",
+                                          "type":  "uuid",
+                                          "nullable":  false,
+                                          "unique":  true,
+                                          "primary_key":  true,
+                                          "description":  "Уникальный идентификатор договора",
+                                          "constraints":  "DEFAULT gen_random_uuid()"
+                                      },
+                                      {
+                                          "name":  "number",
+                                          "type":  "text",
+                                          "nullable":  true,
+                                          "unique":  true,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Номер договора",
+                                          "constraints":  ""
+                                      },
+                                      {
+                                          "name":  "contract_type",
+                                          "type":  "text",
+                                          "nullable":  false,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Тип договора: supply (поставка), contract (подряд), service (услуги), lease (лизинг)",
+                                          "constraints":  ""
+                                      },
+                                      {
+                                          "name":  "organization_id",
+                                          "type":  "uuid",
+                                          "nullable":  false,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  {
+                                                              "table":  "organizations",
+                                                              "field":  "id"
+                                                          },
+                                          "description":  "ID организации-контрагента",
+                                          "constraints":  "NOT NULL"
+                                      },
+                                      {
+                                          "name":  "proposal_id",
+                                          "type":  "uuid",
+                                          "nullable":  true,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  {
+                                                              "table":  "commercial_proposals",
+                                                              "field":  "id"
+                                                          },
+                                          "description":  "ID связанного КП (если договор на основе КП)",
+                                          "constraints":  ""
+                                      },
+                                      {
+                                          "name":  "tender_id",
+                                          "type":  "uuid",
+                                          "nullable":  true,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  {
+                                                              "table":  "tenders",
+                                                              "field":  "id"
+                                                          },
+                                          "description":  "ID тендера (если договор по результатам тендера)",
+                                          "constraints":  ""
+                                      },
+                                      {
+                                          "name":  "subject",
+                                          "type":  "text",
+                                          "nullable":  false,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Предмет договора",
+                                          "constraints":  ""
+                                      },
+                                      {
+                                          "name":  "amount",
+                                          "type":  "float",
+                                          "nullable":  true,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Сумма договора",
+                                          "constraints":  ""
+                                      },
+                                      {
+                                          "name":  "status",
+                                          "type":  "text",
+                                          "nullable":  false,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Статус: draft, active, completed, terminated, cancelled",
+                                          "constraints":  "DEFAULT \u0027draft\u0027"
+                                      },
+                                      {
+                                          "name":  "start_date",
+                                          "type":  "date",
+                                          "nullable":  true,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Дата начала действия договора",
+                                          "constraints":  ""
+                                      },
+                                      {
+                                          "name":  "end_date",
+                                          "type":  "date",
+                                          "nullable":  true,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Дата окончания действия договора",
+                                          "constraints":  ""
+                                      },
+                                      {
+                                          "name":  "file_path",
+                                          "type":  "text",
+                                          "nullable":  true,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Путь к файлу договора",
+                                          "constraints":  ""
+                                      },
+                                      {
+                                          "name":  "notes",
+                                          "type":  "text",
+                                          "nullable":  true,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Примечания",
+                                          "constraints":  ""
+                                      },
+                                      {
+                                          "name":  "created_at",
+                                          "type":  "datetime",
+                                          "nullable":  false,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Дата создания записи",
+                                          "constraints":  "DEFAULT CURRENT_TIMESTAMP"
+                                      },
+                                      {
+                                          "name":  "updated_at",
+                                          "type":  "datetime",
+                                          "nullable":  false,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Дата обновления записи",
+                                          "constraints":  "DEFAULT CURRENT_TIMESTAMP"
+                                      }
+                                  ],
+                       "indexes":  [
+                                       "number",
+                                       "organization_id",
+                                       "status",
+                                       "contract_type"
+                                   ]
+                   },
+                   {
+                       "name":  "invoices",
+                       "description":  "Счета на оплату",
+                       "fields":  [
+                                      {
+                                          "name":  "id",
+                                          "type":  "uuid",
+                                          "nullable":  false,
+                                          "unique":  true,
+                                          "primary_key":  true,
+                                          "description":  "Уникальный идентификатор счёта",
+                                          "constraints":  "DEFAULT gen_random_uuid()"
+                                      },
+                                      {
+                                          "name":  "number",
+                                          "type":  "text",
+                                          "nullable":  true,
+                                          "unique":  true,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Номер счёта",
+                                          "constraints":  ""
+                                      },
+                                      {
+                                          "name":  "contract_id",
+                                          "type":  "uuid",
+                                          "nullable":  true,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  {
+                                                              "table":  "contracts",
+                                                              "field":  "id"
+                                                          },
+                                          "description":  "ID договора, к которому относится счёт",
+                                          "constraints":  ""
+                                      },
+                                      {
+                                          "name":  "organization_id",
+                                          "type":  "uuid",
+                                          "nullable":  false,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  {
+                                                              "table":  "organizations",
+                                                              "field":  "id"
+                                                          },
+                                          "description":  "ID организации-плательщика",
+                                          "constraints":  "NOT NULL"
+                                      },
+                                      {
+                                          "name":  "amount",
+                                          "type":  "float",
+                                          "nullable":  false,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Сумма счёта",
+                                          "constraints":  ""
+                                      },
+                                      {
+                                          "name":  "status",
+                                          "type":  "text",
+                                          "nullable":  false,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Статус: issued, paid, partially_paid, overdue, cancelled",
+                                          "constraints":  "DEFAULT \u0027issued\u0027"
+                                      },
+                                      {
+                                          "name":  "issued_date",
+                                          "type":  "date",
+                                          "nullable":  false,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Дата выставления счёта",
+                                          "constraints":  ""
+                                      },
+                                      {
+                                          "name":  "due_date",
+                                          "type":  "date",
+                                          "nullable":  true,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Дата оплаты",
+                                          "constraints":  ""
+                                      },
+                                      {
+                                          "name":  "is_advance",
+                                          "type":  "boolean",
+                                          "nullable":  false,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Флаг авансового счёта (предоплата)",
+                                          "constraints":  "DEFAULT false"
+                                      },
+                                      {
+                                          "name":  "file_path",
+                                          "type":  "text",
+                                          "nullable":  true,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Путь к файлу счёта",
+                                          "constraints":  ""
+                                      },
+                                      {
+                                          "name":  "created_at",
+                                          "type":  "datetime",
+                                          "nullable":  false,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Дата создания записи",
+                                          "constraints":  "DEFAULT CURRENT_TIMESTAMP"
+                                      }
+                                  ],
+                       "indexes":  [
+                                       "contract_id",
+                                       "organization_id",
+                                       "status"
+                                   ]
+                   },
+                   {
+                       "name":  "tenders",
+                       "description":  "Тендеры/аукционы (госзакупки 44-ФЗ, 223-ФЗ)",
+                       "fields":  [
+                                      {
+                                          "name":  "id",
+                                          "type":  "uuid",
+                                          "nullable":  false,
+                                          "unique":  true,
+                                          "primary_key":  true,
+                                          "description":  "Уникальный идентификатор тендера",
+                                          "constraints":  "DEFAULT gen_random_uuid()"
+                                      },
+                                      {
+                                          "name":  "name",
+                                          "type":  "text",
+                                          "nullable":  false,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Наименование тендера/закупки",
+                                          "constraints":  ""
+                                      },
+                                      {
+                                          "name":  "tender_number",
+                                          "type":  "text",
+                                          "nullable":  true,
+                                          "unique":  true,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Номер тендера на площадке (например, № из ЕИС)",
+                                          "constraints":  ""
+                                      },
+                                      {
+                                          "name":  "customer_organization_id",
+                                          "type":  "uuid",
+                                          "nullable":  true,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  {
+                                                              "table":  "organizations",
+                                                              "field":  "id"
+                                                          },
+                                          "description":  "ID заказчика (организации, проводящей тендер)",
+                                          "constraints":  ""
+                                      },
+                                      {
+                                          "name":  "type",
+                                          "type":  "text",
+                                          "nullable":  true,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Тип закупки: auction (аукцион), tender (конкурс), quotation (запрос котировок)",
+                                          "constraints":  ""
+                                      },
+                                      {
+                                          "name":  "nmck",
+                                          "type":  "float",
+                                          "nullable":  true,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Начальная максимальная цена контракта (НМЦК)",
+                                          "constraints":  ""
+                                      },
+                                      {
+                                          "name":  "status",
+                                          "type":  "text",
+                                          "nullable":  false,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Статус: identified, preparing, submitted, won, lost, contract_signed",
+                                          "constraints":  "DEFAULT \u0027identified\u0027"
+                                      },
+                                      {
+                                          "name":  "submission_deadline",
+                                          "type":  "datetime",
+                                          "nullable":  true,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Срок подачи заявки",
+                                          "constraints":  ""
+                                      },
+                                      {
+                                          "name":  "contract_amount",
+                                          "type":  "float",
+                                          "nullable":  true,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Сумма заключённого контракта (если тендер выигран)",
+                                          "constraints":  ""
+                                      },
+                                      {
+                                          "name":  "notes",
+                                          "type":  "text",
+                                          "nullable":  true,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Примечания, результаты",
+                                          "constraints":  ""
+                                      },
+                                      {
+                                          "name":  "created_at",
+                                          "type":  "datetime",
+                                          "nullable":  false,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Дата создания записи",
+                                          "constraints":  "DEFAULT CURRENT_TIMESTAMP"
+                                      },
+                                      {
+                                          "name":  "updated_at",
+                                          "type":  "datetime",
+                                          "nullable":  false,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Дата обновления записи",
+                                          "constraints":  "DEFAULT CURRENT_TIMESTAMP"
+                                      }
+                                  ],
+                       "indexes":  [
+                                       "customer_organization_id",
+                                       "status",
+                                       "tender_number"
+                                   ]
+                   },
+                   {
+                       "name":  "projects",
+                       "description":  "Проекты (строительство/монтаж спортивных объектов)",
+                       "fields":  [
+                                      {
+                                          "name":  "id",
+                                          "type":  "uuid",
+                                          "nullable":  false,
+                                          "unique":  true,
+                                          "primary_key":  true,
+                                          "description":  "Уникальный идентификатор проекта",
+                                          "constraints":  "DEFAULT gen_random_uuid()"
+                                      },
+                                      {
+                                          "name":  "name",
+                                          "type":  "text",
+                                          "nullable":  false,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Наименование проекта (например, \u0027Площадка 21х11\u0027, \u0027г. Гал, ул. Самурзаканской, 2а\u0027)",
+                                          "constraints":  ""
+                                      },
+                                      {
+                                          "name":  "organization_id",
+                                          "type":  "uuid",
+                                          "nullable":  true,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  {
+                                                              "table":  "organizations",
+                                                              "field":  "id"
+                                                          },
+                                          "description":  "ID организации-заказчика",
+                                          "constraints":  ""
+                                      },
+                                      {
+                                          "name":  "contract_id",
+                                          "type":  "uuid",
+                                          "nullable":  true,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  {
+                                                              "table":  "contracts",
+                                                              "field":  "id"
+                                                          },
+                                          "description":  "ID договора по проекту",
+                                          "constraints":  ""
+                                      },
+                                      {
+                                          "name":  "address",
+                                          "type":  "text",
+                                          "nullable":  true,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Адрес объекта строительства/монтажа",
+                                          "constraints":  ""
+                                      },
+                                      {
+                                          "name":  "status",
+                                          "type":  "text",
+                                          "nullable":  false,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Статус: planning, in_progress, completed, on_hold, cancelled",
+                                          "constraints":  "DEFAULT \u0027planning\u0027"
+                                      },
+                                      {
+                                          "name":  "start_date",
+                                          "type":  "date",
+                                          "nullable":  true,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Плановая дата начала",
+                                          "constraints":  ""
+                                      },
+                                      {
+                                          "name":  "end_date",
+                                          "type":  "date",
+                                          "nullable":  true,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Плановая дата завершения",
+                                          "constraints":  ""
+                                      },
+                                      {
+                                          "name":  "total_amount",
+                                          "type":  "float",
+                                          "nullable":  true,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Общая стоимость проекта [гипотеза]",
+                                          "constraints":  ""
+                                      },
+                                      {
+                                          "name":  "notes",
+                                          "type":  "text",
+                                          "nullable":  true,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Примечания",
+                                          "constraints":  ""
+                                      },
+                                      {
+                                          "name":  "created_at",
+                                          "type":  "datetime",
+                                          "nullable":  false,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Дата создания записи",
+                                          "constraints":  "DEFAULT CURRENT_TIMESTAMP"
+                                      },
+                                      {
+                                          "name":  "updated_at",
+                                          "type":  "datetime",
+                                          "nullable":  false,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Дата обновления записи",
+                                          "constraints":  "DEFAULT CURRENT_TIMESTAMP"
+                                      }
+                                  ],
+                       "indexes":  [
+                                       "organization_id",
+                                       "contract_id",
+                                       "status"
+                                   ]
+                   },
+                   {
+                       "name":  "users",
+                       "description":  "Пользователи системы (менеджеры, сотрудники) [гипотеза]",
+                       "fields":  [
+                                      {
+                                          "name":  "id",
+                                          "type":  "uuid",
+                                          "nullable":  false,
+                                          "unique":  true,
+                                          "primary_key":  true,
+                                          "description":  "Уникальный идентификатор пользователя",
+                                          "constraints":  "DEFAULT gen_random_uuid()"
+                                      },
+                                      {
+                                          "name":  "login",
+                                          "type":  "text",
+                                          "nullable":  false,
+                                          "unique":  true,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Логин для входа в систему",
+                                          "constraints":  ""
+                                      },
+                                      {
+                                          "name":  "full_name",
+                                          "type":  "text",
+                                          "nullable":  false,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "ФИО пользователя",
+                                          "constraints":  ""
+                                      },
+                                      {
+                                          "name":  "role",
+                                          "type":  "text",
+                                          "nullable":  false,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Роль: admin, manager, accountant, director",
+                                          "constraints":  ""
+                                      },
+                                      {
+                                          "name":  "email",
+                                          "type":  "text",
+                                          "nullable":  true,
+                                          "unique":  true,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "E-mail пользователя",
+                                          "constraints":  ""
+                                      },
+                                      {
+                                          "name":  "phone",
+                                          "type":  "text",
+                                          "nullable":  true,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Телефон пользователя",
+                                          "constraints":  ""
+                                      },
+                                      {
+                                          "name":  "is_active",
+                                          "type":  "boolean",
+                                          "nullable":  false,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Признак активности пользователя",
+                                          "constraints":  "DEFAULT true"
+                                      },
+                                      {
+                                          "name":  "password_hash",
+                                          "type":  "text",
+                                          "nullable":  false,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Хэш пароля [гипотеза]",
+                                          "constraints":  ""
+                                      },
+                                      {
+                                          "name":  "created_at",
+                                          "type":  "datetime",
+                                          "nullable":  false,
+                                          "unique":  false,
+                                          "primary_key":  false,
+                                          "foreign_key":  null,
+                                          "description":  "Дата создания аккаунта",
+                                          "constraints":  "DEFAULT CURRENT_TIMESTAMP"
+                                      }
+                                  ],
+                       "indexes":  [
+                                       "login",
+                                       "role"
+                                   ]
+                   }
+               ],
+    "relationships":  [
+                          {
+                              "from_table":  "clients",
+                              "from_field":  "organization_id",
+                              "to_table":  "organizations",
+                              "to_field":  "id",
+                              "type":  "many_to_one",
+                              "description":  "Клиент (физ.лицо) может быть представителем организации (контактное лицо)"
+                          },
+                          {
+                              "from_table":  "organizations",
+                              "from_field":  "parent_counterparty_id",
+                              "to_table":  "organizations",
+                              "to_field":  "id",
+                              "type":  "many_to_one",
+                              "description":  "Организация может иметь головную структуру (филиалы, подразделения)"
+                          },
+                          {
+                              "from_table":  "products",
+                              "from_field":  "category_id",
+                              "to_table":  "product_categories",
+                              "to_field":  "id",
+                              "type":  "many_to_one",
+                              "description":  "Товар относится к категории"
+                          },
+                          {
+                              "from_table":  "product_categories",
+                              "from_field":  "parent_category_id",
+                              "to_table":  "product_categories",
+                              "to_field":  "id",
+                              "type":  "many_to_one",
+                              "description":  "Категория может иметь родительскую категорию (иерархия)"
+                          },
+                          {
+                              "from_table":  "product_specifications",
+                              "from_field":  "product_id",
+                              "to_table":  "products",
+                              "to_field":  "id",
+                              "type":  "many_to_one",
+                              "description":  "Характеристика относится к товару"
+                          },
+                          {
+                              "from_table":  "product_documents",
+                              "from_field":  "product_id",
+                              "to_table":  "products",
+                              "to_field":  "id",
+                              "type":  "many_to_one",
+                              "description":  "Документ прикреплён к товару (паспорт, сертификат, чертёж)"
+                          },
+                          {
+                              "from_table":  "commercial_proposals",
+                              "from_field":  "organization_id",
+                              "to_table":  "organizations",
+                              "to_field":  "id",
+                              "type":  "many_to_one",
+                              "description":  "КП адресовано организации-клиенту"
+                          },
+                          {
+                              "from_table":  "commercial_proposals",
+                              "from_field":  "client_id",
+                              "to_table":  "clients",
+                              "to_field":  "id",
+                              "type":  "many_to_one",
+                              "description":  "КП привязано к контактному лицу (физ.лицу)"
+                          },
+                          {
+                              "from_table":  "commercial_proposals",
+                              "from_field":  "created_by",
+                              "to_table":  "users",
+                              "to_field":  "id",
+                              "type":  "many_to_one",
+                              "description":  "КП создано менеджером (пользователем)"
+                          },
+                          {
+                              "from_table":  "commercial_proposal_items",
+                              "from_field":  "proposal_id",
+                              "to_table":  "commercial_proposals",
+                              "to_field":  "id",
+                              "type":  "many_to_one",
+                              "description":  "Позиция входит в состав КП"
+                          },
+                          {
+                              "from_table":  "commercial_proposal_items",
+                              "from_field":  "product_id",
+                              "to_table":  "products",
+                              "to_field":  "id",
+                              "type":  "many_to_one",
+                              "description":  "Позиция КП ссылается на товар из номенклатуры"
+                          },
+                          {
+                              "from_table":  "contracts",
+                              "from_field":  "organization_id",
+                              "to_table":  "organizations",
+                              "to_field":  "id",
+                              "type":  "many_to_one",
+                              "description":  "Договор заключён с организацией-контрагентом"
+                          },
+                          {
+                              "from_table":  "contracts",
+                              "from_field":  "proposal_id",
+                              "to_table":  "commercial_proposals",
+                              "to_field":  "id",
+                              "type":  "many_to_one",
+                              "description":  "Договор создан на основе КП"
+                          },
+                          {
+                              "from_table":  "contracts",
+                              "from_field":  "tender_id",
+                              "to_table":  "tenders",
+                              "to_field":  "id",
+                              "type":  "many_to_one",
+                              "description":  "Договор заключён по результатам тендера"
+                          },
+                          {
+                              "from_table":  "invoices",
+                              "from_field":  "contract_id",
+                              "to_table":  "contracts",
+                              "to_field":  "id",
+                              "type":  "many_to_one",
+                              "description":  "Счёт относится к договору"
+                          },
+                          {
+                              "from_table":  "invoices",
+                              "from_field":  "organization_id",
+                              "to_table":  "organizations",
+                              "to_field":  "id",
+                              "type":  "many_to_one",
+                              "description":  "Счёт выставлен организации-плательщику"
+                          },
+                          {
+                              "from_table":  "tenders",
+                              "from_field":  "customer_organization_id",
+                              "to_table":  "organizations",
+                              "to_field":  "id",
+                              "type":  "many_to_one",
+                              "description":  "Заказчик тендера — организация"
+                          },
+                          {
+                              "from_table":  "projects",
+                              "from_field":  "organization_id",
+                              "to_table":  "organizations",
+                              "to_field":  "id",
+                              "type":  "many_to_one",
+                              "description":  "Проект выполняется для организации-заказчика"
+                          },
+                          {
+                              "from_table":  "projects",
+                              "from_field":  "contract_id",
+                              "to_table":  "contracts",
+                              "to_field":  "id",
+                              "type":  "many_to_one",
+                              "description":  "Проект привязан к договору"
+                          }
+                      ]
+}

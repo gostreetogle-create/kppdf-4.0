@@ -35,38 +35,100 @@ function genId(): string {
 
         @for (col of columns(); track col.id; let i = $index) {
           <div class="editor__col">
-            <div class="editor__col-header">Колонка {{ i + 1 }}</div>
+            <div class="editor__col-header">
+              <span>Колонка {{ i + 1 }}</span>
+            </div>
+
             <textarea
               class="editor__textarea"
               [ngModel]="col.content"
               (ngModelChange)="updateColumn(i, 'content', $event)"
-              placeholder="Текст колонки..."
+              [placeholder]="'Текст колонки ' + (i + 1) + '...'"
               rows="3"
             ></textarea>
+
+            <!-- Панель форматирования: иконки -->
             <div class="editor__col-toolbar">
-              <kp-select
-                label="Выравнивание"
-                [options]="alignOptions"
-                [ngModel]="col.textAlign || 'left'"
-                (ngModelChange)="updateColumn(i, 'textAlign', $event)"
-              />
-              <kp-select
-                label="Начертание"
-                [options]="weightOptions"
-                [ngModel]="col.fontWeight || 'normal'"
-                (ngModelChange)="updateColumn(i, 'fontWeight', $event)"
-              />
-              <kp-select
-                label="Подчёркивание"
-                [options]="decorationOptions"
-                [ngModel]="col.textDecoration || 'none'"
-                (ngModelChange)="updateColumn(i, 'textDecoration', $event)"
-              />
-              <kp-input
-                label="Ширина"
-                [placeholder]="'auto'"
-                [(ngModel)]="col.width"
-              />
+              <!-- Выравнивание -->
+              <div class="editor__toolbar-group">
+                <kp-button
+                  icon="pi pi-align-left"
+                  size="small"
+                  [severity]="(col.textAlign || 'left') === 'left' ? 'primary' : 'secondary'"
+                  [text]="(col.textAlign || 'left') !== 'left'"
+                  [rounded]="true"
+                  pTooltip="По левому краю"
+                  tooltipPosition="top"
+                  (buttonClick)="updateColumn(i, 'textAlign', 'left')"
+                />
+                <kp-button
+                  icon="pi pi-align-center"
+                  size="small"
+                  [severity]="col.textAlign === 'center' ? 'primary' : 'secondary'"
+                  [text]="col.textAlign !== 'center'"
+                  [rounded]="true"
+                  pTooltip="По центру"
+                  tooltipPosition="top"
+                  (buttonClick)="updateColumn(i, 'textAlign', 'center')"
+                />
+                <kp-button
+                  icon="pi pi-align-right"
+                  size="small"
+                  [severity]="col.textAlign === 'right' ? 'primary' : 'secondary'"
+                  [text]="col.textAlign !== 'right'"
+                  [rounded]="true"
+                  pTooltip="По правому краю"
+                  tooltipPosition="top"
+                  (buttonClick)="updateColumn(i, 'textAlign', 'right')"
+                />
+              </div>
+
+              <div class="editor__toolbar-divider"></div>
+
+              <!-- Начертание: B, I, U -->
+              <div class="editor__toolbar-group">
+                <kp-button
+                  icon="pi pi-bold"
+                  size="small"
+                  [severity]="col.fontWeight === 'bold' ? 'primary' : 'secondary'"
+                  [text]="col.fontWeight !== 'bold'"
+                  [rounded]="true"
+                  pTooltip="Жирный"
+                  tooltipPosition="top"
+                  (buttonClick)="updateColumn(i, 'fontWeight', col.fontWeight === 'bold' ? 'normal' : 'bold')"
+                />
+                <kp-button
+                  icon="pi pi-italic"
+                  size="small"
+                  [severity]="col.fontStyle === 'italic' ? 'primary' : 'secondary'"
+                  [text]="col.fontStyle !== 'italic'"
+                  [rounded]="true"
+                  pTooltip="Курсив"
+                  tooltipPosition="top"
+                  (buttonClick)="updateColumn(i, 'fontStyle', col.fontStyle === 'italic' ? 'normal' : 'italic')"
+                />
+                <kp-button
+                  icon="pi pi-underline"
+                  size="small"
+                  [severity]="col.textDecoration === 'underline' ? 'primary' : 'secondary'"
+                  [text]="col.textDecoration !== 'underline'"
+                  [rounded]="true"
+                  pTooltip="Подчёркнутый"
+                  tooltipPosition="top"
+                  (buttonClick)="updateColumn(i, 'textDecoration', col.textDecoration === 'underline' ? 'none' : 'underline')"
+                />
+              </div>
+
+              <div class="editor__toolbar-divider"></div>
+
+              <!-- Ширина колонки -->
+              <div class="editor__width-field">
+                <kp-input
+                  label="Ширина"
+                  [placeholder]="'auto'"
+                  [(ngModel)]="col.width"
+                />
+              </div>
             </div>
           </div>
         }
@@ -81,20 +143,59 @@ function genId(): string {
   styles: [`
     .editor { display: flex; flex-direction: column; gap: 12px; }
     .editor__col {
-      background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 6px; padding: 10px;
+      background: var(--color-surface-alt);
+      border: 1px solid var(--color-border-light);
+      border-radius: 6px;
+      padding: 10px;
     }
     .editor__col-header {
-      font-size: 12px; font-weight: 600; color: #6b7280; margin-bottom: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--color-text-muted);
+      margin-bottom: 6px;
     }
     .editor__textarea {
-      width: 100%; border: 1px solid #d1d5db; border-radius: 4px; padding: 6px 8px;
-      font-family: inherit; font-size: 13px; resize: vertical;
+      width: 100%;
+      border: 1px solid var(--color-border);
+      border-radius: 4px;
+      padding: 6px 8px;
+      font-family: inherit;
+      font-size: 13px;
+      resize: vertical;
+      background: var(--color-surface);
+      color: var(--color-text);
+    }
+    .editor__textarea:focus {
+      outline: none;
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 1px var(--color-primary-light);
     }
     .editor__col-toolbar {
-      display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-top: 8px;
+      flex-wrap: wrap;
+    }
+    .editor__toolbar-group {
+      display: flex;
+      gap: 2px;
+    }
+    .editor__toolbar-divider {
+      width: 1px;
+      height: 24px;
+      background: var(--color-border);
+      margin: 0 4px;
+    }
+    .editor__width-field {
+      width: 90px;
+      margin-left: auto;
     }
     .editor__footer {
-      display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px;
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+      margin-top: 16px;
     }
   `]
 })
@@ -112,22 +213,6 @@ export class KpDocTextEditorDialogComponent {
     { value: 2, label: '2 колонки' },
     { value: 3, label: '3 колонки' },
     { value: 4, label: '4 колонки' },
-  ];
-
-  alignOptions: SelectOption[] = [
-    { value: 'left', label: 'По левому' },
-    { value: 'center', label: 'По центру' },
-    { value: 'right', label: 'По правому' },
-  ];
-
-  weightOptions: SelectOption[] = [
-    { value: 'normal', label: 'Обычный' },
-    { value: 'bold', label: 'Жирный' },
-  ];
-
-  decorationOptions: SelectOption[] = [
-    { value: 'none', label: 'Нет' },
-    { value: 'underline', label: 'Подчёркнутый' },
   ];
 
   open(block: DocBlock) {

@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { MenuItem } from 'primeng/api';
 import { firstValueFrom } from 'rxjs';
+import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
 
 import { KpInputComponent } from '../../shared/ui/kp-input.component';
 import { KpSelectComponent, SelectOption } from '../../shared/ui/kp-select.component';
@@ -11,6 +12,7 @@ import { KpButtonComponent } from '../../shared/ui/kp-button.component';
 import { KpBreadcrumbComponent } from '../../shared/ui/kp-breadcrumb.component';
 import { KpCardComponent } from '../../shared/ui/kp-card.component';
 import { KpToastComponent } from '../../shared/ui/kp-toast.component';
+import { KpDialogComponent } from '../../shared/ui/kp-dialog.component';
 import { NotificationService } from '../../core/notification.service';
 import { TableRegistryService } from '../../core/table-registry.service';
 import { TableTemplateService } from '../../core/table-template.service';
@@ -28,9 +30,10 @@ interface EditableColumn {
   selector: 'app-table-template-editor',
   standalone: true,
   imports: [
-    CommonModule, FormsModule,
+    CommonModule, FormsModule, DragDropModule,
     KpInputComponent, KpSelectComponent, KpButtonComponent,
     KpBreadcrumbComponent, KpCardComponent, KpToastComponent,
+    KpDialogComponent,
   ],
   templateUrl: './table-template-editor.component.html',
   styleUrls: ['./table-template-editor.component.scss'],
@@ -55,6 +58,8 @@ export class TableTemplateEditorComponent implements OnInit {
   loading = signal(false);
   saving = signal(false);
 
+  previewVisible = signal(false);
+
   tableOptions = computed<SelectOption[]>(() =>
     this.tables().map(t => ({ value: t.name, label: t.label }))
   );
@@ -63,6 +68,7 @@ export class TableTemplateEditorComponent implements OnInit {
     const table = this.tables().find(t => t.name === this.selectedTable());
     return table?.fields.map(f => ({ value: f.name, label: f.label })) ?? [];
   });
+
 
   breadcrumbs: MenuItem[] = [
     { label: 'Администрирование', routerLink: '/admin' },
@@ -84,7 +90,6 @@ export class TableTemplateEditorComponent implements OnInit {
         if (result.success && result.data) {
           const tmpl = result.data;
           this.templateName.set(tmpl.name);
-          // Берём tableName из первой колонки (все колонки одного шаблона от одной таблицы)
           if (tmpl.columns.length > 0) {
             this.selectedTable.set(tmpl.columns[0].tableName);
           }
@@ -110,23 +115,19 @@ export class TableTemplateEditorComponent implements OnInit {
     };
   }
 
-  /** Выбор таблицы — сбрасываем все колонки (новая таблица = новые поля) */
   onTableSelect(tableName: string) {
     this.selectedTable.set(tableName);
     this.tableError.set('');
-    // При смене таблицы в новом шаблоне — очищаем колонки
     if (this.isNew()) {
       this.columns.set([]);
     }
   }
 
-  /** Получить label поля по имени */
-  private getFieldLabel(fieldName: string): string {
+  public getFieldLabel(fieldName: string): string {
     const table = this.tables().find(t => t.name === this.selectedTable());
     return table?.fields.find(f => f.name === fieldName)?.label ?? fieldName;
   }
 
-  /** Добавить новую колонку */
   addColumn() {
     if (!this.selectedTable()) {
       this.tableError.set('Сначала выберите таблицу');
@@ -144,32 +145,29 @@ export class TableTemplateEditorComponent implements OnInit {
     ]);
   }
 
-  /** Удалить колонку */
+  /** Drag-and-drop колонок */
+  onColumnDrop(event: CdkDragDrop<EditableColumn[]>) {
+    if (event.previousIndex === event.currentIndex) return;
+    this.columns.update(cols => {
+      const arr = [...cols];
+      moveItemInArray(arr, event.previousIndex, event.currentIndex);
+      return arr;
+    });
+  }
+
+  /** Предпросмотр таблицы */
+  openPreview() {
+    if (!this.selectedTable() || this.columns().length === 0) {
+      this.notification.info('Добавьте хотя бы одну колонку');
+      return;
+    }
+    this.previewVisible.set(true);
+  }
+
   removeColumn(index: number) {
     this.columns.update(cols => cols.filter((_, i) => i !== index));
   }
 
-  /** Переместить колонку вверх */
-  moveUp(index: number) {
-    if (index === 0) return;
-    this.columns.update(cols => {
-      const arr = [...cols];
-      [arr[index - 1], arr[index]] = [arr[index], arr[index - 1]];
-      return arr;
-    });
-  }
-
-  /** Переместить колонку вниз */
-  moveDown(index: number) {
-    if (index >= this.columns().length - 1) return;
-    this.columns.update(cols => {
-      const arr = [...cols];
-      [arr[index], arr[index + 1]] = [arr[index + 1], arr[index]];
-      return arr;
-    });
-  }
-
-  /** При выборе поля — авто-заполняем заголовок */
   onFieldChange(index: number, fieldName: string) {
     this.columns.update(cols => {
       const updated = [...cols];
@@ -183,7 +181,6 @@ export class TableTemplateEditorComponent implements OnInit {
     });
   }
 
-  /** Валидация */
   validate(): boolean {
     let valid = true;
 
@@ -218,7 +215,6 @@ export class TableTemplateEditorComponent implements OnInit {
     return valid;
   }
 
-  /** Сохранить */
   async save() {
     if (!this.validate()) return;
 

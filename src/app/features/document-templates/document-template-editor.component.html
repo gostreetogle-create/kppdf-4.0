@@ -16,56 +16,91 @@
   @if (loading()) {
     <div class="dt-editor__loading">Загрузка...</div>
   } @else {
-    <!-- Top fields -->
-    <div class="dt-editor__top-row">
-      <div class="dt-editor__field">
-        <kp-input
-          label="Название шаблона"
-          placeholder="Например: Коммерческое предложение"
-          [(ngModel)]="templateName"
-          [error]="nameError()"
+    <!-- Layout: левая панель + правый холст A4 -->
+    <div class="dt-editor__layout">
+      <!-- Левая панель -->
+      <div class="dt-editor__sidebar">
+        <div class="dt-editor__field">
+          <kp-input
+            label="Название шаблона"
+            placeholder="Например: Коммерческое предложение"
+            [(ngModel)]="templateName"
+            [error]="nameError()"
+          />
+        </div>
+
+        <div class="dt-editor__field">
+          <kp-select
+            label="Тип документа"
+            [options]="docTypeOptions"
+            [ngModel]="docType()"
+            (ngModelChange)="docType.set($event)"
+          />
+        </div>
+
+        <div class="dt-editor__field">
+          <kp-input
+            label="Описание"
+            placeholder="Необязательное описание шаблона"
+            [(ngModel)]="description"
+          />
+        </div>
+
+        <!-- Тулбар добавления блоков -->
+        <div class="dt-editor__toolbar">
+          <span class="dt-editor__toolbar-label">Добавить блок:</span>
+          <div class="dt-editor__toolbar-buttons">
+            <kp-button
+              label="+ Текст"
+              icon="pi pi-align-left"
+              size="small"
+              severity="secondary"
+              (buttonClick)="addBlock('text')"
+            />
+            <kp-button
+              label="+ Таблица"
+              icon="pi pi-table"
+              size="small"
+              severity="secondary"
+              (buttonClick)="addBlock('table')"
+            />
+            <kp-button
+              label="+ Разделитель"
+              icon="pi pi-minus"
+              size="small"
+              severity="secondary"
+              (buttonClick)="addBlock('separator')"
+            />
+          </div>
+        </div>
+
+        <!-- Предпросмотр -->
+        <div class="dt-editor__preview-btn">
+          <kp-button
+            label="Предпросмотр"
+            icon="pi pi-eye"
+            size="small"
+            severity="info"
+            [disabled]="blocks().length === 0"
+            (buttonClick)="preview()"
+          />
+        </div>
+      </div>
+
+      <!-- Правая часть: A4 Canvas -->
+      <div class="dt-editor__canvas-area">
+        <kp-doc-canvas
+          [blocks]="blocks()"
+          [selectedBlockId]="selectedBlockId()"
+          (blockSelect)="selectedBlockId.set($event)"
+          (blockEdit)="onBlockEdit($event)"
+          (blockRemove)="removeBlock($event)"
+          (blocksReorder)="onBlocksReorder($event)"
         />
       </div>
-      <div class="dt-editor__field">
-        <kp-select
-          label="Тип документа"
-          [options]="docTypeOptions"
-          [ngModel]="docType()"
-          (ngModelChange)="docType.set($event)"
-        />
-      </div>
     </div>
 
-    <div class="dt-editor__field dt-editor__field--desc">
-      <kp-input
-        label="Описание"
-        placeholder="Необязательное описание шаблона"
-        [(ngModel)]="description"
-      />
-    </div>
-
-    <!-- Block toolbar -->
-    <div class="dt-editor__toolbar">
-      <span class="dt-editor__toolbar-label">Добавить блок:</span>
-      <kp-button label="+ Текст" icon="pi pi-align-left" size="small" severity="secondary" (buttonClick)="addBlock('text')" />
-      <kp-button label="+ Таблица" icon="pi pi-table" size="small" severity="secondary" (buttonClick)="addBlock('table')" />
-      <kp-button label="+ Разделитель" icon="pi pi-minus" size="small" severity="secondary" (buttonClick)="addBlock('separator')" />
-      <span class="dt-editor__toolbar-spacer"></span>
-      <kp-button label="Предпросмотр" icon="pi pi-eye" size="small" severity="info" [disabled]="blocks().length === 0" (buttonClick)="preview()" />
-    </div>
-
-    <!-- A4 Canvas -->
-    <kp-doc-canvas
-      [blocks]="blocks()"
-      [selectedBlockId]="selectedBlockId()"
-      (blockSelect)="selectedBlockId.set($event)"
-      (blockEdit)="onBlockEdit($event)"
-      (blockRemove)="removeBlock($event)"
-      (blockMoveUp)="moveBlockUp($event)"
-      (blockMoveDown)="moveBlockDown($event)"
-    />
-
-    <!-- Footer -->
+    <!-- Футер -->
     <div class="dt-editor__footer">
       <kp-button
         [label]="isNew() ? 'Создать шаблон' : 'Сохранить'"

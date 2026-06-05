@@ -1,3 +1,9 @@
+// kp-card wrapper handles max-width via card styles
+:host {
+  display: block;
+  max-width: 800px;
+}
+
 .tt-list__header {
   display: flex;
   align-items: center;
