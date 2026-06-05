@@ -135,6 +135,8 @@
           (blockSelect)="selectedBlockId.set($event)"
           (blockEdit)="onBlockEdit($event)"
           (blockRemove)="removeBlock($event)"
+          (blockMoveUp)="moveBlockUp($event)"
+          (blockMoveDown)="moveBlockDown($event)"
           (blocksReorder)="onBlocksReorder($event)"
         />
       </div>

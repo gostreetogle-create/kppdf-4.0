@@ -133,6 +133,28 @@ export class DocumentTemplateEditorComponent implements OnInit {
     });
   }
 
+  /** Переместить блок вверх */
+  moveBlockUp(blockId: string) {
+    this.blocks.update(b => {
+      const idx = b.findIndex(bl => bl.id === blockId);
+      if (idx <= 0) return b;
+      const arr = [...b];
+      [arr[idx - 1], arr[idx]] = [arr[idx], arr[idx - 1]];
+      return arr;
+    });
+  }
+
+  /** Переместить блок вниз */
+  moveBlockDown(blockId: string) {
+    this.blocks.update(b => {
+      const idx = b.findIndex(bl => bl.id === blockId);
+      if (idx < 0 || idx >= b.length - 1) return b;
+      const arr = [...b];
+      [arr[idx], arr[idx + 1]] = [arr[idx + 1], arr[idx]];
+      return arr;
+    });
+  }
+
   onBlockEdit(block: DocBlock) {
     if (block.type === 'text') {
       this.textEditor().open(block);

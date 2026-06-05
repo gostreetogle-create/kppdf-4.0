@@ -59,6 +59,26 @@ import { KpButtonComponent } from './kp-button.component.js';
               @if (editable()) {
                 <div class="canvas__block-actions">
                   <kp-button
+                    icon="pi pi-chevron-up"
+                    size="small"
+                    [text]="true"
+                    [rounded]="true"
+                    severity="secondary"
+                    pTooltip="Переместить вверх"
+                    tooltipPosition="left"
+                    (buttonClick)="blockMoveUp.emit(block.id)"
+                  />
+                  <kp-button
+                    icon="pi pi-chevron-down"
+                    size="small"
+                    [text]="true"
+                    [rounded]="true"
+                    severity="secondary"
+                    pTooltip="Переместить вниз"
+                    tooltipPosition="left"
+                    (buttonClick)="blockMoveDown.emit(block.id)"
+                  />
+                  <kp-button
                     icon="pi pi-pencil"
                     size="small"
                     [text]="true"
@@ -199,6 +219,8 @@ export class KpDocCanvasComponent {
   blockSelect = output<string>();
   blockEdit = output<DocBlock>();
   blockRemove = output<string>();
+  blockMoveUp = output<string>();
+  blockMoveDown = output<string>();
   blocksReorder = output<{ previousIndex: number; currentIndex: number }>();
 
   onBlockDrop(event: CdkDragDrop<DocBlock[]>) {

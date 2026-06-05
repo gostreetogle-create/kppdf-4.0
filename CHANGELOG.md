@@ -6,6 +6,27 @@
 
 ---
 
+## [1.9.0] — 2026-06-06 — UI/UX финализация: float-лейблы, превью, ▲▼, реестр
+
+### Added
+- **Float-лейблы:** kp-select поддерживает FloatLabelModule. Поля колонок редактора таблиц с метками «Поле», «Заголовок», «Ширина»
+- **▲▼ Кнопки колонок:** pi-chevron-up/down для перемещения колонок вверх/вниз (альтернатива drag-and-drop)
+- **▲▼ Кнопки блоков:** pi-chevron-up/down в kp-doc-canvas для перемещения блоков документа
+- **Превью таблиц из списка:** диалог с колонками и метаданными из реестра (TableTemplateListComponent)
+- **TableRegistryService:** реестр расширен 2→4 таблицы (products 12 полей, organizations 16, clients 9, suppliers 8). Данные из analysis_output/02_data_model.json
+- **Тесты:** 184→186 тестов (table-registry +2)
+
+### Fixed
+- **angular.json:** пустой ключ "" → "$schema"
+- **package.json:** добавлен "type": "module" (убирает ESLint warning)
+- **UI Kit:** все inline-стили вынесены в CSS-классы
+- **NG0955:** track col.fieldName → track $index в превью редактора таблиц
+- **Выравнивание:** поля колонок на одном уровне (убраны компенсационные padding-top)
+
+### Changed
+- **Превью таблиц:** улучшена стилизация (border-radius, uppercase-заголовки, моноширинный шрифт)
+- **kp-table:** showView input + rowView output + иконка просмотра
+
 ## [1.8.0] — 2026-06-04 — Фазы 4, 7, 8 (Тестирование, UI/UX, DevOps)
 
 ### Added
