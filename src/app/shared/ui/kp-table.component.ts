@@ -35,9 +35,11 @@ export interface TableColumn {
       <ng-template pTemplate="header" let-columns>
         <tr>
           @for (col of columns; track col.field) {
-            <th [pSortableColumn]="col.sortable ? col.field : ''" [style.width]="col.width || 'auto'" class="kp-table__th">
-              <span class="kp-table__th-text">{{ col.header }}</span>
-              @if (col.sortable) { <p-sortIcon [field]="col.field" /> }
+            <th [pSortableColumn]="col.sortable ? col.field : ''" [style.width]="col.width || 'auto'" [class.kp-table__th--right]="col.type === 'number' || col.type === 'date'">
+              <div class="kp-table__th-inner">
+                <span class="kp-table__th-text">{{ col.header }}</span>
+                @if (col.sortable) { <p-sortIcon [field]="col.field" /> }
+              </div>
             </th>
           }
           @if (showActions()) {
@@ -49,7 +51,7 @@ export interface TableColumn {
       <ng-template pTemplate="body" let-rowData let-columns="columns">
         <tr>
           @for (col of columns; track col.field) {
-            <td>
+            <td [class.kp-table__td--right]="col.type === 'number' || col.type === 'date'">
               @switch (col.type) {
                 @case ('badge') {
                   <kp-badge [value]="rowData[col.field]" />
@@ -119,16 +121,25 @@ export interface TableColumn {
   styles: [`
     .kp-table__actions-header { width: 175px; }
 
-    .kp-table__th {
-      display: flex;
+    .kp-table__th-inner {
+      display: inline-flex;
       align-items: center;
       gap: var(--space-1);
+    }
+
+    .kp-table__th--right .kp-table__th-inner {
+      justify-content: flex-end;
+    }
+
+    .kp-table__td--right {
+      text-align: right;
     }
 
     .kp-table__actions {
       display: flex;
       gap: 6px;
       white-space: nowrap;
+      justify-content: center;
     }
 
     /* Кнопки действий — всегда видимый фон + чёткая рамка */
@@ -186,6 +197,16 @@ export interface TableColumn {
       text-align: center;
       padding: var(--space-8) !important;
       color: var(--color-text-muted);
+    }
+
+    /* Выравнивание данных в ячейках */
+    :host ::ng-deep .p-datatable-table td {
+      vertical-align: middle;
+    }
+
+    /* Hover-эффект на строке */
+    :host ::ng-deep .p-datatable-table tbody tr:hover {
+      background: var(--color-surface-hover);
     }
   `],
   changeDetection: ChangeDetectionStrategy.OnPush
