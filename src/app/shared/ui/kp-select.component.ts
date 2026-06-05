@@ -24,14 +24,16 @@ export interface SelectOption {
             (ngModelChange)="onValueChange($event)"
             [optionLabel]="optionLabel()"
             [optionValue]="optionValue()"
-            [placeholder]="''"
+            [placeholder]="placeholder()"
             [disabled]="disabled()"
             [showClear]="showClear()"
             [filter]="filter()"
             [filterBy]="filterBy()"
-            [class.ng-invalid]="!!error()"
+            [class.kp-select--error]="!!error()"
             [attr.aria-label]="label() || placeholder() || 'Выпадающий список'"
             [attr.aria-describedby]="error() ? inputId() + '-error' : null"
+            styleClass="kp-select__trigger"
+            panelStyleClass="kp-select__panel"
           />
           <label [for]="inputId()">{{ label() }}</label>
         </p-floatlabel>
@@ -48,9 +50,11 @@ export interface SelectOption {
           [showClear]="showClear()"
           [filter]="filter()"
           [filterBy]="filterBy()"
-          [class.ng-invalid]="!!error()"
+          [class.kp-select--error]="!!error()"
           [attr.aria-label]="label() || placeholder() || 'Выпадающий список'"
           [attr.aria-describedby]="error() ? inputId() + '-error' : null"
+          styleClass="kp-select__trigger"
+          panelStyleClass="kp-select__panel"
         />
       }
       @if (error()) {
@@ -59,9 +63,155 @@ export interface SelectOption {
     </div>
   `,
   styles: [`
-    .kp-select-field { display: flex; flex-direction: column; gap: var(--space-2); }
-    .kp-select-field--error :host ::ng-deep .p-select { border-color: var(--color-error); }
-    .kp-select__error { color: var(--color-error); font-size: var(--font-size-xs); margin-top: var(--space-1); }
+    .kp-select-field {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-1);
+    }
+
+    /* === Триггер (поле выбора) === */
+    :host ::ng-deep .kp-select__trigger {
+      min-height: 42px;
+      border-radius: var(--radius-md);
+      border: 1.5px solid var(--color-border);
+      background: var(--color-surface);
+      font-size: var(--font-size-base);
+      color: var(--color-text);
+      transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+    }
+
+    :host ::ng-deep .kp-select__trigger:hover {
+      border-color: var(--color-primary);
+    }
+
+    :host ::ng-deep .kp-select__trigger.p-focus,
+    :host ::ng-deep .kp-select__trigger.p-inputwrapper-focus {
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 20%, transparent);
+    }
+
+    /* Состояние ошибки */
+    :host ::ng-deep .kp-select__trigger.kp-select--error {
+      border-color: var(--color-error);
+    }
+
+    :host ::ng-deep .kp-select__trigger.kp-select--error.p-focus,
+    :host ::ng-deep .kp-select__trigger.kp-select--error.p-inputwrapper-focus {
+      border-color: var(--color-error);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-error) 20%, transparent);
+    }
+
+    /* Disabled */
+    :host ::ng-deep .kp-select__trigger.p-disabled {
+      opacity: 0.55;
+      background: var(--color-surface-alt);
+      cursor: not-allowed;
+    }
+
+    /* Placeholder цвет */
+    :host ::ng-deep .kp-select__trigger .p-select-label.p-placeholder {
+      color: var(--color-text-muted);
+    }
+
+    /* Clear-кнопка (крестик) */
+    :host ::ng-deep .kp-select__trigger .p-select-clear-icon {
+      color: var(--color-text-muted);
+      width: 16px;
+      height: 16px;
+      transition: color var(--transition-fast);
+    }
+    :host ::ng-deep .kp-select__trigger .p-select-clear-icon:hover {
+      color: var(--color-text);
+    }
+
+    /* Chevron-стрелка */
+    :host ::ng-deep .kp-select__trigger .p-select-dropdown-icon {
+      color: var(--color-text-muted);
+      width: 16px;
+      height: 16px;
+      transition: transform var(--transition-fast), color var(--transition-fast);
+    }
+
+    /* === Дропдаун-панель === */
+    :host ::ng-deep .kp-select__panel {
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--color-border);
+      box-shadow: var(--shadow-xl);
+      margin-top: var(--space-1);
+      background: var(--color-surface);
+      overflow: hidden;
+    }
+
+    /* Поле поиска внутри дропдауна */
+    :host ::ng-deep .kp-select__panel .p-select-filter-container {
+      padding: var(--space-2);
+      border-bottom: 1px solid var(--color-border-light);
+    }
+
+    :host ::ng-deep .kp-select__panel .p-select-filter {
+      width: 100%;
+      padding: var(--space-2) var(--space-3);
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--color-border-light);
+      font-size: var(--font-size-sm);
+      color: var(--color-text);
+      background: var(--color-surface);
+      outline: none;
+      transition: border-color var(--transition-fast);
+    }
+
+    :host ::ng-deep .kp-select__panel .p-select-filter:focus {
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-primary) 15%, transparent);
+    }
+
+    /* Опции */
+    :host ::ng-deep .kp-select__panel .p-select-option {
+      padding: var(--space-2) var(--space-4);
+      font-size: var(--font-size-sm);
+      color: var(--color-text);
+      cursor: pointer;
+      transition: background var(--transition-fast), color var(--transition-fast);
+    }
+
+    :host ::ng-deep .kp-select__panel .p-select-option:not(.p-select-option-selected):hover {
+      background: var(--color-primary-subtle);
+      color: var(--color-primary);
+    }
+
+    :host ::ng-deep .kp-select__panel .p-select-option.p-select-option-selected {
+      background: var(--color-primary-light);
+      color: var(--color-primary);
+      font-weight: var(--font-weight-semibold);
+    }
+
+    /* Скролл внутри дропдауна */
+    :host ::ng-deep .kp-select__panel .p-select-list-container {
+      max-height: 240px;
+      overflow-y: auto;
+    }
+
+    /* === Float label позиционирование === */
+    :host ::ng-deep p-floatlabel {
+      display: flex;
+      flex-direction: column;
+    }
+
+    :host ::ng-deep p-floatlabel label {
+      order: -1;
+      margin-bottom: var(--space-1);
+      font-size: var(--font-size-sm);
+      font-weight: var(--font-weight-medium);
+      color: var(--color-text-secondary);
+    }
+
+    /* Сообщение об ошибке */
+    .kp-select__error {
+      color: var(--color-error);
+      font-size: var(--font-size-xs);
+      margin-top: var(--space-1);
+      line-height: 1.3;
+    }
   `],
   providers: [
     { provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => KpSelectComponent), multi: true }
