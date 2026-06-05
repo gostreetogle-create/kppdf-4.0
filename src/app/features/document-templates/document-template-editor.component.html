@@ -31,12 +31,12 @@
     <div class="dt-editor__table-edit-footer">
       <kp-button
         label="Сохранить"
-        icon="pi pi-check"
+        lucideIcon="check"
         (buttonClick)="saveSepEdit()"
       />
       <kp-button
         label="Отмена"
-        icon="pi pi-times"
+        lucideIcon="x"
         severity="secondary"
         (buttonClick)="sepEditVisible.set(false)"
       />
@@ -71,12 +71,12 @@
     <div class="dt-editor__table-edit-footer">
       <kp-button
         label="Сохранить"
-        icon="pi pi-check"
+        lucideIcon="check"
         (buttonClick)="saveTableBlockEdit()"
       />
       <kp-button
         label="Отмена"
-        icon="pi pi-times"
+        lucideIcon="x"
         severity="secondary"
         (buttonClick)="tableEditVisible.set(false)"
       />
@@ -130,21 +130,21 @@
           <div class="dt-editor__toolbar-buttons">
             <kp-button
               label="+ Текст"
-              icon="pi pi-align-left"
+              lucideIcon="align-left"
               size="small"
               severity="secondary"
               (buttonClick)="addBlock('text')"
             />
             <kp-button
               label="+ Таблица"
-              icon="pi pi-table"
+              lucideIcon="table"
               size="small"
               severity="secondary"
               (buttonClick)="addBlock('table')"
             />
             <kp-button
               label="+ Разделитель"
-              icon="pi pi-minus"
+              lucideIcon="minus"
               size="small"
               severity="secondary"
               (buttonClick)="addBlock('separator')"
@@ -156,7 +156,7 @@
         <div class="dt-editor__preview-btn">
           <kp-button
             label="Предпросмотр"
-            icon="pi pi-eye"
+            lucideIcon="eye"
             size="small"
             severity="info"
             [disabled]="blocks().length === 0"
@@ -185,13 +185,13 @@
     <div class="dt-editor__footer">
       <kp-button
         [label]="isNew() ? 'Создать шаблон' : 'Сохранить'"
-        icon="pi pi-check"
+        lucideIcon="check"
         [loading]="saving()"
         (buttonClick)="save()"
       />
       <kp-button
         label="Отмена"
-        icon="pi pi-times"
+        lucideIcon="x"
         severity="secondary"
         (buttonClick)="cancel()"
       />
