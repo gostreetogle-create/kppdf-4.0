@@ -21,7 +21,7 @@
         <thead>
           <tr>
             <th class="tt-preview__th--num">#</th>
-            @for (col of tmpl.columns; track $index; let i = $index) {
+            @for (col of tmpl.columns; track col.fieldName; let i = $index) {
               <th [style.width]="col.width || 'auto'">
                 {{ getFieldLabel(col) }}
               </th>
@@ -31,7 +31,7 @@
         <tbody>
           <tr>
             <td class="tt-preview__td--num">1</td>
-            @for (col of tmpl.columns; track $index) {
+            @for (col of tmpl.columns; track col.fieldName) {
               <td class="tt-preview__cell">{{ '{' + '{' + col.fieldName + '}' + '}' }}</td>
             }
           </tr>

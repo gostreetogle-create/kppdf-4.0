@@ -73,7 +73,7 @@
         class="tt-editor__columns-list"
         (cdkDropListDropped)="onColumnDrop($event)"
       >
-        @for (col of columns(); track $index; let i = $index) {
+        @for (col of columns(); track col.fieldName; let i = $index) {
           <div
             class="tt-editor__column-card"
             [class.tt-editor__column-card--error]="col.errors['fieldName']"
@@ -168,7 +168,7 @@
         <table class="tt-editor__preview-table">
           <thead>
             <tr>
-              @for (col of columns(); track $index; let i = $index) {
+              @for (col of columns(); track col.fieldName; let i = $index) {
                 <th [style.width]="col.width || 'auto'">
                   {{ col.label || getFieldLabel(col.fieldName) }}
                 </th>
@@ -177,7 +177,7 @@
           </thead>
           <tbody>
             <tr>
-              @for (col of columns(); track $index) {
+              @for (col of columns(); track col.fieldName) {
                 <td class="tt-editor__preview-cell">
                   {{ '{' + '{' + col.fieldName + '}' + '}' }}
                 </td>
