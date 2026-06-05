@@ -10,10 +10,12 @@ import { KpCardComponent } from '../../shared/ui/kp-card.component';
 import { KpTableComponent, TableColumn } from '../../shared/ui/kp-table.component';
 import { KpToastComponent } from '../../shared/ui/kp-toast.component';
 import { KpConfirmDialogComponent } from '../../shared/ui/kp-confirm-dialog.component';
+import { KpDialogComponent } from '../../shared/ui/kp-dialog.component';
 import { NotificationService } from '../../core/notification.service';
 import { TableTemplateService } from '../../core/table-template.service';
+import { TableRegistryService } from '../../core/table-registry.service';
 import { ConfirmationService } from 'primeng/api';
-import type { TableTemplate } from '../../../../shared/types/index.js';
+import type { TableTemplate, TemplateColumn } from '../../../../shared/types/index.js';
 
 interface TableTemplateRow extends TableTemplate {
   columnsCount: number;
@@ -28,6 +30,7 @@ interface TableTemplateRow extends TableTemplate {
     KpButtonComponent,
     KpBreadcrumbComponent, KpCardComponent,
     KpTableComponent, KpToastComponent, KpConfirmDialogComponent,
+    KpDialogComponent,
   ],
   templateUrl: './table-template-list.component.html',
   styleUrls: ['./table-template-list.component.scss'],
@@ -36,11 +39,19 @@ interface TableTemplateRow extends TableTemplate {
 export class TableTemplateListComponent implements OnInit {
   private router = inject(Router);
   private templateService = inject(TableTemplateService);
+  private registry = inject(TableRegistryService);
   private notification = inject(NotificationService);
   private confirmationService = inject(ConfirmationService);
 
   templates = signal<TableTemplateRow[]>([]);
   loading = signal(false);
+
+  /** Preview dialog */
+  previewVisible = signal(false);
+  previewTemplate = signal<TableTemplate | null>(null);
+  previewFields = signal<Record<string, string>>({});
+  previewTableLabels = signal<Record<string, string>>({});
+  previewLoading = signal(false);
 
   breadcrumbs: MenuItem[] = [
     { label: 'Администрирование', routerLink: '/admin' },
@@ -97,7 +108,53 @@ export class TableTemplateListComponent implements OnInit {
 
   onViewRow(row: unknown) {
     const tmpl = row as TableTemplateRow;
-    this.router.navigate(['/admin/table-templates', tmpl.id, 'edit']);
+    this.openPreview(tmpl);
+  }
+
+  async openPreview(tmpl: TableTemplateRow) {
+    this.previewTemplate.set(tmpl);
+    this.previewLoading.set(true);
+    this.previewVisible.set(true);
+
+    try {
+      const result = await firstValueFrom(this.templateService.getTemplate(tmpl.id));
+      if (result.success && result.data) {
+        const fullTemplate = result.data;
+        this.previewTemplate.set(fullTemplate);
+
+        // Собираем метаданные полей и названия таблиц из реестра
+        const tableNames = [...new Set(fullTemplate.columns.map(c => c.tableName))];
+        const fieldLabels: Record<string, string> = {};
+        const tableLabels: Record<string, string> = {};
+        for (const tableName of tableNames) {
+          const table = await firstValueFrom(this.registry.getTable(tableName));
+          if (table) {
+            tableLabels[tableName] = table.label;
+            for (const field of table.fields) {
+              fieldLabels[field.name] = field.label;
+            }
+          }
+        }
+        this.previewFields.set(fieldLabels);
+        this.previewTableLabels.set(tableLabels);
+      }
+    } catch {
+      this.notification.error('Не удалось загрузить шаблон');
+      this.previewVisible.set(false);
+    } finally {
+      this.previewLoading.set(false);
+    }
+  }
+
+  getFieldLabel(col: TemplateColumn): string {
+    return col.label || this.previewFields()[col.fieldName] || col.fieldName;
+  }
+
+  getTableNames(tmpl: TableTemplate): string {
+    const labels = this.previewTableLabels();
+    return [...new Set(tmpl.columns.map(c => c.tableName))]
+      .map(name => labels[name] || name)
+      .join(', ');
   }
 
   async onClone(row: unknown) {

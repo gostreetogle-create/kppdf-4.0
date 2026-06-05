@@ -1,6 +1,59 @@
 <kp-toast />
 <kp-confirm-dialog />
 
+<!-- Preview dialog -->
+<kp-dialog
+  header="Предпросмотр: {{ previewTemplate()?.name || '' }}"
+  [visible]="previewVisible()"
+  (visibleChange)="previewVisible.set($event)"
+  width="800px"
+>
+  @if (previewLoading()) {
+    <div class="tt-preview__loading">Загрузка...</div>
+  } @else if (previewTemplate(); as tmpl) {
+    <div class="tt-preview__info">
+      <span class="tt-preview__label">{{ tmpl.columns.length }} колонок</span>
+      <span class="tt-preview__sep">·</span>
+      <span class="tt-preview__label">Таблицы: {{ getTableNames(tmpl) }}</span>
+    </div>
+    <div class="tt-preview__wrap">
+      <table class="tt-preview__table">
+        <thead>
+          <tr>
+            <th class="tt-preview__th--num">#</th>
+            @for (col of tmpl.columns; track $index; let i = $index) {
+              <th [style.width]="col.width || 'auto'">
+                {{ getFieldLabel(col) }}
+              </th>
+            }
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="tt-preview__td--num">1</td>
+            @for (col of tmpl.columns; track $index) {
+              <td class="tt-preview__cell">{{ '{' + '{' + col.fieldName + '}' + '}' }}</td>
+            }
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="tt-preview__footer">
+      <kp-button
+        label="Редактировать"
+        icon="pi pi-pencil"
+        (buttonClick)="onEditRow(previewTemplate()); previewVisible.set(false)"
+      />
+      <kp-button
+        label="Закрыть"
+        icon="pi pi-times"
+        severity="secondary"
+        (buttonClick)="previewVisible.set(false)"
+      />
+    </div>
+  }
+</kp-dialog>
+
 <kp-card>
   <kp-breadcrumb [items]="breadcrumbs" />
 

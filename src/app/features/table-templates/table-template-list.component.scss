@@ -18,3 +18,88 @@
   color: var(--color-text);
   margin: 0;
 }
+
+/* === Предпросмотр таблицы === */
+.tt-preview__loading {
+  display: flex;
+  justify-content: center;
+  padding: var(--space-12);
+  color: var(--color-text-muted);
+}
+
+.tt-preview__info {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.tt-preview__sep {
+  color: var(--color-border);
+}
+
+.tt-preview__wrap {
+  overflow-x: auto;
+  margin-bottom: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.tt-preview__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-size-sm);
+}
+
+.tt-preview__table thead {
+  background: var(--color-surface-alt);
+}
+
+.tt-preview__table th {
+  border-bottom: 2px solid var(--color-border);
+  padding: var(--space-3);
+  text-align: left;
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+  white-space: nowrap;
+  font-size: var(--font-size-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.tt-preview__th--num {
+  width: 40px;
+  text-align: center !important;
+}
+
+.tt-preview__table td {
+  border-bottom: 1px solid var(--color-border-light);
+  padding: var(--space-3);
+  color: var(--color-text-secondary);
+}
+
+.tt-preview__table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.tt-preview__td--num {
+  width: 40px;
+  text-align: center;
+  color: var(--color-text-muted) !important;
+  font-size: var(--font-size-xs);
+}
+
+.tt-preview__cell {
+  color: var(--color-text-muted);
+  font-style: italic;
+  font-family: 'Consolas', 'Courier New', monospace;
+  font-size: var(--font-size-xs);
+}
+
+.tt-preview__footer {
+  display: flex;
+  gap: var(--space-3);
+  justify-content: flex-end;
+}
