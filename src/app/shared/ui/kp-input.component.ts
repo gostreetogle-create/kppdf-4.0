@@ -4,11 +4,12 @@ import { CommonModule } from '@angular/common';
 import { InputTextModule } from 'primeng/inputtext';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { FloatLabelModule } from 'primeng/floatlabel';
+import { LucideDynamicIcon } from '@lucide/angular';
 
 @Component({
   selector: 'kp-input',
   standalone: true,
-  imports: [CommonModule, FormsModule, InputTextModule, InputNumberModule, FloatLabelModule],
+  imports: [CommonModule, FormsModule, InputTextModule, InputNumberModule, FloatLabelModule, LucideDynamicIcon],
   template: `
     <div class="kp-input-field" [class.kp-input-field--error]="!!error()">
       @if (label()) { <p-floatlabel>
@@ -40,12 +41,16 @@ import { FloatLabelModule } from 'primeng/floatlabel';
             />
             @if (showClear() && value) {
               <button type="button" class="kp-input__action" (click)="clear()" tabindex="-1" aria-label="Очистить">
-                <i class="pi pi-times"></i>
+                <svg lucideIcon="x"></svg>
               </button>
             }
             @if (type() === 'password') {
               <button type="button" class="kp-input__action" (click)="showPassword.set(!showPassword())" tabindex="-1" [attr.aria-label]="showPassword() ? 'Скрыть пароль' : 'Показать пароль'">
-                <i [class]="showPassword() ? 'pi pi-eye-slash' : 'pi pi-eye'"></i>
+                @if (showPassword()) {
+                  <svg lucideIcon="eye-off"></svg>
+                } @else {
+                  <svg lucideIcon="eye"></svg>
+                }
               </button>
             }
           </div>
@@ -74,12 +79,16 @@ import { FloatLabelModule } from 'primeng/floatlabel';
             />
             @if (showClear() && value) {
               <button type="button" class="kp-input__action" (click)="clear()" tabindex="-1" aria-label="Очистить">
-                <i class="pi pi-times"></i>
+                <svg lucideIcon="x"></svg>
               </button>
             }
             @if (type() === 'password') {
               <button type="button" class="kp-input__action" (click)="showPassword.set(!showPassword())" tabindex="-1" [attr.aria-label]="showPassword() ? 'Скрыть пароль' : 'Показать пароль'">
-                <i [class]="showPassword() ? 'pi pi-eye-slash' : 'pi pi-eye'"></i>
+                @if (showPassword()) {
+                  <svg lucideIcon="eye-off"></svg>
+                } @else {
+                  <svg lucideIcon="eye"></svg>
+                }
               </button>
             }
           </div>

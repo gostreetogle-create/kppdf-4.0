@@ -12,6 +12,7 @@ import {
   LucideExternalLink, LucideTriangleAlert,
   LucideChevronLeft, LucideChevronRight, LucideSun, LucideMoon, LucideMenu, LucideBell,
   LucideHome, LucidePalette, LucideBook, LucideBuilding, LucideCog, LucideFile,
+  LucideEyeOff, LucideX,
 } from '@lucide/angular';
 import Aura from '@primeuix/themes/aura';
 
@@ -43,6 +44,7 @@ export const appConfig: ApplicationConfig = {
       LucideExternalLink, LucideTriangleAlert,
       LucideChevronLeft, LucideChevronRight, LucideSun, LucideMoon, LucideMenu, LucideBell,
   LucideHome, LucidePalette, LucideBook, LucideBuilding, LucideCog, LucideFile,
+  LucideEyeOff, LucideX,
     ),
   ]
 };
