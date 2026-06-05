@@ -65,14 +65,14 @@ import { inject } from '@angular/core';
             <kp-button label="Raised" [raised]="true" />
             <kp-button label="Rounded" [rounded]="true" />
             <kp-button label="Text-only" [text]="true" />
-            <kp-button icon="pi pi-check" />
+            <kp-button lucideIcon="check" />
           </div>
           <div class="uikit__demo-row">
             <kp-button label="Loading" [loading]="true" />
             <kp-button label="Disabled" [disabled]="true" />
             <kp-button label="Small" size="small" />
             <kp-button label="Large" size="large" />
-            <kp-button label="С иконкой" icon="pi pi-search" />
+            <kp-button label="С иконкой" lucideIcon="search" />
           </div>
         </div>
       </section>
@@ -171,7 +171,7 @@ import { inject } from '@angular/core';
         </h2>
         <p class="uikit__section-desc">Модальное окно с backdrop-blur, maxHeight и прокруткой длинного контента.</p>
         <div class="uikit__demo">
-          <kp-button label="Открыть диалог" icon="pi pi-window-maximize" (buttonClick)="dialogVisible.set(true)" />
+          <kp-button label="Открыть диалог" lucideIcon="external-link" (buttonClick)="dialogVisible.set(true)" />
           <kp-dialog
             header="Пример диалога"
             [visible]="dialogVisible()"
@@ -332,7 +332,7 @@ import { inject } from '@angular/core';
           <kp-button
             label="Показать подтверждение"
             severity="danger"
-            icon="pi pi-exclamation-triangle"
+            lucideIcon="triangle-alert"
             (buttonClick)="showConfirm()"
           />
         </div>

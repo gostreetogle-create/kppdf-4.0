@@ -16,7 +16,7 @@ type AvatarStatus = 'online' | 'offline' | 'busy' | 'away' | null;
         [image]="image()"
         [size]="size()"
         [shape]="shape()"
-        [styleClass]="styleClass()"
+        [styleClass]="'kp-avatar--' + size() + ' ' + styleClass()"
       />
       @if (status()) {
         <span class="kp-avatar__status kp-avatar__status--{{ status() }}"></span>
@@ -38,10 +38,14 @@ type AvatarStatus = 'online' | 'offline' | 'busy' | 'away' | null;
       border: 2px solid var(--color-surface);
       box-sizing: border-box;
     }
-    :host-context(.p-avatar-large) .kp-avatar__status,
-    :host-context(.p-avatar-xlarge) .kp-avatar__status {
+    :host ::ng-deep .kp-avatar--large ~ .kp-avatar__status,
+    :host ::ng-deep .kp-avatar--xlarge ~ .kp-avatar__status {
       width: 14px;
       height: 14px;
+    }
+    :host ::ng-deep .kp-avatar--large .p-avatar,
+    :host ::ng-deep .kp-avatar--xlarge .p-avatar {
+      /* placeholder for future large-avatar specific styles */
     }
     .kp-avatar__status--online { background: var(--color-success); }
     .kp-avatar__status--offline { background: var(--color-text-muted); }

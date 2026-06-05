@@ -42,6 +42,18 @@ a, button, input, select, textarea {
   }
 }
 
+// Глобальные focus-visible кольца
+:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--color-surface), 0 0 0 4px var(--color-primary);
+  border-radius: var(--radius-sm);
+}
+
+// Исключаем элементы, которым focus-visible не нужен
+.p-button:focus-visible {
+  box-shadow: 0 0 0 2px var(--color-surface), 0 0 0 4px var(--color-primary) !important;
+}
+
 // Глобальные улучшения для PrimeNG компонентов
 .p-card {
   border-radius: var(--radius-lg) !important;

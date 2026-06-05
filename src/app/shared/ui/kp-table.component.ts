@@ -35,8 +35,8 @@ export interface TableColumn {
       <ng-template pTemplate="header" let-columns>
         <tr>
           @for (col of columns; track col.field) {
-            <th [pSortableColumn]="col.sortable ? col.field : ''" [style.width]="col.width || 'auto'">
-              {{ col.header }}
+            <th [pSortableColumn]="col.sortable ? col.field : ''" [style.width]="col.width || 'auto'" class="kp-table__th">
+              <span class="kp-table__th-text">{{ col.header }}</span>
               @if (col.sortable) { <p-sortIcon [field]="col.field" /> }
             </th>
           }
@@ -118,6 +118,12 @@ export interface TableColumn {
   `,
   styles: [`
     .kp-table__actions-header { width: 175px; }
+
+    .kp-table__th {
+      display: flex;
+      align-items: center;
+      gap: var(--space-1);
+    }
 
     .kp-table__actions {
       display: flex;

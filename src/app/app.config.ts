@@ -8,7 +8,8 @@ import {
   provideLucideIcons,
   LucidePencil, LucideTrash2, LucideEye, LucideCopy, LucideGripVertical,
   LucideChevronUp, LucideChevronDown, LucideAlignLeft, LucideTable, LucideMinus,
-  LucideArrowUpDown, LucideBox,
+  LucideArrowUpDown, LucideBox, LucideCheck, LucideSearch,
+  LucideExternalLink, LucideTriangleAlert,
 } from '@lucide/angular';
 import Aura from '@primeuix/themes/aura';
 
@@ -36,7 +37,8 @@ export const appConfig: ApplicationConfig = {
     provideLucideIcons(
       LucidePencil, LucideTrash2, LucideEye, LucideCopy, LucideGripVertical,
       LucideChevronUp, LucideChevronDown, LucideAlignLeft, LucideTable, LucideMinus,
-      LucideArrowUpDown, LucideBox,
+      LucideArrowUpDown, LucideBox, LucideCheck, LucideSearch,
+      LucideExternalLink, LucideTriangleAlert,
     ),
   ]
 };
