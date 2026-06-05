@@ -118,6 +118,33 @@ export interface DocBlock {
   settings?: DocBlockSettings;
 }
 
+// ========================================
+// Справочники (CRUD-сущности)
+// ========================================
+
+/** Организация — юр.лицо / ИП */
+export interface Organization {
+  id: string;
+  name: string;
+  shortName: string;
+  legalForm: string;
+  inn: string;
+  kpp: string;
+  ogrn: string;
+  phone: string;
+  email: string;
+  legalAddress: string;
+  postalAddress: string;
+  bankName: string;
+  bankBik: string;
+  bankAccount: string;
+  signerName: string;
+  signerPosition: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
 /** Шаблон документа */
 export interface DocumentTemplate {
   id: string;

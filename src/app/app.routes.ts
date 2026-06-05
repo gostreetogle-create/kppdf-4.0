@@ -37,6 +37,18 @@ export const routes: Routes = [
       {
         path: 'admin/document-templates/:id/edit',
         loadComponent: () => import('./features/document-templates/document-template-editor.component').then(m => m.DocumentTemplateEditorComponent)
+      },
+      {
+        path: 'references/organizations',
+        loadComponent: () => import('./features/organizations/organization-list.component').then(m => m.OrganizationListComponent)
+      },
+      {
+        path: 'references/organizations/new',
+        loadComponent: () => import('./features/organizations/organization-editor.component').then(m => m.OrganizationEditorComponent)
+      },
+      {
+        path: 'references/organizations/:id/edit',
+        loadComponent: () => import('./features/organizations/organization-editor.component').then(m => m.OrganizationEditorComponent)
       }
     ]
   },

@@ -42,6 +42,14 @@ export class AdminLayoutComponent {
     { label: 'UI Kit', icon: 'pi pi-palette', routerLink: '/ui-kit' },
     { separator: true },
     {
+      label: 'Справочники',
+      icon: 'pi pi-book',
+      items: [
+        { label: 'Организации', icon: 'pi pi-building', routerLink: '/references/organizations' }
+      ]
+    },
+    { separator: true },
+    {
       label: 'Администрирование',
       icon: 'pi pi-cog',
       items: [
