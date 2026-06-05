@@ -162,7 +162,7 @@ const BLOCK_TYPE_LABELS: Record<string, string> = {
 
     .canvas__block {
       position: relative;
-      transition: outline 0.15s ease;
+      transition: outline var(--transition-spring);
       outline: 2px solid transparent;
       outline-offset: -2px;
     }
@@ -239,7 +239,7 @@ const BLOCK_TYPE_LABELS: Record<string, string> = {
       color: var(--color-text-muted);
       cursor: grab;
       opacity: 0;
-      transition: opacity 0.15s ease, color 0.15s ease, background 0.15s ease;
+      transition: opacity var(--transition-spring), color var(--transition-spring), background var(--transition-spring);
       z-index: 10;
       border-radius: 4px;
       background: var(--color-surface);
@@ -259,7 +259,7 @@ const BLOCK_TYPE_LABELS: Record<string, string> = {
       display: flex;
       gap: 2px;
       opacity: 0;
-      transition: opacity 0.15s ease;
+      transition: opacity var(--transition-spring);
       z-index: 10;
     }
     .canvas__block:hover .canvas__block-actions {

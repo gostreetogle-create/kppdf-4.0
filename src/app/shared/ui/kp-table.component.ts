@@ -136,7 +136,7 @@ export interface TableColumn {
       width: 32px;
       height: 32px;
       border-radius: var(--radius-md);
-      transition: background var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast), border-color var(--transition-fast);
+      transition: background var(--transition-spring), box-shadow var(--transition-spring), transform var(--transition-spring), border-color var(--transition-spring);
       border: 1.5px solid var(--color-border);
     }
 

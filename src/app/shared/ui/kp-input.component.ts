@@ -113,7 +113,7 @@ import { FloatLabelModule } from 'primeng/floatlabel';
       align-items: center;
       justify-content: center;
       line-height: 1;
-      transition: color var(--transition-fast), background var(--transition-fast);
+      transition: color var(--transition-spring), background var(--transition-spring);
     }
     .kp-input__action + .kp-input__action { right: 32px; }
     .kp-input__action:hover {

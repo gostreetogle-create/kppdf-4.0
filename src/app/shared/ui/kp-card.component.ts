@@ -32,7 +32,7 @@ import { CommonModule } from '@angular/common';
       display: block;
     }
     :host ::ng-deep .kp-card-interactive {
-      transition: box-shadow var(--transition-normal), transform var(--transition-normal);
+      transition: box-shadow var(--transition-spring), transform var(--transition-spring);
       cursor: default;
     }
     :host ::ng-deep .kp-card-interactive:hover {
