@@ -89,6 +89,7 @@
               <!-- Выбор поля -->
               <div class="tt-editor__column-select">
                 <kp-select
+                  label="Поле"
                   placeholder="Выберите поле"
                   [options]="fieldOptions()"
                   [ngModel]="col.fieldName"
@@ -100,7 +101,8 @@
               <!-- Заголовок -->
               <div class="tt-editor__column-input">
                 <kp-input
-                  placeholder="Заголовок"
+                  label="Заголовок"
+                  placeholder="Введите заголовок"
                   [(ngModel)]="columns()[i].label"
                 />
               </div>
@@ -108,6 +110,7 @@
               <!-- Ширина -->
               <div class="tt-editor__column-input tt-editor__column-input--width">
                 <kp-input
+                  label="Ширина"
                   placeholder="120px"
                   [(ngModel)]="columns()[i].width"
                 />

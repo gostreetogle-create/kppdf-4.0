@@ -98,7 +98,6 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding-top: var(--space-4);
   color: var(--color-text-muted);
   cursor: grab;
   flex-shrink: 0;
@@ -125,13 +124,11 @@
 .tt-editor__column-select {
   min-width: 180px;
   flex: 1;
-  align-self: flex-start;
 }
 
 .tt-editor__column-input {
   min-width: 140px;
   flex: 1;
-  align-self: flex-start;
 }
 
 .tt-editor__column-input--width {
@@ -144,7 +141,6 @@
   display: flex;
   gap: var(--space-1);
   align-items: center;
-  padding-top: var(--space-4);
   flex-shrink: 0;
 }
 
