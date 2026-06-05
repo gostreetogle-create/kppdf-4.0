@@ -6,6 +6,7 @@ import { MenuItem } from 'primeng/api';
 import { firstValueFrom } from 'rxjs';
 import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
 
+import { LucideDynamicIcon } from '@lucide/angular';
 import { KpInputComponent } from '../../shared/ui/kp-input.component';
 import { KpSelectComponent, SelectOption } from '../../shared/ui/kp-select.component';
 import { KpButtonComponent } from '../../shared/ui/kp-button.component';
@@ -33,7 +34,7 @@ interface EditableColumn {
     CommonModule, FormsModule, DragDropModule,
     KpInputComponent, KpSelectComponent, KpButtonComponent,
     KpBreadcrumbComponent, KpCardComponent, KpToastComponent,
-    KpDialogComponent,
+    KpDialogComponent, LucideDynamicIcon,
   ],
   templateUrl: './table-template-editor.component.html',
   styleUrls: ['./table-template-editor.component.scss'],

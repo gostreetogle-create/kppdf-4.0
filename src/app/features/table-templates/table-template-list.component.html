@@ -41,12 +41,12 @@
     <div class="tt-preview__footer">
       <kp-button
         label="Редактировать"
-        icon="pi pi-pencil"
+        lucideIcon="pencil"
         (buttonClick)="onEditRow(previewTemplate()); previewVisible.set(false)"
       />
       <kp-button
         label="Закрыть"
-        icon="pi pi-times"
+        lucideIcon="x"
         severity="secondary"
         (buttonClick)="previewVisible.set(false)"
       />
@@ -61,7 +61,7 @@
     <h2 class="tt-list__title">Шаблоны таблиц</h2>
     <kp-button
       label="Создать шаблон"
-      icon="pi pi-plus"
+      lucideIcon="plus"
       routerLink="/admin/table-templates/new"
     />
   </div>

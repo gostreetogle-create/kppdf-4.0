@@ -38,7 +38,7 @@
         <h3 class="tt-editor__columns-title">Колонки таблицы</h3>
         <div class="tt-editor__columns-header-actions">
           <kp-button
-            icon="pi pi-eye"
+            lucideIcon="eye"
             severity="info"
             size="small"
             [text]="true"
@@ -49,7 +49,7 @@
           />
           <kp-button
             label="+ Добавить колонку"
-            icon="pi pi-plus"
+            lucideIcon="plus"
             size="small"
             severity="secondary"
             [disabled]="!selectedTable()"
@@ -82,7 +82,7 @@
           >
             <!-- Drag handle -->
             <div class="tt-editor__drag-handle" cdkDragHandle>
-              <i class="pi pi-grip-vertical"></i>
+              <svg lucideIcon="grip-vertical"></svg>
             </div>
 
             <div class="tt-editor__column-row">
@@ -119,7 +119,7 @@
               <!-- Действия -->
               <div class="tt-editor__column-actions">
                 <kp-button
-                  icon="pi pi-chevron-up"
+                  lucideIcon="chevron-up"
                   severity="secondary"
                   [text]="true"
                   [rounded]="true"
@@ -130,7 +130,7 @@
                   (buttonClick)="moveColumnUp(i)"
                 />
                 <kp-button
-                  icon="pi pi-chevron-down"
+                  lucideIcon="chevron-down"
                   severity="secondary"
                   [text]="true"
                   [rounded]="true"
@@ -141,7 +141,7 @@
                   (buttonClick)="moveColumnDown(i)"
                 />
                 <kp-button
-                  icon="pi pi-trash"
+                  lucideIcon="trash-2"
                   severity="danger"
                   [text]="true"
                   [rounded]="true"
@@ -189,7 +189,7 @@
       <div class="tt-editor__preview-footer">
         <kp-button
           label="Закрыть"
-          icon="pi pi-times"
+          lucideIcon="x"
           severity="secondary"
           (buttonClick)="previewVisible.set(false)"
         />
@@ -200,13 +200,13 @@
     <div class="tt-editor__footer">
       <kp-button
         [label]="isNew() ? 'Создать шаблон' : 'Сохранить'"
-        icon="pi pi-check"
+        lucideIcon="check"
         [loading]="saving()"
         (buttonClick)="save()"
       />
       <kp-button
         label="Отмена"
-        icon="pi pi-times"
+        lucideIcon="x"
         severity="secondary"
         (buttonClick)="cancel()"
       />
