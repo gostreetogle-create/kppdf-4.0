@@ -2,6 +2,8 @@ import { Component, signal, inject, ChangeDetectionStrategy, ChangeDetectorRef }
 import { KpDialogComponent } from './kp-dialog.component.js';
 import { KpDocCanvasComponent } from './kp-doc-canvas.component.js';
 import { KpButtonComponent } from './kp-button.component.js';
+import html2canvas from 'html2canvas';
+import { jsPDF } from 'jspdf';
 import type { DocBlock } from '../../../../shared/types/index.js';
 
 const DOC_TYPE_LABELS: Record<string, string> = {
@@ -41,6 +43,13 @@ const DOC_TYPE_LABELS: Record<string, string> = {
         </div>
 
         <div class="preview__footer no-print">
+          <kp-button
+            label="Скачать PDF"
+            icon="pi pi-download"
+            severity="success"
+            [loading]="pdfLoading()"
+            (buttonClick)="downloadPdf()"
+          />
           <kp-button
             label="Печать"
             icon="pi pi-print"
@@ -212,6 +221,7 @@ const DOC_TYPE_LABELS: Record<string, string> = {
 export class KpDocPreviewDialogComponent {
   visible = signal(false);
   printing = signal(false);
+  pdfLoading = signal(false);
   templateName = signal('');
   docType = signal('');
   backgroundImage = signal('');
@@ -250,5 +260,60 @@ export class KpDocPreviewDialogComponent {
       // Reset after printing
       setTimeout(() => this.printing.set(false), 500);
     }, 100);
+  }
+
+  async downloadPdf() {
+    this.pdfLoading.set(true);
+    this.cdr.detectChanges();
+
+    // Small delay to let the canvas fully render
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    const pageElement = document.querySelector('kp-doc-preview-dialog .canvas__page') as HTMLElement | null;
+    if (!pageElement) {
+      this.pdfLoading.set(false);
+      return;
+    }
+
+    try {
+      const canvas = await html2canvas(pageElement, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#ffffff',
+      });
+
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+
+      const imgWidth = pdfWidth;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+      let heightLeft = imgHeight;
+      let position = 0;
+      let pageNum = 0;
+
+      // First page
+      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+      heightLeft -= pdfHeight;
+      pageNum++;
+
+      // Additional pages if content overflows
+      while (heightLeft > 0) {
+        position = -(pdfHeight * pageNum);
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+        heightLeft -= pdfHeight;
+        pageNum++;
+      }
+
+      const fileName = `${this.templateName() || 'документ'}.pdf`;
+      pdf.save(fileName);
+    } catch (err) {
+      console.error('PDF export failed:', err);
+    } finally {
+      this.pdfLoading.set(false);
+    }
   }
 }
