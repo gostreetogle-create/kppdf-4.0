@@ -125,19 +125,20 @@ export interface TableColumn {
       white-space: nowrap;
     }
 
-    /* Кнопки действий — всегда видимый фон по severity */
+    /* Кнопки действий — всегда видимый фон + чёткая рамка */
     .kp-table__actions ::ng-deep .p-button.p-button-text {
       width: 32px;
       height: 32px;
       border-radius: var(--radius-md);
-      transition: background var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast);
+      transition: background var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast), border-color var(--transition-fast);
+      border: 1.5px solid var(--color-border);
     }
 
-    /* secondary (редактировать) */
+    /* secondary (редактировать, ▲▼) */
     .kp-table__actions ::ng-deep .p-button.p-button-text.p-button-secondary {
       color: var(--color-text-secondary);
       background: var(--color-surface-alt);
-      border: 1px solid var(--color-border-light);
+      border-color: var(--color-border);
     }
     .kp-table__actions ::ng-deep .p-button.p-button-text.p-button-secondary:hover {
       color: var(--color-primary);
@@ -147,11 +148,11 @@ export interface TableColumn {
       transform: scale(1.08);
     }
 
-    /* info (клонировать) */
+    /* info (просмотр, клонировать) */
     .kp-table__actions ::ng-deep .p-button.p-button-text.p-button-info {
       color: var(--color-text-muted);
       background: var(--color-surface-alt);
-      border: 1px solid var(--color-border-light);
+      border-color: var(--color-border);
     }
     .kp-table__actions ::ng-deep .p-button.p-button-text.p-button-info:hover {
       color: var(--color-info);
@@ -165,7 +166,7 @@ export interface TableColumn {
     .kp-table__actions ::ng-deep .p-button.p-button-text.p-button-danger {
       color: var(--color-text-muted);
       background: var(--color-surface-alt);
-      border: 1px solid var(--color-border-light);
+      border-color: var(--color-border);
     }
     .kp-table__actions ::ng-deep .p-button.p-button-text.p-button-danger:hover {
       color: var(--color-error);

@@ -24,7 +24,7 @@ export interface SelectOption {
             (ngModelChange)="onValueChange($event)"
             [optionLabel]="optionLabel()"
             [optionValue]="optionValue()"
-            [placeholder]="placeholder()"
+            [placeholder]="''"
             [disabled]="disabled()"
             [showClear]="showClear()"
             [filter]="filter()"

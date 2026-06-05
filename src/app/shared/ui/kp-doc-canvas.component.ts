@@ -199,6 +199,20 @@ import { KpButtonComponent } from './kp-button.component.js';
     .canvas__block:hover .canvas__block-actions {
       opacity: 1;
     }
+
+    /* Чёткие рамки у кнопок действий на холсте */
+    .canvas__block-actions ::ng-deep .p-button.p-button-text {
+      border: 1.5px solid var(--color-border);
+      background: var(--color-surface);
+    }
+    .canvas__block-actions ::ng-deep .p-button.p-button-text:hover {
+      border-color: var(--color-primary);
+      background: var(--color-primary-subtle);
+    }
+    .canvas__block-actions ::ng-deep .p-button.p-button-text.p-button-danger:hover {
+      border-color: var(--color-error);
+      background: var(--color-error-bg);
+    }
     .canvas__empty {
       display: flex;
       align-items: center;
