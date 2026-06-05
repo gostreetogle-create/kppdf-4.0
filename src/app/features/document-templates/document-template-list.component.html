@@ -1,5 +1,6 @@
 <kp-toast />
 <kp-confirm-dialog />
+<kp-doc-preview-dialog />
 
 <kp-card>
   <kp-breadcrumb [items]="breadcrumbs" />
@@ -23,7 +24,9 @@
     [sortOrder]="1"
     [searchFields]="['name']"
     [showClone]="true"
+    [showView]="true"
     emptyMessage="Нет созданных шаблонов документов"
+    (rowView)="onViewRow($event)"
     (rowEdit)="onEditRow($event)"
     (rowClone)="onClone($event)"
     (rowDelete)="onDelete($event)"

@@ -1,4 +1,4 @@
-import { Component, inject, signal, OnInit, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, signal, viewChild, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { MenuItem } from 'primeng/api';
@@ -10,6 +10,7 @@ import { KpCardComponent } from '../../shared/ui/kp-card.component';
 import { KpTableComponent, TableColumn } from '../../shared/ui/kp-table.component';
 import { KpToastComponent } from '../../shared/ui/kp-toast.component';
 import { KpConfirmDialogComponent } from '../../shared/ui/kp-confirm-dialog.component';
+import { KpDocPreviewDialogComponent } from '../../shared/ui/kp-doc-preview-dialog.component';
 import { NotificationService } from '../../core/notification.service';
 import { DocumentTemplateService } from '../../core/document-template.service';
 import { ConfirmationService } from 'primeng/api';
@@ -34,7 +35,7 @@ const DOC_TYPE_LABELS: Record<string, string> = {
   imports: [
     CommonModule, RouterLink,
     KpButtonComponent, KpBreadcrumbComponent, KpCardComponent,
-    KpTableComponent, KpToastComponent, KpConfirmDialogComponent,
+    KpTableComponent, KpToastComponent, KpConfirmDialogComponent, KpDocPreviewDialogComponent,
   ],
   templateUrl: './document-template-list.component.html',
   styleUrls: ['./document-template-list.component.scss'],
@@ -48,6 +49,8 @@ export class DocumentTemplateListComponent implements OnInit {
 
   templates = signal<DocTemplateRow[]>([]);
   loading = signal(false);
+
+  previewDialog = viewChild.required(KpDocPreviewDialogComponent);
 
   breadcrumbs: MenuItem[] = [
     { label: 'Администрирование', routerLink: '/admin' },
@@ -113,5 +116,14 @@ export class DocumentTemplateListComponent implements OnInit {
     } else {
       this.notification.error(result.message || 'Ошибка клонирования');
     }
+  }
+
+  onViewRow(row: unknown) {
+    const tmpl = row as DocTemplateRow;
+    this.previewDialog().open(
+      tmpl.name,
+      tmpl.docType,
+      tmpl.blocks,
+    );
   }
 }

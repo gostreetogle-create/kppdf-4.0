@@ -89,7 +89,6 @@
               <!-- Выбор поля -->
               <div class="tt-editor__column-select">
                 <kp-select
-                  label="Поле"
                   placeholder="Выберите поле"
                   [options]="fieldOptions()"
                   [ngModel]="col.fieldName"
@@ -101,16 +100,14 @@
               <!-- Заголовок -->
               <div class="tt-editor__column-input">
                 <kp-input
-                  label="Заголовок"
-                  placeholder="Авто из поля"
+                  placeholder="Заголовок"
                   [(ngModel)]="columns()[i].label"
                 />
               </div>
 
               <!-- Ширина -->
-              <div class="tt-editor__column-input" style="max-width: 100px">
+              <div class="tt-editor__column-input tt-editor__column-input--width">
                 <kp-input
-                  label="Ширина"
                   placeholder="120px"
                   [(ngModel)]="columns()[i].width"
                 />
@@ -118,6 +115,28 @@
 
               <!-- Действия -->
               <div class="tt-editor__column-actions">
+                <kp-button
+                  icon="pi pi-chevron-up"
+                  severity="secondary"
+                  [text]="true"
+                  [rounded]="true"
+                  size="small"
+                  pTooltip="Переместить вверх"
+                  tooltipPosition="top"
+                  [disabled]="i === 0"
+                  (buttonClick)="moveColumnUp(i)"
+                />
+                <kp-button
+                  icon="pi pi-chevron-down"
+                  severity="secondary"
+                  [text]="true"
+                  [rounded]="true"
+                  size="small"
+                  pTooltip="Переместить вниз"
+                  tooltipPosition="top"
+                  [disabled]="i === columns().length - 1"
+                  (buttonClick)="moveColumnDown(i)"
+                />
                 <kp-button
                   icon="pi pi-trash"
                   severity="danger"
@@ -146,7 +165,7 @@
         <table class="tt-editor__preview-table">
           <thead>
             <tr>
-              @for (col of columns(); track col.fieldName; let i = $index) {
+              @for (col of columns(); track $index; let i = $index) {
                 <th [style.width]="col.width || 'auto'">
                   {{ col.label || getFieldLabel(col.fieldName) }}
                 </th>
@@ -155,7 +174,7 @@
           </thead>
           <tbody>
             <tr>
-              @for (col of columns(); track col.fieldName) {
+              @for (col of columns(); track $index) {
                 <td class="tt-editor__preview-cell">
                   {{ '{' + '{' + col.fieldName + '}' + '}' }}
                 </td>

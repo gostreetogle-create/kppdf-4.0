@@ -1,5 +1,7 @@
 .tt-editor {
-  max-width: 800px;
+  max-width: 1100px;
+  margin: 0 auto;
+  display: block;
 }
 
 .tt-editor__header {
@@ -96,7 +98,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding-top: var(--space-5);
+  padding-top: var(--space-4);
   color: var(--color-text-muted);
   cursor: grab;
   flex-shrink: 0;
@@ -113,7 +115,7 @@
 
 .tt-editor__column-row {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: var(--space-3);
   flex-wrap: wrap;
   flex: 1;
@@ -123,18 +125,27 @@
 .tt-editor__column-select {
   min-width: 180px;
   flex: 1;
+  align-self: flex-start;
 }
 
 .tt-editor__column-input {
   min-width: 140px;
   flex: 1;
+  align-self: flex-start;
+}
+
+.tt-editor__column-input--width {
+  max-width: 100px;
+  min-width: 80px;
+  flex: 0 0 auto;
 }
 
 .tt-editor__column-actions {
   display: flex;
   gap: var(--space-1);
   align-items: center;
-  padding-top: var(--space-5);
+  padding-top: var(--space-4);
+  flex-shrink: 0;
 }
 
 .tt-editor__column-error {
@@ -169,6 +180,8 @@
 .tt-editor__preview-wrap {
   overflow-x: auto;
   margin-bottom: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
 }
 
 .tt-editor__preview-table {
@@ -177,25 +190,38 @@
   font-size: var(--font-size-sm);
 }
 
+.tt-editor__preview-table thead {
+  background: var(--color-surface-alt);
+}
+
 .tt-editor__preview-table th {
   background: var(--color-surface-alt);
-  border: 1px solid var(--color-border);
-  padding: var(--space-2) var(--space-3);
+  border-bottom: 2px solid var(--color-border);
+  padding: var(--space-3) var(--space-3);
   text-align: left;
   font-weight: var(--font-weight-semibold);
   color: var(--color-text);
   white-space: nowrap;
+  font-size: var(--font-size-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
 }
 
 .tt-editor__preview-table td {
-  border: 1px solid var(--color-border-light);
-  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--color-border-light);
+  padding: var(--space-3) var(--space-3);
   color: var(--color-text-secondary);
+}
+
+.tt-editor__preview-table tbody tr:last-child td {
+  border-bottom: none;
 }
 
 .tt-editor__preview-cell {
   color: var(--color-text-muted);
   font-style: italic;
+  font-family: 'Consolas', 'Courier New', monospace;
+  font-size: var(--font-size-xs);
 }
 
 .tt-editor__preview-footer {

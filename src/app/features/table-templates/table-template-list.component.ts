@@ -95,6 +95,11 @@ export class TableTemplateListComponent implements OnInit {
     this.router.navigate(['/admin/table-templates', tmpl.id, 'edit']);
   }
 
+  onViewRow(row: unknown) {
+    const tmpl = row as TableTemplateRow;
+    this.router.navigate(['/admin/table-templates', tmpl.id, 'edit']);
+  }
+
   async onClone(row: unknown) {
     const tmpl = row as TableTemplateRow;
     const result = await firstValueFrom(this.templateService.cloneTemplate(tmpl.id));

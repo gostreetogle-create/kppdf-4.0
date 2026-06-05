@@ -122,15 +122,15 @@ import { inject } from '@angular/core';
           Карточка &middot; <code>&lt;kp-card&gt;</code>
         </h2>
         <p class="uikit__section-desc">Блок с заголовком и подзаголовком. Hover lift-эффект. Скелетон для загрузки.</p>
-        <div class="uikit__demo-row" style="margin-bottom:var(--space-4)">
+        <div class="uikit__demo-row uikit__mb-4">
           <kp-toggle label="Показать скелетон" [(checked)]="cardLoading" />
         </div>
         <div class="uikit__demo uikit__demo--grid">
           <kp-card header="Заголовок карточки" [loading]="cardLoading()">
-            <p style="margin:0;color:var(--color-text-muted)">Содержимое карточки. Здесь может быть любой контент: текст, таблицы, формы.</p>
+            <p class="uikit__card-text">Содержимое карточки. Здесь может быть любой контент: текст, таблицы, формы.</p>
           </kp-card>
           <kp-card header="С подзаголовком" subheader="Дополнительная информация" [loading]="cardLoading()">
-            <p style="margin:0;color:var(--color-text-muted)">Карточка с подзаголовком для контекста. Наведи — увидишь lift.</p>
+            <p class="uikit__card-text">Карточка с подзаголовком для контекста. Наведи — увидишь lift.</p>
           </kp-card>
         </div>
       </section>
@@ -178,10 +178,10 @@ import { inject } from '@angular/core';
             (visibleChange)="dialogVisible.set($event)"
           >
             <p>Это содержимое диалога.</p>
-            <p style="color:var(--color-text-muted)">Здесь можно разместить форму, текст или любой другой контент.</p>
-            <p style="color:var(--color-text-muted)">При длинном содержимом — автоматическая прокрутка (maxHeight: 70vh).</p>
-            <p style="color:var(--color-text-muted)">Фон за диалогом размыт (backdrop-filter: blur).</p>
-            <div style="margin-top:var(--space-4);display:flex;gap:var(--space-2);justify-content:flex-end">
+            <p class="uikit__muted">Здесь можно разместить форму, текст или любой другой контент.</p>
+            <p class="uikit__muted">При длинном содержимом — автоматическая прокрутка (maxHeight: 70vh).</p>
+            <p class="uikit__muted">Фон за диалогом размыт (backdrop-filter: blur).</p>
+            <div class="uikit__dialog-footer">
               <kp-button label="Закрыть" severity="secondary" (buttonClick)="dialogVisible.set(false)" />
               <kp-button label="Сохранить" (buttonClick)="dialogVisible.set(false)" />
             </div>
@@ -206,7 +206,7 @@ import { inject } from '@angular/core';
           <kp-badge value="Черновик" severity="secondary" />
           <kp-badge value="Контраст" severity="contrast" />
         </div>
-        <div class="uikit__demo-row" style="margin-top:var(--space-4)">
+        <div class="uikit__demo-row uikit__mt-4">
           <kp-badge value="Активен" icon="pi pi-check" severity="success" />
           <kp-badge value="В ожидании" icon="pi pi-clock" severity="warn" />
           <kp-badge value="Ошибка" icon="pi pi-times" severity="danger" />
@@ -428,6 +428,25 @@ import { inject } from '@angular/core';
       align-items: center;
       gap: var(--space-3);
     }
+
+    .uikit__card-text {
+      margin: 0;
+      color: var(--color-text-muted);
+    }
+
+    .uikit__muted {
+      color: var(--color-text-muted);
+    }
+
+    .uikit__dialog-footer {
+      margin-top: var(--space-4);
+      display: flex;
+      gap: var(--space-2);
+      justify-content: flex-end;
+    }
+
+    .uikit__mb-4 { margin-bottom: var(--space-4); }
+    .uikit__mt-4 { margin-top: var(--space-4); }
   `]
 })
 export class UiKitComponent {

@@ -168,6 +168,24 @@ export class TableTemplateEditorComponent implements OnInit {
     this.columns.update(cols => cols.filter((_, i) => i !== index));
   }
 
+  moveColumnUp(index: number) {
+    if (index === 0) return;
+    this.columns.update(cols => {
+      const arr = [...cols];
+      [arr[index - 1], arr[index]] = [arr[index], arr[index - 1]];
+      return arr;
+    });
+  }
+
+  moveColumnDown(index: number) {
+    if (index >= this.columns().length - 1) return;
+    this.columns.update(cols => {
+      const arr = [...cols];
+      [arr[index], arr[index + 1]] = [arr[index + 1], arr[index]];
+      return arr;
+    });
+  }
+
   onFieldChange(index: number, fieldName: string) {
     this.columns.update(cols => {
       const updated = [...cols];

@@ -39,8 +39,8 @@ import { KpButtonComponent } from './kp-button.component.js';
               cdkDragBoundary=".canvas__blocks-list"
               (click)="blockSelect.emit(block.id)"
             >
-              <!-- Drag handle (visible on hover) -->
-              <div class="canvas__drag-handle" cdkDragHandle>
+              <!-- Drag handle indicator (visible on hover) -->
+              <div class="canvas__drag-handle">
                 <i class="pi pi-grip-vertical"></i>
               </div>
 

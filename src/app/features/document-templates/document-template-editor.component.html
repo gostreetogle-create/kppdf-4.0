@@ -6,6 +6,46 @@
 <!-- Preview dialog -->
 <kp-doc-preview-dialog />
 
+<!-- Table block editor dialog -->
+<kp-dialog
+  header="Редактирование табличного блока"
+  [visible]="tableEditVisible()"
+  (visibleChange)="onTableEditDialogClose($event)"
+  width="500px"
+>
+  <div class="dt-editor__table-edit">
+    <div class="dt-editor__field">
+      <kp-input
+        label="Заголовок таблицы"
+        placeholder="Например: Спецификация товаров"
+        [(ngModel)]="editingTableTitle"
+      />
+    </div>
+    <div class="dt-editor__field">
+      <kp-select
+        label="Шаблон таблицы"
+        placeholder="Выберите шаблон"
+        [options]="tableTemplateOptions()"
+        [ngModel]="editingTableTemplateId()"
+        (ngModelChange)="editingTableTemplateId.set($event)"
+      />
+    </div>
+    <div class="dt-editor__table-edit-footer">
+      <kp-button
+        label="Сохранить"
+        icon="pi pi-check"
+        (buttonClick)="saveTableBlockEdit()"
+      />
+      <kp-button
+        label="Отмена"
+        icon="pi pi-times"
+        severity="secondary"
+        (buttonClick)="tableEditVisible.set(false)"
+      />
+    </div>
+  </div>
+</kp-dialog>
+
 <kp-card styleClass="dt-editor">
   <kp-breadcrumb [items]="breadcrumbs" />
 

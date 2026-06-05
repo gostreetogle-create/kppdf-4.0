@@ -21,7 +21,7 @@ const DOC_TYPE_LABELS: Record<string, string> = {
       [header]="'Предпросмотр: ' + templateName()"
       [visible]="visible()"
       (visibleChange)="visible.set($event)"
-      width="900px"
+      width="1000px"
     >
       <div class="preview">
         <div class="preview__info">
@@ -123,7 +123,7 @@ const DOC_TYPE_LABELS: Record<string, string> = {
       color: #d1d5db;
     }
     .preview__canvas-wrap {
-      max-height: 70vh;
+      max-height: 82vh;
       overflow-y: auto;
       border-radius: 8px;
     }

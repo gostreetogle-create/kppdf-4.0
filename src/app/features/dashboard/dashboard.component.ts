@@ -75,7 +75,9 @@ import { RouterLink } from '@angular/router';
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 0 var(--space-4) var(--space-10);
+      padding: var(--space-6) var(--space-4) var(--space-10);
+      max-width: 1100px;
+      margin: 0 auto;
     }
 
     .welcome__hero {

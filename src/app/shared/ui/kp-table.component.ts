@@ -1,5 +1,6 @@
 import { Component, input, output, ChangeDetectionStrategy } from '@angular/core';
 import { TableModule } from 'primeng/table';
+import { TooltipModule } from 'primeng/tooltip';
 import { CommonModule } from '@angular/common';
 import { KpButtonComponent } from './kp-button.component';
 import { KpBadgeComponent } from './kp-badge.component';
@@ -15,7 +16,7 @@ export interface TableColumn {
 @Component({
   selector: 'kp-table',
   standalone: true,
-  imports: [CommonModule, TableModule, KpButtonComponent, KpBadgeComponent],
+  imports: [CommonModule, TableModule, TooltipModule, KpButtonComponent, KpBadgeComponent],
   template: `
     <p-table
       [value]="data()"
@@ -61,11 +62,24 @@ export interface TableColumn {
           }
           @if (showActions()) {
             <td class="kp-table__actions">
+              @if (showView()) {
+                <kp-button
+                  icon="pi pi-eye"
+                  severity="info"
+                  [text]="true"
+                  [rounded]="true"
+                  pTooltip="Просмотр"
+                  tooltipPosition="top"
+                  (buttonClick)="rowView.emit(rowData)"
+                />
+              }
               <kp-button
                 icon="pi pi-pencil"
                 severity="secondary"
                 [text]="true"
                 [rounded]="true"
+                pTooltip="Редактировать"
+                tooltipPosition="top"
                 (buttonClick)="rowEdit.emit(rowData)"
               />
               @if (showClone()) {
@@ -74,6 +88,8 @@ export interface TableColumn {
                   severity="info"
                   [text]="true"
                   [rounded]="true"
+                  pTooltip="Клонировать"
+                  tooltipPosition="top"
                   (buttonClick)="rowClone.emit(rowData)"
                 />
               }
@@ -82,6 +98,8 @@ export interface TableColumn {
                 severity="danger"
                 [text]="true"
                 [rounded]="true"
+                pTooltip="Удалить"
+                tooltipPosition="top"
                 (buttonClick)="rowDelete.emit(rowData)"
               />
             </td>
@@ -99,7 +117,7 @@ export interface TableColumn {
     </p-table>
   `,
   styles: [`
-    .kp-table__actions-header { width: 140px; }
+    .kp-table__actions-header { width: 175px; }
 
     .kp-table__actions {
       display: flex;
@@ -176,9 +194,11 @@ export class KpTableComponent {
   searchFields = input<string[]>([]);
   showActions = input(true);
   showClone = input(false);
+  showView = input(false);
   emptyMessage = input('Нет данных');
 
   readonly rowEdit = output<unknown>();
   readonly rowDelete = output<unknown>();
   readonly rowClone = output<unknown>();
+  readonly rowView = output<unknown>();
 }

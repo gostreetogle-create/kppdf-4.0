@@ -1,4 +1,4 @@
-import { Component, inject, signal, viewChild, OnInit, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, signal, computed, viewChild, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
@@ -12,12 +12,14 @@ import { KpButtonComponent } from '../../shared/ui/kp-button.component';
 import { KpBreadcrumbComponent } from '../../shared/ui/kp-breadcrumb.component';
 import { KpCardComponent } from '../../shared/ui/kp-card.component';
 import { KpToastComponent } from '../../shared/ui/kp-toast.component';
+import { KpDialogComponent } from '../../shared/ui/kp-dialog.component';
 import { KpDocCanvasComponent } from '../../shared/ui/kp-doc-canvas.component';
 import { KpDocTextEditorDialogComponent } from '../../shared/ui/kp-doc-text-editor-dialog.component';
 import { KpDocPreviewDialogComponent } from '../../shared/ui/kp-doc-preview-dialog.component';
 import { NotificationService } from '../../core/notification.service';
 import { DocumentTemplateService } from '../../core/document-template.service';
-import type { DocBlock, DocBlockType, DocumentTemplate } from '../../../../shared/types/index.js';
+import { TableTemplateService } from '../../core/table-template.service';
+import type { DocBlock, DocBlockType, DocumentTemplate, TableTemplate } from '../../../../shared/types/index.js';
 
 function genId(): string {
   return Math.random().toString(36).slice(2, 10);
@@ -36,7 +38,7 @@ const DOC_TYPE_OPTIONS: SelectOption[] = [
   imports: [
     CommonModule, FormsModule, DragDropModule,
     KpInputComponent, KpSelectComponent, KpButtonComponent,
-    KpBreadcrumbComponent, KpCardComponent, KpToastComponent,
+    KpBreadcrumbComponent, KpCardComponent, KpToastComponent, KpDialogComponent,
     KpDocCanvasComponent, KpDocTextEditorDialogComponent, KpDocPreviewDialogComponent,
   ],
   templateUrl: './document-template-editor.component.html',
@@ -47,6 +49,7 @@ export class DocumentTemplateEditorComponent implements OnInit {
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private templateService = inject(DocumentTemplateService);
+  private tableTemplateService = inject(TableTemplateService);
   private notification = inject(NotificationService);
 
   isNew = signal(true);
@@ -59,6 +62,17 @@ export class DocumentTemplateEditorComponent implements OnInit {
   selectedBlockId = signal('');
   loading = signal(false);
   saving = signal(false);
+
+  /** Table block editing dialog */
+  tableEditVisible = signal(false);
+  editingTableBlock = signal<DocBlock | null>(null);
+  editingTableTemplateId = signal('');
+  editingTableTitle = signal('');
+  tableTemplateList = signal<TableTemplate[]>([]);
+
+  tableTemplateOptions = computed<SelectOption[]>(() =>
+    this.tableTemplateList().map(t => ({ value: t.id, label: t.name }))
+  );
 
   docTypeOptions = DOC_TYPE_OPTIONS;
 
@@ -122,8 +136,58 @@ export class DocumentTemplateEditorComponent implements OnInit {
   onBlockEdit(block: DocBlock) {
     if (block.type === 'text') {
       this.textEditor().open(block);
+    } else if (block.type === 'table') {
+      this.openTableBlockEditor(block);
     } else {
       this.notification.info('Редактирование этого типа блока будет добавлено позже');
+    }
+  }
+
+  /** Открыть редактор табличного блока */
+  async openTableBlockEditor(block: DocBlock) {
+    this.editingTableBlock.set(block);
+    this.editingTableTemplateId.set(block.tableTemplateId || '');
+    this.editingTableTitle.set(block.title || '');
+
+    if (this.tableTemplateList().length === 0) {
+      try {
+        const result = await firstValueFrom(this.tableTemplateService.getTemplates());
+        if (result.success && result.data) {
+          this.tableTemplateList.set(result.data);
+        }
+      } catch {
+        this.notification.error('Не удалось загрузить шаблоны таблиц');
+        return;
+      }
+    }
+    this.tableEditVisible.set(true);
+  }
+
+  /** Сохранить изменения табличного блока */
+  saveTableBlockEdit() {
+    const block = this.editingTableBlock();
+    if (!block) return;
+
+    this.blocks.update(b => b.map(bl => {
+      if (bl.id === block.id) {
+        return {
+          ...bl,
+          title: this.editingTableTitle().trim() || undefined,
+          tableTemplateId: this.editingTableTemplateId() || undefined,
+        };
+      }
+      return bl;
+    }));
+    this.tableEditVisible.set(false);
+    this.editingTableBlock.set(null);
+    this.notification.success('Блок таблицы обновлён');
+  }
+
+  /** Закрытие диалога редактирования табличного блока */
+  onTableEditDialogClose(visible: boolean) {
+    this.tableEditVisible.set(visible);
+    if (!visible) {
+      this.editingTableBlock.set(null);
     }
   }
 
