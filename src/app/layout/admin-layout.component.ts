@@ -46,7 +46,8 @@ export class AdminLayoutComponent {
       label: 'Справочники',
       icon: 'book',
       items: [
-        { label: 'Организации', icon: 'building', routerLink: '/references/organizations' }
+        { label: 'Организации', icon: 'building', routerLink: '/references/organizations' },
+        { label: 'Поставщики', icon: 'truck', routerLink: '/references/suppliers' }
       ]
     },
     { separator: true },

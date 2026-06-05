@@ -42,7 +42,7 @@ export const appConfig: ApplicationConfig = {
       LucideArrowUpDown, LucideBox, LucideCheck, LucideSearch,
       LucideExternalLink, LucideTriangleAlert,
       LucideChevronLeft, LucideChevronRight, LucideSun, LucideMoon, LucideMenu, LucideBell,
-      LucideHome, LucidePalette, LucideBook, LucideBuilding, LucideCog, LucideFile,
+  LucideHome, LucidePalette, LucideBook, LucideBuilding, LucideCog, LucideFile,
     ),
   ]
 };

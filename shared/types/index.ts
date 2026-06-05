@@ -145,6 +145,21 @@ export interface Organization {
   updatedAt: string;
 }
 
+/** Поставщик */
+export interface Supplier {
+  id: string;
+  name: string;
+  contactPerson: string;
+  phone: string;
+  email: string;
+  inn: string;
+  bankAccount: string;
+  paymentTermDays: number;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
 /** Шаблон документа */
 export interface DocumentTemplate {
   id: string;

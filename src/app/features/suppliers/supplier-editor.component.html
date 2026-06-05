@@ -1,0 +1,63 @@
+<kp-toast />
+
+<kp-card styleClass="org-editor">
+  <kp-breadcrumb [items]="breadcrumbs" />
+
+  <h2 class="org-editor__title">
+    {{ isNew() ? 'Новый поставщик' : 'Редактирование поставщика' }}
+  </h2>
+
+  @if (loading()) {
+    <div class="org-editor__loading">Загрузка...</div>
+  } @else {
+    <!-- Основные данные -->
+    <fieldset class="org-editor__section">
+      <legend class="org-editor__section-title">Основные данные</legend>
+      <div class="org-editor__row">
+        <div class="org-editor__field org-editor__field--wide">
+          <kp-input label="Наименование" placeholder="ООО «Название компании»" [(ngModel)]="name" [error]="nameError()" />
+        </div>
+        <div class="org-editor__field">
+          <kp-input label="Контактное лицо" placeholder="Фамилия Имя Отчество" [(ngModel)]="contactPerson" />
+        </div>
+      </div>
+      <div class="org-editor__row">
+        <div class="org-editor__field org-editor__field--compact">
+          <kp-input label="ИНН" placeholder="10 или 12 цифр" [(ngModel)]="inn" [error]="innError()" />
+        </div>
+        <div class="org-editor__field org-editor__field--compact">
+          <kp-input label="Телефон" placeholder="+7 (495) 123-45-67" [(ngModel)]="phone" />
+        </div>
+        <div class="org-editor__field org-editor__field--compact">
+          <kp-input label="Email" placeholder="info@company.ru" [(ngModel)]="email" />
+        </div>
+      </div>
+    </fieldset>
+
+    <!-- Реквизиты -->
+    <fieldset class="org-editor__section">
+      <legend class="org-editor__section-title">Реквизиты</legend>
+      <div class="org-editor__row">
+        <div class="org-editor__field">
+          <kp-input label="Расчётный счёт" placeholder="20 цифр" [(ngModel)]="bankAccount" />
+        </div>
+        <div class="org-editor__field org-editor__field--compact">
+          <kp-input label="Отсрочка платежа (дн.)" type="number" placeholder="30" [(ngModel)]="paymentTermDays" />
+        </div>
+      </div>
+    </fieldset>
+
+    <!-- Статус -->
+    <div class="org-editor__status">
+      <div class="org-editor__status-row">
+        <kp-toggle [(ngModel)]="isActive" label="Поставщик активен" />
+      </div>
+    </div>
+
+    <!-- Футер -->
+    <div class="org-editor__footer">
+      <kp-button [label]="isNew() ? 'Создать поставщика' : 'Сохранить'" icon="pi pi-check" [loading]="saving()" (buttonClick)="save()" />
+      <kp-button label="Отмена" icon="pi pi-times" severity="secondary" (buttonClick)="cancel()" />
+    </div>
+  }
+</kp-card>

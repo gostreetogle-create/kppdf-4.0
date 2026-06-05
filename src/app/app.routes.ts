@@ -49,6 +49,18 @@ export const routes: Routes = [
       {
         path: 'references/organizations/:id/edit',
         loadComponent: () => import('./features/organizations/organization-editor.component').then(m => m.OrganizationEditorComponent)
+      },
+      {
+        path: 'references/suppliers',
+        loadComponent: () => import('./features/suppliers/supplier-list.component').then(m => m.SupplierListComponent)
+      },
+      {
+        path: 'references/suppliers/new',
+        loadComponent: () => import('./features/suppliers/supplier-editor.component').then(m => m.SupplierEditorComponent)
+      },
+      {
+        path: 'references/suppliers/:id/edit',
+        loadComponent: () => import('./features/suppliers/supplier-editor.component').then(m => m.SupplierEditorComponent)
       }
     ]
   },
