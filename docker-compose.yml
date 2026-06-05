@@ -17,11 +17,11 @@ services:
     environment:
       MONGO_INITDB_DATABASE: project-core
     healthcheck:
-      test: ["CMD", "mongosh", "--quiet", "--eval", "db.runCommand('ping').ok"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 15s
+      test: ["CMD-SHELL", "mongosh --quiet --eval 'db.runCommand(\"ping\").ok' || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
 
   # ChromaDB — векторная БД для семантического поиска
   chromadb:
@@ -52,8 +52,7 @@ services:
     ports:
       - "3000:3000"
     depends_on:
-      mongodb:
-        condition: service_healthy
+      - mongodb
     volumes:
       - backend_uploads:/app/uploads
     env_file:

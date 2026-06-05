@@ -15,6 +15,7 @@ import { errorHandler, notFoundHandler } from './middleware/error-handler.js';
 import { logger } from './utils/logger.js';
 import { setupSwagger } from './docs/swagger.js';
 import authRoutes from './modules/auth.routes.js';
+import organizationRoutes from './modules/organization.routes.js';
 import { User } from './modules/user.model.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -43,6 +44,7 @@ app.use('/uploads', express.static(path.resolve(__dirname, '../uploads')));
 // Routes — rate-limit только на логин
 app.use('/api/v1/auth/login', authLimiter);
 app.use('/api/v1/auth', authRoutes);
+app.use('/api/v1/organizations', organizationRoutes);
 
 // Swagger docs
 setupSwagger(app);
