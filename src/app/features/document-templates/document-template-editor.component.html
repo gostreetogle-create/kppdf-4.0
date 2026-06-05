@@ -6,6 +6,44 @@
 <!-- Preview dialog -->
 <kp-doc-preview-dialog />
 
+<!-- Separator block editor dialog -->
+<kp-dialog
+  header="Редактирование разделителя"
+  [visible]="sepEditVisible()"
+  (visibleChange)="onSepEditDialogClose($event)"
+  width="400px"
+>
+  <div class="dt-editor__table-edit">
+    <div class="dt-editor__field">
+      <kp-input
+        label="Высота, px"
+        placeholder="20"
+        type="number"
+        [(ngModel)]="editingSepHeight"
+      />
+    </div>
+    <div class="dt-editor__field">
+      <kp-toggle
+        label="Показывать линию"
+        [(ngModel)]="editingSepShowLine"
+      />
+    </div>
+    <div class="dt-editor__table-edit-footer">
+      <kp-button
+        label="Сохранить"
+        icon="pi pi-check"
+        (buttonClick)="saveSepEdit()"
+      />
+      <kp-button
+        label="Отмена"
+        icon="pi pi-times"
+        severity="secondary"
+        (buttonClick)="sepEditVisible.set(false)"
+      />
+    </div>
+  </div>
+</kp-dialog>
+
 <!-- Table block editor dialog -->
 <kp-dialog
   header="Редактирование табличного блока"
@@ -134,6 +172,7 @@
           [selectedBlockId]="selectedBlockId()"
           (blockSelect)="selectedBlockId.set($event)"
           (blockEdit)="onBlockEdit($event)"
+          (blockDblClick)="onBlockDblClick($event)"
           (blockRemove)="removeBlock($event)"
           (blockMoveUp)="moveBlockUp($event)"
           (blockMoveDown)="moveBlockDown($event)"

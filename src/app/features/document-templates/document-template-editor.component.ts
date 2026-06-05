@@ -13,6 +13,7 @@ import { KpBreadcrumbComponent } from '../../shared/ui/kp-breadcrumb.component';
 import { KpCardComponent } from '../../shared/ui/kp-card.component';
 import { KpToastComponent } from '../../shared/ui/kp-toast.component';
 import { KpDialogComponent } from '../../shared/ui/kp-dialog.component';
+import { KpToggleComponent } from '../../shared/ui/kp-toggle.component';
 import { KpDocCanvasComponent } from '../../shared/ui/kp-doc-canvas.component';
 import { KpDocTextEditorDialogComponent } from '../../shared/ui/kp-doc-text-editor-dialog.component';
 import { KpDocPreviewDialogComponent } from '../../shared/ui/kp-doc-preview-dialog.component';
@@ -37,7 +38,7 @@ const DOC_TYPE_OPTIONS: SelectOption[] = [
   standalone: true,
   imports: [
     CommonModule, FormsModule, DragDropModule,
-    KpInputComponent, KpSelectComponent, KpButtonComponent,
+    KpInputComponent, KpSelectComponent, KpButtonComponent, KpToggleComponent,
     KpBreadcrumbComponent, KpCardComponent, KpToastComponent, KpDialogComponent,
     KpDocCanvasComponent, KpDocTextEditorDialogComponent, KpDocPreviewDialogComponent,
   ],
@@ -69,6 +70,12 @@ export class DocumentTemplateEditorComponent implements OnInit {
   editingTableTemplateId = signal('');
   editingTableTitle = signal('');
   tableTemplateList = signal<TableTemplate[]>([]);
+
+  /** Separator block editing dialog */
+  sepEditVisible = signal(false);
+  editingSepBlock = signal<DocBlock | null>(null);
+  editingSepHeight = signal(20);
+  editingSepShowLine = signal(false);
 
   tableTemplateOptions = computed<SelectOption[]>(() =>
     this.tableTemplateList().map(t => ({ value: t.id, label: t.name }))
@@ -155,13 +162,25 @@ export class DocumentTemplateEditorComponent implements OnInit {
     });
   }
 
+  /** Двойной клик по блоку — открыть соответствующий редактор */
+  onBlockDblClick(block: DocBlock) {
+    if (block.type === 'text') {
+      this.textEditor().open(block);
+    } else if (block.type === 'table') {
+      this.openTableBlockEditor(block);
+    } else if (block.type === 'separator') {
+      this.openSepEditor(block);
+    }
+  }
+
+  /** Клик по кнопке ✏️ — открыть редактор блока */
   onBlockEdit(block: DocBlock) {
     if (block.type === 'text') {
       this.textEditor().open(block);
     } else if (block.type === 'table') {
       this.openTableBlockEditor(block);
-    } else {
-      this.notification.info('Редактирование этого типа блока будет добавлено позже');
+    } else if (block.type === 'separator') {
+      this.openSepEditor(block);
     }
   }
 
@@ -210,6 +229,42 @@ export class DocumentTemplateEditorComponent implements OnInit {
     this.tableEditVisible.set(visible);
     if (!visible) {
       this.editingTableBlock.set(null);
+    }
+  }
+
+  /** Открыть редактор разделителя */
+  openSepEditor(block: DocBlock) {
+    this.editingSepBlock.set(block);
+    this.editingSepHeight.set(block.height ?? 20);
+    this.editingSepShowLine.set(block.showLine ?? false);
+    this.sepEditVisible.set(true);
+  }
+
+  /** Сохранить изменения разделителя */
+  saveSepEdit() {
+    const block = this.editingSepBlock();
+    if (!block) return;
+
+    this.blocks.update(b => b.map(bl => {
+      if (bl.id === block.id) {
+        return {
+          ...bl,
+          height: Number(this.editingSepHeight()),
+          showLine: this.editingSepShowLine(),
+        };
+      }
+      return bl;
+    }));
+    this.sepEditVisible.set(false);
+    this.editingSepBlock.set(null);
+    this.notification.success('Разделитель обновлён');
+  }
+
+  /** Закрытие диалога редактирования разделителя */
+  onSepEditDialogClose(visible: boolean) {
+    this.sepEditVisible.set(visible);
+    if (!visible) {
+      this.editingSepBlock.set(null);
     }
   }
 

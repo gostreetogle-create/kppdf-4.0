@@ -52,6 +52,7 @@ const BLOCK_TYPE_LABELS: Record<string, string> = {
               cdkDragLockAxis="y"
               cdkDragBoundary=".canvas__blocks-list"
               (click)="blockSelect.emit(block.id)"
+              (dblclick)="blockDblClick.emit(block)"
             >
               <!-- Кастомный превью — компактная плашка с иконкой и названием -->
               <ng-template cdkDragPreview>
@@ -300,6 +301,7 @@ export class KpDocCanvasComponent {
   blockRemove = output<string>();
   blockMoveUp = output<string>();
   blockMoveDown = output<string>();
+  blockDblClick = output<DocBlock>();
   blocksReorder = output<{ previousIndex: number; currentIndex: number }>();
 
   private fallbackIcon = 'box';
