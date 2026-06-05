@@ -7,6 +7,18 @@ import { KpDocBlockTableComponent } from './kp-doc-block-table.component.js';
 import { KpDocBlockSeparatorComponent } from './kp-doc-block-separator.component.js';
 import { KpButtonComponent } from './kp-button.component.js';
 
+const BLOCK_TYPE_ICONS: Record<string, string> = {
+  text: 'pi pi-align-left',
+  table: 'pi pi-table',
+  separator: 'pi pi-minus',
+};
+
+const BLOCK_TYPE_LABELS: Record<string, string> = {
+  text: 'Текст',
+  table: 'Таблица',
+  separator: 'Разделитель',
+};
+
 @Component({
   selector: 'kp-doc-canvas',
   standalone: true,
@@ -28,18 +40,34 @@ import { KpButtonComponent } from './kp-button.component.js';
         <div
           cdkDropList
           class="canvas__blocks-list"
+          [cdkDropListLockAxis]="'y'"
           (cdkDropListDropped)="onBlockDrop($event)"
         >
           @for (block of blocks(); track block.id) {
             <div
               class="canvas__block"
               [class.canvas__block--selected]="selectedBlockId() === block.id"
-              [class.cdk-drag-placeholder]="false"
               cdkDrag
+              cdkDragLockAxis="y"
               cdkDragBoundary=".canvas__blocks-list"
               (click)="blockSelect.emit(block.id)"
             >
-              <!-- Drag handle indicator (visible on hover) -->
+              <!-- Кастомный превью — компактная плашка с иконкой и названием -->
+              <ng-template cdkDragPreview>
+                <div class="canvas__drag-preview">
+                  <i [class]="getBlockIcon(block.type)"></i>
+                  <span>{{ getBlockLabel(block) }}</span>
+                </div>
+              </ng-template>
+
+              <!-- Кастомный placeholder — видимая пунктирная зона -->
+              <ng-template cdkDragPlaceholder>
+                <div class="canvas__drag-placeholder">
+                  <i class="pi pi-arrows-v canvas__drag-placeholder-icon"></i>
+                </div>
+              </ng-template>
+
+              <!-- Drag handle (visible on hover) -->
               <div class="canvas__drag-handle">
                 <i class="pi pi-grip-vertical"></i>
               </div>
@@ -143,21 +171,55 @@ import { KpButtonComponent } from './kp-button.component.js';
       outline-color: #3b82f6;
     }
 
-    /* CDK Drag styles */
-    .canvas__block.cdk-drag-preview {
-      outline-color: #3b82f6;
-      background: rgba(255,255,255,0.97);
-      box-shadow: 0 8px 32px rgba(0,0,0,0.18);
-      opacity: 0.95;
+    /* === CDK Drag: кастомный превью === */
+    .canvas__drag-preview {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      background: var(--color-surface);
+      border: 2px solid var(--color-primary);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-xl);
+      font-size: var(--font-size-sm);
+      font-weight: var(--font-weight-semibold);
+      color: var(--color-text);
+      opacity: 0.97;
+      pointer-events: none;
+      transform: scale(1.03);
     }
-    .canvas__block.cdk-drag-placeholder {
-      opacity: 0.3;
-      outline-style: dashed;
-      outline-color: #93c5fd;
-      background: #eff6ff;
+    .canvas__drag-preview i {
+      font-size: 1rem;
+      color: var(--color-primary);
     }
+
+    /* === CDK Drag: кастомный placeholder === */
+    .canvas__drag-placeholder {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 64px;
+      border: 2px dashed var(--color-primary);
+      border-radius: var(--radius-md);
+      background: var(--color-primary-subtle);
+      animation: canvas-placeholder-pulse 1.2s ease-in-out infinite;
+    }
+    .canvas__drag-placeholder-icon {
+      font-size: 1.25rem;
+      color: var(--color-primary);
+      opacity: 0.6;
+    }
+    @keyframes canvas-placeholder-pulse {
+      0%, 100% { opacity: 0.5; }
+      50% { opacity: 1; }
+    }
+
+    /* === CDK Drag: анимация перемещения элементов === */
     .cdk-drop-list-dragging .canvas__block:not(.cdk-drag-placeholder) {
-      transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
+      transition: transform 180ms cubic-bezier(0.25, 0.8, 0.25, 1.2);
+    }
+    .cdk-drag-animating {
+      transition: transform 180ms cubic-bezier(0.25, 0.8, 0.25, 1.2);
     }
 
     .canvas__drag-handle {
@@ -170,20 +232,20 @@ import { KpButtonComponent } from './kp-button.component.js';
       display: flex;
       align-items: center;
       justify-content: center;
-      color: #9ca3af;
+      color: var(--color-text-muted);
       cursor: grab;
       opacity: 0;
-      transition: opacity 0.15s ease, color 0.15s ease;
+      transition: opacity 0.15s ease, color 0.15s ease, background 0.15s ease;
       z-index: 10;
       border-radius: 4px;
-      background: rgba(255,255,255,0.8);
+      background: var(--color-surface);
     }
     .canvas__block:hover .canvas__drag-handle {
       opacity: 1;
     }
     .canvas__drag-handle:hover {
-      color: #3b82f6;
-      background: #eff6ff;
+      color: var(--color-primary);
+      background: var(--color-primary-subtle);
     }
 
     .canvas__block-actions {
@@ -236,6 +298,15 @@ export class KpDocCanvasComponent {
   blockMoveUp = output<string>();
   blockMoveDown = output<string>();
   blocksReorder = output<{ previousIndex: number; currentIndex: number }>();
+
+  getBlockIcon(type: string): string {
+    return BLOCK_TYPE_ICONS[type] || 'pi pi-box';
+  }
+
+  getBlockLabel(block: DocBlock): string {
+    const typeLabel = BLOCK_TYPE_LABELS[block.type] || block.type;
+    return block.title ? `${typeLabel}: ${block.title}` : typeLabel;
+  }
 
   onBlockDrop(event: CdkDragDrop<DocBlock[]>) {
     if (event.previousIndex === event.currentIndex) return;
