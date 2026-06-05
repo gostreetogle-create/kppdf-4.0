@@ -144,9 +144,8 @@
 }
 
 .nav__icon {
-  font-size: 1.1rem;
-  width: 20px;
-  text-align: center;
+  width: 1.1rem;
+  height: 1.1rem;
   flex-shrink: 0;
 }
 
@@ -295,9 +294,10 @@
     color: var(--color-text);
   }
 
-  i {
-    width: 20px;
-    text-align: center;
+  svg {
+    width: 1.1rem;
+    height: 1.1rem;
+    flex-shrink: 0;
   }
 
   &--child {

@@ -11,6 +11,7 @@ import { KpButtonComponent } from '../shared/ui/kp-button.component';
 import { KpDrawerComponent } from '../shared/ui/kp-drawer.component';
 import { KpAvatarComponent } from '../shared/ui/kp-avatar.component';
 import { KpTieredMenuComponent } from '../shared/ui/kp-tiered-menu.component';
+import { LucideDynamicIcon } from '@lucide/angular';
 
 @Component({
   selector: 'app-admin-layout',
@@ -20,7 +21,7 @@ import { KpTieredMenuComponent } from '../shared/ui/kp-tiered-menu.component';
     RouterOutlet, RouterLink, RouterLinkActive,
     TooltipModule,
     KpToastComponent, KpButtonComponent,
-    KpDrawerComponent, KpAvatarComponent, KpTieredMenuComponent,
+    KpDrawerComponent, KpAvatarComponent, KpTieredMenuComponent, LucideDynamicIcon,
   ],
   templateUrl: './admin-layout.component.html',
   styleUrls: ['./admin-layout.component.scss'],
@@ -38,23 +39,23 @@ export class AdminLayoutComponent {
   currentUser = this.authService.currentUser;
 
   navItems: MenuItem[] = [
-    { label: 'Главная', icon: 'pi pi-home', routerLink: '/dashboard' },
-    { label: 'UI Kit', icon: 'pi pi-palette', routerLink: '/ui-kit' },
+    { label: 'Главная', icon: 'home', routerLink: '/dashboard' },
+    { label: 'UI Kit', icon: 'palette', routerLink: '/ui-kit' },
     { separator: true },
     {
       label: 'Справочники',
-      icon: 'pi pi-book',
+      icon: 'book',
       items: [
-        { label: 'Организации', icon: 'pi pi-building', routerLink: '/references/organizations' }
+        { label: 'Организации', icon: 'building', routerLink: '/references/organizations' }
       ]
     },
     { separator: true },
     {
       label: 'Администрирование',
-      icon: 'pi pi-cog',
+      icon: 'cog',
       items: [
-        { label: 'Шаблоны таблиц', icon: 'pi pi-table', routerLink: '/admin/table-templates' },
-        { label: 'Шаблоны документов', icon: 'pi pi-file', routerLink: '/admin/document-templates' }
+        { label: 'Шаблоны таблиц', icon: 'table', routerLink: '/admin/table-templates' },
+        { label: 'Шаблоны документов', icon: 'file', routerLink: '/admin/document-templates' }
       ]
     }
   ];

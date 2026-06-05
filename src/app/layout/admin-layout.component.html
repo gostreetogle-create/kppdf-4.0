@@ -18,7 +18,7 @@
             class="sidebar-mobile-item"
             (click)="mobileSidebarVisible.set(false)"
           >
-            <i [class]="item.icon"></i>
+            @if (item.icon) { <svg [lucideIcon]="item.icon"></svg> }
             <span>{{ item.label }}</span>
           </a>
         } @else if (item.items) {
@@ -30,7 +30,7 @@
               class="sidebar-mobile-item sidebar-mobile-item--child"
               (click)="mobileSidebarVisible.set(false)"
             >
-              <i [class]="child.icon"></i>
+              @if (child.icon) { <svg [lucideIcon]="child.icon"></svg> }
               <span>{{ child.label }}</span>
             </a>
           }
@@ -48,7 +48,7 @@
         [text]="true"
         size="small"
         [label]="sidebarVisible() ? 'Свернуть меню' : 'Развернуть меню'"
-        [icon]="sidebarVisible() ? 'pi pi-angle-left' : 'pi pi-angle-right'"
+        [lucideIcon]="sidebarVisible() ? 'chevron-left' : 'chevron-right'"
         styleClass="sidebar__toggle"
         (buttonClick)="toggleSidebar()"
       />
@@ -61,7 +61,7 @@
         } @else if (item.items && item.items.length > 0) {
           <div class="nav__group">
             <div class="nav__group-header">
-              @if (item.icon) { <i [class]="item.icon + ' nav__icon'"></i> }
+              @if (item.icon) { <svg [lucideIcon]="item.icon" class="nav__icon"></svg> }
               @if (sidebarVisible()) { <span class="nav__group-label">{{ item.label }}</span> }
             </div>
             @if (sidebarVisible()) {
@@ -73,7 +73,7 @@
                     class="nav__item nav__item--child"
                     [attr.aria-label]="child.label"
                   >
-                    @if (child.icon) { <i [class]="child.icon + ' nav__icon'"></i> }
+                    @if (child.icon) { <svg [lucideIcon]="child.icon" class="nav__icon"></svg> }
                     <span class="nav__label">{{ child.label }}</span>
                   </a>
                 }
@@ -89,7 +89,7 @@
             tooltipPosition="right"
             [attr.aria-label]="item.label"
           >
-            <i [class]="item.icon + ' nav__icon'"></i>
+            @if (item.icon) { <svg [lucideIcon]="item.icon" class="nav__icon"></svg> }
             @if (sidebarVisible()) { <span class="nav__label">{{ item.label }}</span> }
           </a>
         }
@@ -101,7 +101,7 @@
         [text]="true"
         size="small"
         [label]="isDark() ? 'Светлая тема' : 'Тёмная тема'"
-        [icon]="isDark() ? 'pi pi-sun' : 'pi pi-moon'"
+        [lucideIcon]="isDark() ? 'sun' : 'moon'"
         styleClass="sidebar__theme-btn"
         [pTooltip]="isDark() ? 'Светлая тема' : 'Тёмная тема'"
         tooltipPosition="right"
@@ -119,7 +119,7 @@
         [text]="true"
         size="small"
         label="Меню"
-        icon="pi pi-bars"
+        lucideIcon="menu"
         styleClass="topbar__mobile-menu"
         (buttonClick)="toggleMobileSidebar()"
       />
@@ -129,7 +129,7 @@
         <kp-button
           [text]="true"
           size="small"
-          icon="pi pi-bell"
+          lucideIcon="bell"
           (buttonClick)="onNotificationsClick()"
         />
 
