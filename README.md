@@ -1,9 +1,6 @@
-# Project Core
+# Project Core — kppdf-4.0
 
-**Универсальное ядро для создания веб-приложений.**
-
-Готовый фундамент для любого сайта: структура, дизайн, авторизация, работа с базой данных.  
-Запускается **одной командой**.
+**Универсальное ядро для создания веб-приложений.** Angular 21 + Express + MongoDB.
 
 ---
 
@@ -11,68 +8,90 @@
 
 ### Требования
 - **Node.js 22+**
-- **Docker Desktop** (для Windows) — для MongoDB
-- **Git** (для обновлений)
+- **Docker Desktop** — для MongoDB, ChromaDB и backend
+- **Git**
 
-### Запуск на Windows
+### Запуск (одна команда)
 
-```powershell
-.\start.ps1
+```bash
+docker compose up -d
 ```
 
-Скрипт сам сделает всё:
+> ⚠️ Папка `kppdf-4.0` содержит точку — невалидна для Docker Compose. В корне лежит `.env` с `COMPOSE_PROJECT_NAME=kppdf`, команды работают автоматически.
 
-| Шаг | Что происходит |
-|-----|---------------|
-| 1 | Проверяет Node.js и npm |
-| 2 | Устанавливает зависимости (npm install), если их нет |
-| 3 | Проверяет Docker и запускает MongoDB контейнер |
-| 4 | Проверяет и освобождает порты (3000, 4200) |
-| 5 | Запускает backend (Express на порту 3000) |
-| 6 | Запускает frontend (Angular на порту 4200) |
-| 7 | Открывает браузер |
+Три контейнера поднимутся автоматически:
 
-### Вход в систему
+| Контейнер | Порт | Описание |
+|-----------|------|----------|
+| `kppdf-mongodb` | 27017 | MongoDB 8 |
+| `kppdf-chromadb` | 8000 | Векторная БД (семантический поиск) |
+| `kppdf-backend` | 3000 | Express API |
 
-| Логин | Пароль | Роль |
-|-------|--------|------|
-| admin | admin123 | Администратор |
+Затем фронтенд:
+
+```bash
+npm install
+npx ng serve
+```
+
+Открыть: **http://localhost:4200**
+
+### Вход
+
+| Логин | Пароль |
+|-------|--------|
+| `admin` | `admin123` |
+
+---
+
+## Стек
+
+| Слой | Технология |
+|------|-----------|
+| **Frontend** | Angular 21 · Standalone · Signals · OnPush |
+| **UI** | PrimeNG 21 (Aura theme) + @lucide/angular (30 иконок) |
+| **Стили** | SCSS + CSS Custom Properties · светлая/тёмная темы |
+| **Бэкенд** | Express 5 + TypeScript (tsx) |
+| **БД** | MongoDB 8 + Mongoose 8 |
+| **Аутентификация** | JWT access + refresh · HttpOnly cookies |
+| **AI-инфраструктура** | ChromaDB (векторная БД) · AGENTS.md · ARCHITECTURE.md |
+| **Тесты** | Vitest + jsdom · 206 тестов |
+| **CI/CD** | GitHub Actions (lint → test → build) |
+| **Контейнеризация** | Docker Compose (3 сервиса) |
 
 ---
 
 ## Структура проекта
 
 ```
-project-core/
-├── src/                        # Frontend (Angular 21)
-│   ├── app/
-│   │   ├── core/               # Сервисы (API, auth, уведомления)
-│   │   ├── shared/
-│   │   │   ├── ui/             # kp-* компоненты (кнопки, таблицы, формы)
-│   │   │   └── utils/          # Вспомогательные функции
-│   │   ├── features/           # Страницы (dashboard, login...)
-│   │   └── layout/             # Оболочка (сайдбар, топбар)
-│   ├── styles/
-│   │   ├── _tokens.scss        # Дизайн-токены (цвета, размеры, шрифты)
-│   │   └── _global.scss        # Глобальные стили
-│   └── index.html
+├── src/app/
+│   ├── core/                     # Сервисы (API, auth, theme, CRUD-сервисы)
+│   ├── shared/ui/               # UI Kit: 16 kp-* компонентов + документные блоки
+│   ├── features/                # Страницы
+│   │   ├── dashboard/           # Главная
+│   │   ├── login/               # Вход
+│   │   ├── ui-kit/              # Витрина компонентов
+│   │   ├── document-templates/  # Конструктор документов (A4 canvas, drag-and-drop)
+│   │   ├── table-templates/     # Конструктор таблиц
+│   │   ├── organizations/       # CRUD-справочник организаций
+│   │   └── suppliers/           # CRUD-справочник поставщиков
+│   └── layout/                  # Оболочка (sidebar, topbar, theme toggle)
 │
-├── backend/                    # Backend (Express.js)
-│   ├── src/
-│   │   ├── config/             # Настройки (env, MongoDB)
-│   │   ├── middleware/         # Auth, error handler
-│   │   ├── modules/            # Модели и роутеры (User, Auth...)
-│   │   └── utils/              # CRUD Factory, API response
-│   ├── uploads/                # Загруженные файлы (сохраняются!)
-│   ├── .env                    # Пароли и ключи
-│   └── .env.example            # Шаблон .env
+├── backend/                     # Express API
+│   └── src/
+│       ├── modules/             # Модели + CRUD-роутеры
+│       ├── middleware/           # JWT auth, error handler
+│       └── utils/               # CRUD Factory, Pino logger, API response
 │
-├── shared/types/               # Общие типы для FE и BE
-├── docker-compose.yml          # MongoDB + Backend контейнеры
-├── start.ps1                   # ОДНА команда для запуска
-├── stop.ps1                    # Остановка проекта
-├── deploy.sh                   # Деплой на сервер
-└── AGENTS.md                   # Правила для AI-разработки
+├── shared/types/                # Общие TypeScript-типы
+├── src/styles/
+│   ├── _tokens.scss             # Дизайн-токены (цвета, тени, радиусы, типографика)
+│   └── _global.scss             # Глобальные стили, PrimeNG-оверрайды
+│
+├── docker-compose.yml           # MongoDB + ChromaDB + Backend
+├── ARCHITECTURE.md              # Полная карта проекта
+├── CONVENTIONS.md               # Правила разработки
+└── ЧЕК-ЛИСТ-КОНСОЛИДИРОВАННЫЙ.md  # Живой чек-лист задач
 ```
 
 ---
@@ -83,236 +102,166 @@ project-core/
 
 ```
 core → shared → features → layout
-(ядро)  (общее)  (страницы)  (оболочка)
 ```
 
-- **core/** — сервисы. Не знает про страницы и оболочку.
-- **shared/** — общие компоненты. Не знает про страницы.
-- **features/** — страницы. Не зависят друг от друга.
-- **layout/** — оболочка. Знает про всё.
+- **core/** — сервисы. Не знает о страницах.
+- **shared/** — общие компоненты. Не знает о страницах.
+- **features/** — страницы. **Не зависят друг от друга.**
+- **layout/** — оболочка. Знает всё.
 
-### Технологии
+### Правила разработки
 
-| Компонент | Технология |
-|-----------|-----------|
-| Frontend | Angular 21 + Signals + Standalone |
-| UI Kit | PrimeNG 21 (через kp-* обёртки) |
-| Стили | SCSS + CSS custom properties |
-| Backend | Express.js + TypeScript |
-| База данных | MongoDB + Mongoose |
-| Аутентификация | JWT (access + refresh) |
-| Тесты | Vitest + jsdom |
-| Контейнеризация | Docker Compose |
+| Правило | Описание |
+|---------|----------|
+| 🔴 Standalone | Все компоненты standalone, без NgModules |
+| 🔴 Signals | `input()`, `output()`, `signal()`, `computed()` — без декораторов |
+| 🔴 `inject()` | DI через inject(), без constructor |
+| 🔴 OnPush | `ChangeDetectionStrategy.OnPush` везде |
+| 🔴 `track` | Уникальный ключ в каждом `@for` |
+| 🔴 kp-* | Только kp-компоненты на страницах, без прямого PrimeNG |
+| 🔴 Токены | Цвета/тени/радиусы через `var(--*)`, без хардкода |
+| 🟡 grep | Проверять имена экспортов в node_modules перед импортом |
+
+Подробно: [`CONVENTIONS.md`](CONVENTIONS.md)
 
 ---
 
-## UI Kit (kp-* компоненты)
+## UI Kit (22 компонента)
 
-Все элементы интерфейса — обёртки над PrimeNG.  
-На страницах используется **только** kp-* компоненты.
+### Базовые (16 компонентов)
 
-| Компонент | Селектор | Описание |
-|-----------|----------|----------|
-| Кнопка | `<kp-button>` | Основная, второстепенная, опасная, текстовая |
-| Поле ввода | `<kp-input>` | Текст, число, пароль, email, float label |
-| Выпадающий список | `<kp-select>` | Выбор из списка, поиск, очистка |
-| Карточка | `<kp-card>` | Блок с заголовком и содержимым |
-| Таблица | `<kp-table>` | CRUD-таблица с пагинацией, сортировкой |
-| Диалог | `<kp-dialog>` | Модальное окно |
-| Уведомление | `<kp-toast>` | Всплывающие сообщения |
-| Подтверждение | `<kp-confirm-dialog>` | Подтверждение действий (удаление и т.п.) |
-| Бейдж статуса | `<kp-badge>` | Цветная метка |
-| Хлебные крошки | `<kp-breadcrumb>` | Навигационный путь |
-| Боковая панель | `<kp-drawer>` | Выдвижная панель (слева/справа) |
-| Аватар | `<kp-avatar>` | Иконка пользователя с инициалами |
-| Меню | `<kp-tiered-menu>` | Многоуровневое выпадающее меню |
-| Выбор даты | `<kp-datepicker>` | Календарь для выбора даты |
-| Загрузка файлов | `<kp-file-upload>` | Загрузка файлов с drag & drop |
-| Переключатель | `<kp-toggle>` | Двоичный переключатель (вкл/выкл) |
+| Компонент | Селектор | Возможности |
+|-----------|----------|-------------|
+| **Кнопка** | `<kp-button>` | 6 severity, 2 size, outlined/raised/rounded/text, lucideIcon, loading |
+| **Поле ввода** | `<kp-input>` | text/number/password/email, float-label, очистка, пароль (eye), ошибка |
+| **Выпадающий список** | `<kp-select>` | ngModel, поиск/фильтр, очистка, float-label, ошибка |
+| **Карточка** | `<kp-card>` | header/subheader, hover lift-эффект, loading skeleton |
+| **Таблица** | `<kp-table>` | CRUD, пагинация, сортировка, поиск, бейджи, кнопки действий |
+| **Диалог** | `<kp-dialog>` | Модальный, backdrop-blur, прокрутка длинного контента |
+| **Уведомление** | `<kp-toast>` | 4 типа (success/info/warn/error), прогресс-бар |
+| **Подтверждение** | `<kp-confirm-dialog>` | Диалог подтверждения действий |
+| **Бейдж** | `<kp-badge>` | 6 severity, rounded, с иконкой |
+| **Хлебные крошки** | `<kp-breadcrumb>` | Навигационный путь, кастомный разделитель |
+| **Аватар** | `<kp-avatar>` | Инициалы/иконка/фото, 4 статуса (online/offline/busy/away) |
+| **Переключатель** | `<kp-toggle>` | 3 размера, ngModel |
+| **Выбор даты** | `<kp-datepicker>` | Русская локализация, с/без времени |
+| **Загрузка файлов** | `<kp-file-upload>` | Drag-and-drop, basic/advanced режимы |
+| **Боковая панель** | `<kp-drawer>` | Выдвижная панель |
+| **Меню** | `<kp-tiered-menu>` | Многоуровневое меню |
+
+### Документные (6 компонентов)
+
+| Компонент | Селектор | Возможности |
+|-----------|----------|-------------|
+| **Холст A4** | `<kp-doc-canvas>` | Drag-and-drop блоков, превью, placeholder |
+| **Текстовый блок** | `<kp-doc-block-text>` | Редактирование текста в диалоге |
+| **Табличный блок** | `<kp-doc-block-table>` | Привязка к шаблону таблицы |
+| **Разделитель** | `<kp-doc-block-separator>` | Настраиваемая высота и линия |
+| **Редактор текста** | `<kp-doc-text-editor-dialog>` | Редактирование текстового блока |
+| **Предпросмотр** | `<kp-doc-preview-dialog>` | Превью и печать документа |
+
+---
+
+## Скрипты
+
+```bash
+# Фронтенд
+npm start              # ng serve (порт 4200)
+npm run build          # production сборка
+npx ng lint            # ESLint
+npx vitest run         # 206 тестов
+
+# Docker
+docker compose up -d            # Запустить все сервисы
+docker compose down             # Остановить
+docker compose logs -f backend  # Логи бэкенда
+docker compose ps               # Статус контейнеров
+
+# Бэкенд (локально, без Docker)
+cd backend && npm run dev       # tsx --watch (порт 3000)
+```
 
 ---
 
 ## API (Backend)
 
-Все endpoint'ы возвращают единый формат:
+### Формат ответа
 
 ```json
-{
-  "success": true,
-  "data": { ... },
-  "message": "..."
-}
+{ "success": true, "data": { ... }, "message": "..." }
 ```
 
-### Авторизация
+### Эндпоинты
 
 | Метод | Путь | Описание |
 |-------|------|----------|
-| POST | `/api/v1/auth/login` | Вход (username + password) |
+| POST | `/api/v1/auth/login` | Вход |
 | POST | `/api/v1/auth/refresh` | Обновление токена |
-| GET | `/api/v1/auth/me` | Текущий пользователь (требует токен) |
+| GET | `/api/v1/auth/me` | Профиль (🔒) |
 
 ### CRUD Factory
 
-Для любой сущности можно создать CRUD-роутер одной функцией:
-
 ```typescript
 import { createCrudRouter } from '../utils/crud-factory.js';
-import { MyModel } from '../modules/my-model.model.js';
-
 router.use('/items', createCrudRouter(MyModel, {
-  searchFields: ['name', 'article'],
+  searchFields: ['name'],
   populate: ['category']
 }));
 ```
 
-Готовые endpoint'ы:
-
-| Метод | Путь | Описание |
-|-------|------|----------|
-| GET | `/api/v1/items` | Список (пагинация, поиск, сортировка) |
-| GET | `/api/v1/items/:id` | Одна запись |
-| POST | `/api/v1/items` | Создать |
-| PUT | `/api/v1/items/:id` | Обновить |
-| DELETE | `/api/v1/items/:id` | Удалить |
-
-Параметры списка: `?page=1&limit=20&sort=-createdAt&search=текст`
+Генерирует: `GET/POST /items`, `GET/PUT/DELETE /items/:id`  
+Параметры: `?page=1&limit=20&sort=-createdAt&search=текст`
 
 ---
 
-## Деплой на сервер
+## Тёмная тема
 
-### Первичная настройка (Ubuntu)
+Две полные темы через CSS Custom Properties:
+- `:root` — светлая (по умолчанию)
+- `[data-theme="dark"]` — тёмная (47 переопределённых токенов)
+
+Переключение — кнопка ☀️/🌙 в топбаре.
+
+Все токены в [`src/styles/_tokens.scss`](src/styles/_tokens.scss):
+- **Цвета:** primary, text, surface, border, success/warning/error/info + семантические bg
+- **Тени:** xs/sm/md/lg/xl + card/card-hover
+- **Радиусы:** sm(6px) / md(8px) / lg(12px) / xl(16px)
+- **Типографика:** Inter, 6 размеров, 4 веса
+- **Переходы:** fast/normal/slow + spring-easing
+- **Градиенты:** primary, sidebar, card-hover
+
+---
+
+## Инфраструктура для AI
+
+Проект спроектирован для работы с AI-ассистентом (Codebuff/Cursor).
+
+| Файл | Назначение |
+|------|-----------|
+| [`ARCHITECTURE.md`](ARCHITECTURE.md) | Полная карта проекта — читать в начале сессии |
+| [`CONVENTIONS.md`](CONVENTIONS.md) | Железные правила разработки |
+| [`AGENTS.md`](AGENTS.md) | Правила для AI-агентов |
+| [`ЧЕК-ЛИСТ-КОНСОЛИДИРОВАННЫЙ.md`](ЧЕК-ЛИСТ-КОНСОЛИДИРОВАННЫЙ.md) | Живой список задач |
+| `база-знаний/` | Извлечённые книги и документация (~30 .md файлов) |
+| `kppdf-chromadb` | Векторная БД для семантического поиска (порт 8000) |
+
+---
+
+## Деплой
 
 ```bash
-# 1. Установить Docker и Node.js
-sudo apt update && sudo apt install -y docker.io docker-compose nodejs npm
-
-# 2. Клонировать проект
-git clone https://github.com/ваш-репозиторий/project-core.git
-cd project-core
-
-# 3. Настроить .env
+# Первичная настройка
+git clone <repo> && cd kppdf-4.0
 cp backend/.env.example backend/.env
-nano backend/.env  # Укажите JWT_SECRET, настройте порты
+# отредактировать .env: JWT_SECRET, пароли
+docker compose up -d
 
-# 4. Запустить одной командой
-./deploy.sh
+# Обновление
+git pull
+docker compose up -d --build
 ```
 
-### Обновление
-
-```bash
-# Зайти на сервер, перейти в папку проекта
-cd /path/to/project-core
-./deploy.sh
-```
-
-Что делает `deploy.sh`:
-1. Забирает последнюю версию из git
-2. Устанавливает зависимости
-3. Собирает frontend
-4. Перезапускает Docker Compose контейнеры
-5. ✅ **НЕ трогает данные в MongoDB**
-6. ✅ **НЕ трогает загруженные файлы**
-
----
-
-## Создание нового проекта из ядра
-
-### Способ 1: Ручной (скопировать + настроить)
-
-```bash
-# 1. Скопировать ядро
-cp -r project-core my-new-project
-cd my-new-project
-
-# 2. Удалить старый git
-rm -rf .git
-
-# 3. Настроить .env
-cp backend/.env.example backend/.env
-
-# 4. Инициализировать новый git
-git init
-git add .
-git commit -m "Initial commit from Project Core"
-
-# 5. Запустить
-.\start.ps1
-```
-
-### Способ 2: AI-агент (рекомендуется)
-
-1. Запустите Codebuff в папке скопированного ядра
-2. Дайте команду: _"Создай проект на основе бизнес-логики: [опишите ваш бизнес]"_
-3. AI-агент сам:
-   - Запросит уточнения по бизнес-логике
-   - Создаст модели данных
-   - Создаст страницы (список, создание, редактирование)
-   - Настроит роутинг
-   - Создаст тесты
-   - Обновит README под ваш проект
-
-> **Важно:** Каждый этап создания записывается в чек-лист.  
-> Даже при обрыве связи AI продолжит с того же места.
-
----
-
-## Дизайн-токены
-
-Все цвета, размеры и шрифты — в одном файле `src/styles/_tokens.scss`.
-
-```scss
-:root {
-  --color-primary: #2563eb;     // Акцентный синий
-  --color-bg: #f8f9fa;          // Фон страницы
-  --color-surface: #ffffff;     // Белая карточка
-  --color-border: #dee2e6;      // Рамки
-  --color-text: #212529;        // Основной текст
-  --color-text-muted: #6c757d;  // Подписи
-}
-```
-
-Тёмная тема — автоматически через `[data-theme="dark"]`.  
-Переключение — кнопка в сайдбаре.
-
----
-
-## Правила разработки
-
-Подробно — в файле [AGENTS.md](AGENTS.md).
-
-Коротко:
-- **Только Standalone** компоненты (без NgModules)
-- **Только inject()** (без constructor DI)
-- **Только Signals** (без NgRx)
-- **Только kp-** компоненты на страницах (без прямого PrimeNG)
-- **Только SCSS** (без inline-стилей)
-- **strict: true** в TypeScript
-- После изменений: `ng build` + тесты
-
----
-
-## Векторная база знаний (опционально)
-
-Для проектов, использующих AI, рядом с ядром можно развернуть ChromaDB:
-
-```bash
-# Установить Python зависимости
-pip install chromadb
-
-# Наполнить базу знаний
-python scripts/seed_chromadb.py
-```
-
-База знаний позволяет AI:
-- Понимать архитектуру проекта
-- Находить нужные файлы
-- Отвечать на вопросы о коде
-- Создавать новые фичи без потери контекста
-
-Подробнее: `knowledge-base/` и `prompts/` в корневой папке.
+Данные MongoDB и ChromaDB сохраняются в Docker volumes — не теряются при перезапуске.
 
 ---
 
