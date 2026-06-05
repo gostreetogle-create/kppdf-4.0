@@ -7,7 +7,7 @@
 services:
   # База данных MongoDB
   mongodb:
-    image: mongo:7
+    image: mongo:8
     container_name: kppdf-mongodb
     restart: unless-stopped
     ports:
@@ -17,10 +17,30 @@ services:
     environment:
       MONGO_INITDB_DATABASE: project-core
     healthcheck:
-      test: echo 'db.runCommand("ping").ok' | mongosh --quiet
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.runCommand('ping').ok"]
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 15s
+
+  # ChromaDB — векторная БД для семантического поиска
+  chromadb:
+    image: chromadb/chroma:latest
+    container_name: kppdf-chromadb
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    volumes:
+      - chromadb_data:/chroma/chroma
+    environment:
+      IS_PERSISTENT: "TRUE"
+      ANONYMIZED_TELEMETRY: "FALSE"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://localhost:8000/api/v2/heartbeat || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
   # Backend (Express)
   backend:
@@ -45,5 +65,7 @@ services:
 volumes:
   mongodb_data:
     name: kppdf-mongodb-data
+  chromadb_data:
+    name: kppdf-chromadb-data
   backend_uploads:
     name: kppdf-uploads
