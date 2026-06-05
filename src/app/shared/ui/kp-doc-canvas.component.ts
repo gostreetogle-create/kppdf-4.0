@@ -41,6 +41,8 @@ const BLOCK_TYPE_LABELS: Record<string, string> = {
         <div
           cdkDropList
           class="canvas__blocks-list"
+          role="list"
+          aria-label="Список блоков документа"
           [cdkDropListLockAxis]="'y'"
           (cdkDropListDropped)="onBlockDrop($event)"
         >
@@ -51,6 +53,9 @@ const BLOCK_TYPE_LABELS: Record<string, string> = {
               cdkDrag
               cdkDragLockAxis="y"
               cdkDragBoundary=".canvas__blocks-list"
+              role="listitem"
+              [attr.aria-label]="getBlockLabel(block)"
+              [attr.aria-selected]="selectedBlockId() === block.id"
               (click)="blockSelect.emit(block.id)"
               (dblclick)="blockDblClick.emit(block)"
             >
@@ -70,7 +75,7 @@ const BLOCK_TYPE_LABELS: Record<string, string> = {
               </ng-template>
 
               <!-- Drag handle (visible on hover) -->
-              <div class="canvas__drag-handle">
+              <div class="canvas__drag-handle" aria-hidden="true">
                 <svg lucideIcon="grip-vertical"></svg>
               </div>
 

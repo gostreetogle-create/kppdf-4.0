@@ -65,6 +65,7 @@ import { LucideDynamicIcon } from '@lucide/angular';
             (ngModelChange)="onValueChange($event)"
             [disabled]="disabled()"
             [placeholder]="placeholder()"
+            [attr.aria-label]="placeholder() || 'Числовое поле'"
           />
         } @else {
           <div class="kp-input__wrapper">
@@ -76,6 +77,7 @@ import { LucideDynamicIcon } from '@lucide/angular';
               [disabled]="disabled()"
               [placeholder]="placeholder()"
               [class.ng-invalid]="!!error()"
+              [attr.aria-label]="placeholder() || 'Поле ввода'"
             />
             @if (showClear() && value) {
               <button type="button" class="kp-input__action" (click)="clear()" tabindex="-1" aria-label="Очистить">
