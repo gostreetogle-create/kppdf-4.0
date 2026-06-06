@@ -49,12 +49,12 @@ npx ng serve
 | Слой | Технология |
 |------|-----------|
 | **Frontend** | Angular 21 · Standalone · Signals · OnPush |
-| **UI** | PrimeNG 21 (Aura theme) + @lucide/angular (30 иконок) |
+| **UI** | PrimeNG 21 (Aura theme) + @lucide/angular (31 иконка) |
 | **Стили** | SCSS + CSS Custom Properties · светлая/тёмная темы |
 | **Бэкенд** | Express 5 + TypeScript (tsx) |
 | **БД** | MongoDB 8 + Mongoose 8 |
 | **Аутентификация** | JWT access + refresh · HttpOnly cookies |
-| **AI-инфраструктура** | ChromaDB (векторная БД) · AGENTS.md · ARCHITECTURE.md |
+| **AI-инфраструктура** | ChromaDB (векторная БД, 3 557 документов) · AGENTS.md · ARCHITECTURE.md |
 | **Тесты** | Vitest + jsdom · 206 тестов |
 | **CI/CD** | GitHub Actions (lint → test → build) |
 | **Контейнеризация** | Docker Compose (3 сервиса) |
@@ -198,14 +198,18 @@ cd backend && npm run dev       # tsx --watch (порт 3000)
 | POST | `/api/v1/auth/login` | Вход |
 | POST | `/api/v1/auth/refresh` | Обновление токена |
 | GET | `/api/v1/auth/me` | Профиль (🔒) |
+| GET/POST | `/api/v1/organizations` | Список / Создать организацию (🔒) |
+| GET/PUT/DELETE | `/api/v1/organizations/:id` | Чтение / Обновление / Удаление (🔒) |
 
 ### CRUD Factory
 
 ```typescript
 import { createCrudRouter } from '../utils/crud-factory.js';
-router.use('/items', createCrudRouter(MyModel, {
-  searchFields: ['name'],
-  populate: ['category']
+
+// Пример: Organisation (backend/src/modules/organization.routes.ts)
+router.use('/organizations', createCrudRouter(Organization, {
+  searchFields: ['name', 'shortName', 'inn'],
+  sortFields: ['name', 'inn', 'createdAt']
 }));
 ```
 
@@ -243,7 +247,7 @@ router.use('/items', createCrudRouter(MyModel, {
 | [`AGENTS.md`](AGENTS.md) | Правила для AI-агентов |
 | [`ЧЕК-ЛИСТ-КОНСОЛИДИРОВАННЫЙ.md`](ЧЕК-ЛИСТ-КОНСОЛИДИРОВАННЫЙ.md) | Живой список задач |
 | `база-знаний/` | Извлечённые книги и документация (~30 .md файлов) |
-| `kppdf-chromadb` | Векторная БД для семантического поиска (порт 8000) |
+| `kppdf-chromadb` | Векторная БД для семантического поиска (порт 8000, 3 557 документов) |
 
 ---
 
