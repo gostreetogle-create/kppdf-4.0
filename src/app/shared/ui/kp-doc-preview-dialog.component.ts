@@ -45,19 +45,19 @@ const DOC_TYPE_LABELS: Record<string, string> = {
         <div class="preview__footer no-print">
           <kp-button
             label="Скачать PDF"
-            icon="pi pi-download"
+            lucideIcon="download"
             severity="success"
             [loading]="pdfLoading()"
             (buttonClick)="downloadPdf()"
           />
           <kp-button
             label="Печать"
-            icon="pi pi-print"
+            lucideIcon="printer"
             (buttonClick)="print()"
           />
           <kp-button
             label="Закрыть"
-            icon="pi pi-times"
+            lucideIcon="x"
             severity="secondary"
             (buttonClick)="visible.set(false)"
           />

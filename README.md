@@ -49,7 +49,7 @@ npx ng serve
 | Слой | Технология |
 |------|-----------|
 | **Frontend** | Angular 21 · Standalone · Signals · OnPush |
-| **UI** | PrimeNG 21 (Aura theme) + @lucide/angular (31 иконка) |
+| **UI** | PrimeNG 21 (Aura theme) + @lucide/angular (33 иконки) |
 | **Стили** | SCSS + CSS Custom Properties · светлая/тёмная темы |
 | **Бэкенд** | Express 5 + TypeScript (tsx) |
 | **БД** | MongoDB 8 + Mongoose 8 |

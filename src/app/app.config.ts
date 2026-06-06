@@ -7,6 +7,7 @@ import { MessageService, ConfirmationService } from 'primeng/api';
 import {
   provideLucideIcons,
   LucidePencil, LucideTrash2, LucideEye, LucideCopy, LucideGripVertical,
+  LucideDownload, LucidePrinter,
   LucideChevronUp, LucideChevronDown, LucideAlignLeft, LucideTable, LucideMinus,
   LucideArrowUpDown, LucideBox, LucideCheck, LucideSearch,
   LucideExternalLink, LucideTriangleAlert,
@@ -43,6 +44,7 @@ export const appConfig: ApplicationConfig = {
       LucideExternalLink, LucideTriangleAlert,
       LucideChevronLeft, LucideChevronRight, LucideSun, LucideMoon, LucideMenu, LucideBell,      LucideHome, LucidePalette, LucideBook, LucideBuilding, LucideCog, LucideFile,
   LucideEyeOff, LucideX, LucidePlus,
+  LucideDownload, LucidePrinter,
     ),
   ]
 };
