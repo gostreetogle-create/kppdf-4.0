@@ -43,8 +43,10 @@ const BLOCK_TYPE_LABELS: Record<string, string> = {
           class="canvas__blocks-list"
           role="list"
           aria-label="Список блоков документа"
+          tabindex="0"
           [cdkDropListLockAxis]="'y'"
           (cdkDropListDropped)="onBlockDrop($event)"
+          (keydown)="onKeyDown($event)"
         >
           @for (block of blocks(); track block.id) {
             <div
@@ -284,6 +286,13 @@ const BLOCK_TYPE_LABELS: Record<string, string> = {
       border-color: var(--color-error);
       background: var(--color-error-bg);
     }
+    /* Focus ring for keyboard accessibility */
+    .canvas__blocks-list:focus {
+      outline: none;
+      box-shadow: 0 0 0 3px var(--color-primary);
+      border-radius: 2px;
+    }
+
     .canvas__empty {
       display: flex;
       align-items: center;
@@ -326,5 +335,22 @@ export class KpDocCanvasComponent {
       previousIndex: event.previousIndex,
       currentIndex: event.currentIndex,
     });
+  }
+
+  /** Keyboard navigation: Delete — удалить, Ctrl+↑/↓ — переместить */
+  onKeyDown(event: KeyboardEvent): void {
+    const blockId = this.selectedBlockId();
+    if (!blockId || !this.editable()) return;
+
+    if (event.key === 'Delete') {
+      event.preventDefault();
+      this.blockRemove.emit(blockId);
+    } else if (event.ctrlKey && event.key === 'ArrowUp') {
+      event.preventDefault();
+      this.blockMoveUp.emit(blockId);
+    } else if (event.ctrlKey && event.key === 'ArrowDown') {
+      event.preventDefault();
+      this.blockMoveDown.emit(blockId);
+    }
   }
 }
