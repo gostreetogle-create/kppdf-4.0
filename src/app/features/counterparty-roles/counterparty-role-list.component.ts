@@ -45,6 +45,7 @@ interface RoleRow extends CounterpartyRoleDef {
       </div>
 
       <kp-table
+        storageKey="counterparty-roles"
         [data]="roles()"
         [columns]="tableColumns"
         [rows]="20"

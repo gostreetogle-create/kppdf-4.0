@@ -1,6 +1,5 @@
-import { Component, input, output, signal, OnInit, ChangeDetectionStrategy } from '@angular/core';
+import { Component, input, output, signal, ChangeDetectionStrategy, inject, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { inject } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import type { DocBlock, TableTemplate } from '../../../../shared/types/index.js';
 import { TableTemplateService } from '../../core/table-template.service.js';
@@ -62,7 +61,7 @@ import { TableTemplateService } from '../../core/table-template.service.js';
     }
   `]
 })
-export class KpDocBlockTableComponent implements OnInit {
+export class KpDocBlockTableComponent {
   block = input.required<DocBlock>();
   mode = input<'template' | 'instance'>('template');
   editClick = output<DocBlock>();
@@ -70,11 +69,20 @@ export class KpDocBlockTableComponent implements OnInit {
   private templateService = inject(TableTemplateService);
   tmpl = signal<TableTemplate | undefined>(undefined);
 
-  async ngOnInit() {
-    const tid = this.block().tableTemplateId;
-    if (tid) {
-      const res = await firstValueFrom(this.templateService.getTemplate(tid));
-      if (res.success && res.data) this.tmpl.set(res.data);
-    }
+  constructor() {
+    // Реактивно загружаем шаблон таблицы при изменении ID
+    effect(async () => {
+      const tid = this.block().tableTemplateId;
+      if (tid) {
+        try {
+          const res = await firstValueFrom(this.templateService.getTemplate(tid));
+          if (res.success && res.data) this.tmpl.set(res.data);
+        } catch {
+          this.tmpl.set(undefined);
+        }
+      } else {
+        this.tmpl.set(undefined);
+      }
+    });
   }
 }

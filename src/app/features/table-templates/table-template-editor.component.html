@@ -70,87 +70,53 @@
 
       <div
         cdkDropList
+        cdkDropListOrientation="horizontal"
         class="tt-editor__columns-list"
         (cdkDropListDropped)="onColumnDrop($event)"
       >
-        @for (col of columns(); track col.fieldName; let i = $index) {
+        @for (col of columns(); track col.uid; let i = $index) {
           <div
             class="tt-editor__column-card"
             [class.tt-editor__column-card--error]="col.errors['fieldName']"
             cdkDrag
             cdkDragBoundary=".tt-editor__columns-list"
           >
-            <!-- Drag handle -->
-            <div class="tt-editor__drag-handle" cdkDragHandle>
-              <svg lucideIcon="grip-vertical"></svg>
+            <div class="tt-editor__card-header">
+              <div class="tt-editor__drag-handle" cdkDragHandle>
+                <svg lucideIcon="grip-vertical"></svg>
+              </div>
+              <span class="tt-editor__card-title">Колонка {{ i + 1 }}</span>
+              <kp-button
+                lucideIcon="trash-2"
+                severity="danger"
+                [text]="true"
+                [rounded]="true"
+                size="small"
+                pTooltip="Удалить колонку"
+                tooltipPosition="top"
+                (buttonClick)="removeColumn(i)"
+              />
             </div>
 
-            <div class="tt-editor__column-row">
-              <!-- Выбор поля -->
-              <div class="tt-editor__column-select">
-                <kp-select
-                  label="Поле"
-                  placeholder="Выберите поле"
-                  [options]="fieldOptions()"
-                  [ngModel]="col.fieldName"
-                  (ngModelChange)="onFieldChange(i, $event)"
-                  [error]="col.errors['fieldName'] || ''"
-                />
-              </div>
-
-              <!-- Заголовок -->
-              <div class="tt-editor__column-input">
-                <kp-input
-                  label="Заголовок"
-                  placeholder="Введите заголовок"
-                  [(ngModel)]="columns()[i].label"
-                />
-              </div>
-
-              <!-- Ширина -->
-              <div class="tt-editor__column-input tt-editor__column-input--width">
-                <kp-input
-                  label="Ширина"
-                  placeholder="120px"
-                  [(ngModel)]="columns()[i].width"
-                />
-              </div>
-
-              <!-- Действия -->
-              <div class="tt-editor__column-actions">
-                <kp-button
-                  lucideIcon="chevron-up"
-                  severity="secondary"
-                  [text]="true"
-                  [rounded]="true"
-                  size="small"
-                  pTooltip="Переместить вверх"
-                  tooltipPosition="top"
-                  [disabled]="i === 0"
-                  (buttonClick)="moveColumnUp(i)"
-                />
-                <kp-button
-                  lucideIcon="chevron-down"
-                  severity="secondary"
-                  [text]="true"
-                  [rounded]="true"
-                  size="small"
-                  pTooltip="Переместить вниз"
-                  tooltipPosition="top"
-                  [disabled]="i === columns().length - 1"
-                  (buttonClick)="moveColumnDown(i)"
-                />
-                <kp-button
-                  lucideIcon="trash-2"
-                  severity="danger"
-                  [text]="true"
-                  [rounded]="true"
-                  size="small"
-                  pTooltip="Удалить колонку"
-                  tooltipPosition="top"
-                  (buttonClick)="removeColumn(i)"
-                />
-              </div>
+            <div class="tt-editor__column-fields">
+              <kp-select
+                label="Поле"
+                placeholder="Выберите поле"
+                [options]="fieldOptions()"
+                [ngModel]="col.fieldName"
+                (ngModelChange)="onFieldChange(i, $event)"
+                [error]="col.errors['fieldName'] || ''"
+              />
+              <kp-input
+                label="Заголовок"
+                placeholder="Введите заголовок"
+                [(ngModel)]="columns()[i].label"
+              />
+              <kp-input
+                label="Ширина"
+                placeholder="120px"
+                [(ngModel)]="columns()[i].width"
+              />
             </div>
           </div>
         }
@@ -165,28 +131,15 @@
       (visibleChange)="previewVisible.set($event)"
       width="800px"
     >
-      <div class="tt-editor__preview-wrap">
-        <table class="tt-editor__preview-table">
-          <thead>
-            <tr>
-              @for (col of columns(); track col.fieldName; let i = $index) {
-                <th [style.width]="col.width || 'auto'">
-                  {{ col.label || getFieldLabel(col.fieldName) }}
-                </th>
-              }
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              @for (col of columns(); track col.fieldName) {
-                <td class="tt-editor__preview-cell">
-                  {{ '{' + '{' + col.fieldName + '}' + '}' }}
-                </td>
-              }
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      <kp-table
+        [data]="previewData()"
+        [columns]="previewColumns()"
+        [paginator]="false"
+        [showActions]="false"
+        [resizable]="true"
+        [storageKey]="'tt-editor-' + (templateId() || 'new')"
+        (columnResized)="onColumnResized($event)"
+      />
       <div class="tt-editor__preview-footer">
         <kp-button
           label="Закрыть"

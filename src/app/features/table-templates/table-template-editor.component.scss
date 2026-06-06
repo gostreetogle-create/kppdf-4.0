@@ -54,8 +54,11 @@
 
 .tt-editor__columns-list {
   display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  overflow-x: auto;
+  padding-bottom: var(--space-2);
 }
 
 .tt-editor__column-card {
@@ -63,9 +66,6 @@
   border: 1px solid var(--color-border-light);
   border-radius: var(--radius-md);
   padding: var(--space-3);
-  display: flex;
-  align-items: flex-start;
-  gap: var(--space-2);
   transition: box-shadow var(--transition-spring), border-color var(--transition-spring);
   cursor: default;
 }
@@ -94,6 +94,23 @@
   transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
 }
 
+/* === Заголовок карточки колонки === */
+.tt-editor__card-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--color-border-light);
+}
+
+.tt-editor__card-title {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-secondary);
+  flex: 1;
+}
+
 .tt-editor__drag-handle {
   display: flex;
   align-items: center;
@@ -113,42 +130,11 @@
   }
 }
 
-.tt-editor__column-row {
+/* === Поля колонки (вертикально) === */
+.tt-editor__column-fields {
   display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  flex-wrap: wrap;
-  flex: 1;
-  min-width: 0;
-}
-
-.tt-editor__column-select {
-  min-width: 180px;
-  flex: 1;
-}
-
-.tt-editor__column-input {
-  min-width: 140px;
-  flex: 1;
-}
-
-.tt-editor__column-input--width {
-  max-width: 100px;
-  min-width: 80px;
-  flex: 0 0 auto;
-}
-
-.tt-editor__column-actions {
-  display: flex;
-  gap: var(--space-1);
-  align-items: center;
-  flex-shrink: 0;
-}
-
-.tt-editor__column-error {
-  color: var(--color-error);
-  font-size: var(--font-size-xs);
-  margin-top: var(--space-1);
+  flex-direction: column;
+  gap: var(--space-2);
 }
 
 .tt-editor__empty {
@@ -174,53 +160,6 @@
 }
 
 /* === Предпросмотр таблицы === */
-.tt-editor__preview-wrap {
-  overflow-x: auto;
-  margin-bottom: var(--space-4);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-}
-
-.tt-editor__preview-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: var(--font-size-sm);
-}
-
-.tt-editor__preview-table thead {
-  background: var(--color-surface-alt);
-}
-
-.tt-editor__preview-table th {
-  background: var(--color-surface-alt);
-  border-bottom: 2px solid var(--color-border);
-  padding: var(--space-3) var(--space-3);
-  text-align: left;
-  font-weight: var(--font-weight-semibold);
-  color: var(--color-text);
-  white-space: nowrap;
-  font-size: var(--font-size-xs);
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-}
-
-.tt-editor__preview-table td {
-  border-bottom: 1px solid var(--color-border-light);
-  padding: var(--space-3) var(--space-3);
-  color: var(--color-text-secondary);
-}
-
-.tt-editor__preview-table tbody tr:last-child td {
-  border-bottom: none;
-}
-
-.tt-editor__preview-cell {
-  color: var(--color-text-muted);
-  font-style: italic;
-  font-family: 'Consolas', 'Courier New', monospace;
-  font-size: var(--font-size-xs);
-}
-
 .tt-editor__preview-footer {
   display: flex;
   justify-content: flex-end;

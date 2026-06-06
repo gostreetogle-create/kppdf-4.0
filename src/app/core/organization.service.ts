@@ -1,18 +1,10 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable, of, delay } from 'rxjs';
 import type { ApiResponse, Organization } from '../../../shared/types/index.js';
+import { BaseCrudService } from './crud-factory.js';
 import { CounterpartyRoleService } from './counterparty-role.service.js';
 
-function generateId(): string {
-  return crypto.randomUUID?.() ?? Math.random().toString(36).slice(2, 11);
-}
-
-function nowISO(): string {
-  return new Date().toISOString();
-}
-
 /** Предзаполненные контрагенты для демо */
-// ID ролей будут подставляться из CounterpartyRoleService
 const SEED_ORGANIZATIONS: Organization[] = [
   {
     id: 'org-1',
@@ -86,21 +78,14 @@ const SEED_ORGANIZATIONS: Organization[] = [
     createdAt: '2024-09-12T16:00:00.000Z',
     updatedAt: '2026-02-01T09:00:00.000Z',
   },
-  // Бывшие поставщики — с ID роли поставщика
 ];
 
-/**
- * Сервис контрагентов — CRUD с хранением в памяти.
- * Объединяет бывшие справочники «Организации» и «Поставщики».
- *
- * Позже заменяется на HTTP-сервис через ApiService.
- */
 @Injectable({ providedIn: 'root' })
-export class OrganizationService {
+export class OrganizationService extends BaseCrudService<Organization> {
   private roleService = inject(CounterpartyRoleService);
-  private organizations: Organization[] = [];
 
   constructor() {
+    super();
     this.initSeedData();
   }
 
@@ -108,88 +93,33 @@ export class OrganizationService {
     const supplierRoleId = this.roleService.getRoleIdBySlug('supplier') || 'role-supplier';
     const buyerRoleId = this.roleService.getRoleIdBySlug('buyer') || 'role-buyer';
 
-    // Проставляем роли первым трём организациям
-    this.organizations = [...SEED_ORGANIZATIONS].map((org, i) => {
-      if (i === 0) return { ...org, counterpartyRoleIds: [buyerRoleId] };       // ТехноПром — покупатель
-      if (i === 1) return { ...org, counterpartyRoleIds: [supplierRoleId, buyerRoleId] }; // СтройМонтажСервис — и поставщик, и покупатель
-      if (i === 2) return { ...org, counterpartyRoleIds: [supplierRoleId] };    // ИП Сидоров — поставщик
+    this.items = SEED_ORGANIZATIONS.map((org, i) => {
+      if (i === 0) return { ...org, counterpartyRoleIds: [buyerRoleId] };
+      if (i === 1) return { ...org, counterpartyRoleIds: [supplierRoleId, buyerRoleId] };
+      if (i === 2) return { ...org, counterpartyRoleIds: [supplierRoleId] };
       return org;
     });
 
-    // Добавляем бывших поставщиков с правильными ID ролей
-    this.organizations.push({
-      id: 'sup-1',
-      name: 'ООО «МеталлПродукт»',
-      shortName: 'ООО «МеталлПродукт»',
-      legalForm: 'ООО',
-      inn: '6671234567',
-      kpp: '',
-      ogrn: '',
-      phone: '+7 (343) 222-33-44',
-      email: 'sale@metallproduct.ru',
-      legalAddress: '',
-      postalAddress: '',
-      bankName: '',
-      bankBik: '',
-      bankAccount: '40702810700000012345',
-      signerName: '',
-      signerPosition: '',
-      counterpartyRoleIds: [supplierRoleId],
-      contactPerson: 'Кузнецов Андрей Викторович',
-      paymentTermDays: 30,
-      isActive: true,
-      createdAt: '2025-02-10T09:00:00.000Z',
-      updatedAt: '2026-04-15T11:00:00.000Z',
-    });
-    this.organizations.push({
-      id: 'sup-2',
-      name: 'АО «ХимРеактив»',
-      shortName: 'АО «ХимРеактив»',
-      legalForm: 'АО',
-      inn: '7709876543',
-      kpp: '',
-      ogrn: '',
-      phone: '+7 (495) 777-88-99',
-      email: 'info@chemreactive.ru',
-      legalAddress: '',
-      postalAddress: '',
-      bankName: '',
-      bankBik: '',
-      bankAccount: '40702810500000067890',
-      signerName: '',
-      signerPosition: '',
-      counterpartyRoleIds: [supplierRoleId],
-      contactPerson: 'Смирнова Елена Игоревна',
-      paymentTermDays: 15,
-      isActive: true,
-      createdAt: '2025-05-20T14:00:00.000Z',
-      updatedAt: '2026-03-01T16:30:00.000Z',
-    });
-    this.organizations.push({
-      id: 'sup-3',
-      name: 'ИП Григорьев Дмитрий Сергеевич',
-      shortName: 'ИП Григорьев Д.С.',
-      legalForm: 'ИП',
-      inn: '503456789012',
-      kpp: '',
-      ogrn: '',
-      phone: '+7 (926) 333-22-11',
-      email: 'grigoriev@parts-msk.ru',
-      legalAddress: '',
-      postalAddress: '',
-      bankName: '',
-      bankBik: '',
-      bankAccount: '40802810300000054321',
-      signerName: '',
-      signerPosition: '',
-      counterpartyRoleIds: [supplierRoleId],
-      contactPerson: 'Григорьев Дмитрий Сергеевич',
-      paymentTermDays: 0,
-      isActive: false,
-      createdAt: '2024-11-01T10:00:00.000Z',
-      updatedAt: '2026-01-20T09:00:00.000Z',
-    });
+    this.items.push(
+      { id: 'sup-1', name: 'ООО «МеталлПродукт»', shortName: 'ООО «МеталлПродукт»', legalForm: 'ООО', inn: '6671234567', kpp: '', ogrn: '',
+        phone: '+7 (343) 222-33-44', email: 'sale@metallproduct.ru', legalAddress: '', postalAddress: '',
+        bankName: '', bankBik: '', bankAccount: '40702810700000012345', signerName: '', signerPosition: '',
+        counterpartyRoleIds: [supplierRoleId], contactPerson: 'Кузнецов Андрей Викторович', paymentTermDays: 30, isActive: true,
+        createdAt: '2025-02-10T09:00:00.000Z', updatedAt: '2026-04-15T11:00:00.000Z' },
+      { id: 'sup-2', name: 'АО «ХимРеактив»', shortName: 'АО «ХимРеактив»', legalForm: 'АО', inn: '7709876543', kpp: '', ogrn: '',
+        phone: '+7 (495) 777-88-99', email: 'info@chemreactive.ru', legalAddress: '', postalAddress: '',
+        bankName: '', bankBik: '', bankAccount: '40702810500000067890', signerName: '', signerPosition: '',
+        counterpartyRoleIds: [supplierRoleId], contactPerson: 'Смирнова Елена Игоревна', paymentTermDays: 15, isActive: true,
+        createdAt: '2025-05-20T14:00:00.000Z', updatedAt: '2026-03-01T16:30:00.000Z' },
+      { id: 'sup-3', name: 'ИП Григорьев Дмитрий Сергеевич', shortName: 'ИП Григорьев Д.С.', legalForm: 'ИП', inn: '503456789012', kpp: '', ogrn: '',
+        phone: '+7 (926) 333-22-11', email: 'grigoriev@parts-msk.ru', legalAddress: '', postalAddress: '',
+        bankName: '', bankBik: '', bankAccount: '40802810300000054321', signerName: '', signerPosition: '',
+        counterpartyRoleIds: [supplierRoleId], contactPerson: 'Григорьев Дмитрий Сергеевич', paymentTermDays: 0, isActive: false,
+        createdAt: '2024-11-01T10:00:00.000Z', updatedAt: '2026-01-20T09:00:00.000Z' },
+    );
   }
+
+  // ─── Кастомные методы ───
 
   /** Получить всех контрагентов (опционально с фильтром по slug роли) */
   getOrganizations(roleSlug?: string): Observable<ApiResponse<Organization[]>> {
@@ -197,61 +127,39 @@ export class OrganizationService {
     if (roleSlug) {
       const roleId = this.roleService.getRoleIdBySlug(roleSlug);
       data = roleId
-        ? this.organizations.filter(o => o.counterpartyRoleIds.includes(roleId))
+        ? this.items.filter(o => o.counterpartyRoleIds.includes(roleId))
         : [];
     } else {
-      data = [...this.organizations];
+      data = [...this.items];
     }
-    return of({ success: true, data }).pipe(delay(100));
+    return of({ success: true, data }).pipe(delay(this.delayMs));
   }
 
   /** Получить контрагента по id */
   getOrganization(id: string): Observable<ApiResponse<Organization | undefined>> {
-    const org = this.organizations.find(o => o.id === id);
-    return of({
-      success: !!org,
-      data: org ? { ...org } : undefined,
-    }).pipe(delay(100));
+    return this.getById(id);
   }
 
   /** Создать нового контрагента */
   createOrganization(data: Omit<Organization, 'id' | 'createdAt' | 'updatedAt'>): Observable<ApiResponse<Organization>> {
-    const now = nowISO();
-    const org: Organization = {
-      ...data,
-      id: generateId(),
-      createdAt: now,
-      updatedAt: now,
-    };
-    this.organizations.push(org);
-    return of({ success: true, data: { ...org } }).pipe(delay(100));
+    return this.create(data);
   }
 
   /** Обновить контрагента */
   updateOrganization(id: string, data: Partial<Omit<Organization, 'id' | 'createdAt'>>): Observable<ApiResponse<Organization>> {
-    const index = this.organizations.findIndex(o => o.id === id);
-    if (index === -1) {
-      return of({ success: false, data: undefined as unknown as Organization, message: 'Контрагент не найден' }).pipe(delay(100));
-    }
-    this.organizations[index] = { ...this.organizations[index], ...data, id, updatedAt: nowISO() };
-    return of({ success: true, data: { ...this.organizations[index] } }).pipe(delay(100));
+    return this.update(id, data);
   }
 
   /** Удалить контрагента */
   deleteOrganization(id: string): Observable<ApiResponse<void>> {
-    const index = this.organizations.findIndex(o => o.id === id);
-    if (index === -1) {
-      return of({ success: false, data: undefined, message: 'Контрагент не найден' }).pipe(delay(100));
-    }
-    this.organizations.splice(index, 1);
-    return of({ success: true, data: undefined }).pipe(delay(100));
+    return this.delete(id);
   }
 
   /** Получить количество контрагентов по slug роли */
   getCountByRole(roleSlug?: string): Observable<number> {
-    if (!roleSlug) return of(this.organizations.length);
+    if (!roleSlug) return of(this.items.length);
     const roleId = this.roleService.getRoleIdBySlug(roleSlug);
     if (!roleId) return of(0);
-    return of(this.organizations.filter(o => o.counterpartyRoleIds.includes(roleId)).length);
+    return of(this.items.filter(o => o.counterpartyRoleIds.includes(roleId)).length);
   }
 }

@@ -15,6 +15,7 @@ import { KpAvatarComponent } from '../../shared/ui/kp-avatar.component';
 import { KpToggleComponent } from '../../shared/ui/kp-toggle.component';
 import { KpFileUploadComponent } from '../../shared/ui/kp-file-upload.component';
 import { KpDatepickerComponent } from '../../shared/ui/kp-datepicker.component';
+import { LucideDynamicIcon } from '@lucide/angular';
 import { NotificationService } from '../../core/notification.service';
 import { ConfirmationService } from 'primeng/api';
 import { MenuItem } from 'primeng/api';
@@ -30,7 +31,8 @@ import { inject } from '@angular/core';
     KpBadgeComponent, KpBreadcrumbComponent,
     KpToastComponent, KpConfirmDialogComponent,
     KpAvatarComponent, KpToggleComponent,
-    KpFileUploadComponent, KpDatepickerComponent
+    KpFileUploadComponent, KpDatepickerComponent,
+    LucideDynamicIcon
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -320,6 +322,27 @@ import { inject } from '@angular/core';
       </section>
 
       <!-- ============================================ -->
+      <!-- KP-LCI: Lucide иконки -->
+      <!-- ============================================ -->
+      <section class="uikit__section" id="kp-icons">
+        <h2 class="uikit__section-title">
+          <span class="uikit__code">KP-LCI</span>
+          Lucide иконки &middot; <code>&lt;svg [lucideIcon]="'name'"&gt;</code>
+        </h2>
+        <p class="uikit__section-desc">Все lucide-иконки, используемые в проекте. Размер: 1.25rem (20px).</p>
+        <div class="uikit__demo">
+          <div class="uikit__icons-grid">
+            @for (icon of lucideIcons; track icon) {
+              <div class="uikit__icon-item">
+                <svg [lucideIcon]="icon" class="uikit__icon-svg"></svg>
+                <span class="uikit__icon-label">{{ icon }}</span>
+              </div>
+            }
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================ -->
       <!-- KP-CFM: Подтверждение (Confirm Dialog) -->
       <!-- ============================================ -->
       <section class="uikit__section" id="kp-confirm">
@@ -447,6 +470,42 @@ import { inject } from '@angular/core';
 
     .uikit__mb-4 { margin-bottom: var(--space-4); }
     .uikit__mt-4 { margin-top: var(--space-4); }
+
+    /* Иконки */
+    .uikit__icons-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .uikit__icon-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      width: 90px;
+      padding: 8px 4px;
+      border: 1px solid var(--color-border-light);
+      border-radius: var(--radius-md);
+      background: var(--color-surface-alt);
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .uikit__icon-item:hover {
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 2px var(--color-primary-subtle);
+    }
+    .uikit__icon-svg {
+      width: 1.5rem;
+      height: 1.5rem;
+      color: var(--color-text);
+    }
+    .uikit__icon-label {
+      font-size: 10px;
+      color: var(--color-text-muted);
+      text-align: center;
+      word-break: break-all;
+      line-height: 1.2;
+      max-width: 100%;
+    }
   `]
 })
 export class UiKitComponent {
@@ -503,6 +562,20 @@ export class UiKitComponent {
   ]);
 
   // KP-BRD: breadcrumb items
+  /** Все lucide-иконки, используемые в проекте */
+  lucideIcons = [
+    'house', 'palette', 'book', 'building', 'tag', 'shopping-cart',
+    'cog', 'file', 'flag',
+    'chevron-left', 'chevron-right', 'chevron-up', 'chevron-down',
+    'sun', 'moon', 'menu', 'bell',
+    'check', 'x', 'search', 'plus', 'minus',
+    'external-link', 'triangle-alert', 'rotate-ccw',
+    'align-left',
+    'eye', 'eye-off', 'pencil', 'trash-2', 'copy', 'download', 'printer',
+    'grip-vertical', 'arrow-up-down',
+    'table',
+  ];
+
   breadcrumbItems: MenuItem[] = [
     { label: 'Главная', routerLink: '/dashboard' },
     { label: 'UI Kit' }

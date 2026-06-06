@@ -33,8 +33,50 @@ registerLocaleData(localeRu);
     </div>
   `,
   styles: [`
-    .kp-field { display: flex; flex-direction: column; gap: var(--space-2, 8px); }
-    .kp-field__label { font-size: var(--font-size-sm); font-weight: var(--font-weight-semibold); color: var(--color-text-secondary); }
+    :host { display: block; width: 100%; }
+
+    .kp-field {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-1);
+      width: 100%;
+    }
+
+    .kp-field__label {
+      font-size: var(--form-label-font-size);
+      font-weight: var(--form-label-font-weight);
+      color: var(--form-label-color);
+      margin-bottom: 0;
+    }
+
+    :host ::ng-deep .p-datepicker {
+      width: 100%;
+      height: var(--form-height);
+      border-radius: var(--form-border-radius);
+      border: 1px solid var(--form-border-color);
+      background: var(--form-bg);
+      font-size: var(--form-font-size);
+      color: var(--form-text-color);
+      transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+    }
+
+    :host ::ng-deep .p-datepicker:hover {
+      border-color: var(--form-border-color-hover);
+    }
+
+    :host ::ng-deep .p-datepicker.p-focus {
+      border-color: var(--form-border-color-focus);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 20%, transparent);
+    }
+
+    :host ::ng-deep .p-datepicker .p-inputtext {
+      font-size: var(--form-font-size);
+      color: var(--form-text-color);
+    }
+
+    :host ::ng-deep .p-datepicker .p-inputtext::placeholder {
+      color: var(--form-placeholder-color);
+    }
   `],
 })
 export class KpDatepickerComponent {

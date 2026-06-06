@@ -39,9 +39,19 @@ export class AdminLayoutComponent {
   currentUser = this.authService.currentUser;
 
   navItems: MenuItem[] = [
-    { id: 'nav-home', label: 'Главная', icon: 'home', routerLink: '/dashboard' },
+    { id: 'nav-home', label: 'Главная', icon: 'house', routerLink: '/dashboard' },
+    { id: 'nav-app-guide', label: '🗺️ Карта приложения', routerLink: '/app-guide' },
     { id: 'nav-uikit', label: 'UI Kit', icon: 'palette', routerLink: '/ui-kit' },
     { id: 'nav-sep-1', separator: true },
+    {
+      id: 'nav-sales',
+      label: 'Продажи',
+      icon: 'shopping-cart',
+      items: [
+        { id: 'nav-products', label: '🏪 Товары и услуги', icon: 'box', routerLink: '/sales/products' },
+        { id: 'nav-cart', label: '🛒 Корзина', icon: 'shopping-cart', routerLink: '/sales/cart' },
+      ]
+    },
     {
       id: 'nav-refs',
       label: 'Справочники',
@@ -49,7 +59,10 @@ export class AdminLayoutComponent {
       items: [
         { id: 'nav-orgs', label: 'Контрагенты', icon: 'building', routerLink: '/references/organizations' },
         { id: 'nav-role-types', label: 'Виды контрагентов', icon: 'tag', routerLink: '/references/counterparty-roles' },
-        { id: 'nav-suppliers', label: '— Поставщики', icon: 'truck', routerLink: '/references/organizations?role=supplier' },
+        { id: 'nav-doc-types', label: 'Типы документов', icon: 'file', routerLink: '/references/doc-types' },
+        { id: 'nav-clients', label: '👤 Клиенты', routerLink: '/references/clients' },
+        { id: 'nav-prod-cats', label: 'Категории товаров', icon: 'tag', routerLink: '/references/product-categories' },
+        { id: 'nav-suppliers', label: '— Поставщики', routerLink: '/references/organizations?role=supplier' },
         { id: 'nav-buyers', label: '— Покупатели', icon: 'shopping-cart', routerLink: '/references/organizations?role=buyer' }
       ]
     },
@@ -59,7 +72,6 @@ export class AdminLayoutComponent {
       label: 'Администрирование',
       icon: 'cog',
       items: [
-        { id: 'nav-table-tpl', label: 'Шаблоны таблиц', icon: 'table', routerLink: '/admin/table-templates' },
         { id: 'nav-table-tpl', label: 'Шаблоны таблиц', icon: 'table', routerLink: '/admin/table-templates' },
         { id: 'nav-doc-tpl', label: 'Шаблоны документов', icon: 'file', routerLink: '/admin/document-templates' },
         { id: 'nav-feature-flags', label: 'Флаги возможностей', icon: 'flag', routerLink: '/admin/feature-flags' }

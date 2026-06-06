@@ -67,7 +67,7 @@ const PLACEHOLDER_CATEGORIES = [...new Set(PLACEHOLDER_GROUPS.map(p => p.categor
       header="Редактирование текстового блока"
       [visible]="visible()"
       (visibleChange)="visible.set($event)"
-      width="700px"
+      width="900px"
     >
       <div class="editor">
         <kp-input label="Заголовок блока" [(ngModel)]="title" placeholder="Необязательный заголовок" />
@@ -79,145 +79,175 @@ const PLACEHOLDER_CATEGORIES = [...new Set(PLACEHOLDER_GROUPS.map(p => p.categor
           (ngModelChange)="onColumnCountChange($event)"
         />
 
-        @for (col of columns(); track col.id; let i = $index) {
-          <div class="editor__col">
-            <div class="editor__col-header">
-              <span>Колонка {{ i + 1 }}</span>
-            </div>
+        <div class="editor__cols">
+          @for (col of columns(); track col.id; let i = $index) {
+            <div class="editor__col">
+              <div class="editor__col-header">
+                <span>Колонка {{ i + 1 }}</span>
+              </div>
 
-            <textarea
-              #colTextarea
-              class="editor__textarea"
-              [ngModel]="col.content"
-              (ngModelChange)="updateColumn(i, 'content', $event)"
-              [placeholder]="'Текст колонки ' + (i + 1) + '...'"
-              rows="3"
-            ></textarea>
+              <textarea
+                #colTextarea
+                class="editor__textarea"
+                [ngModel]="col.content"
+                (ngModelChange)="updateColumn(i, 'content', $event)"
+                [placeholder]="'Текст колонки ' + (i + 1) + '...'"
+                rows="3"
+              ></textarea>
 
-            <!-- Панель плейсхолдеров -->
-            <details class="editor__placeholders">
-              <summary class="editor__placeholders-summary">
-                <svg [lucideIcon]="'curly-braces'" class="editor__placeholders-icon"></svg>
-                Вставить плейсхолдер
-              </summary>
-              <div class="editor__placeholders-body">
-                @for (cat of placeholderCategories; track cat) {
-                  <div class="editor__placeholders-group">
-                    <div class="editor__placeholders-cat">{{ cat }}</div>
-                    <div class="editor__placeholders-chips">
-                      @for (ph of placeholdersByCategory(cat); track ph.key) {
+              <!-- Панель плейсхолдеров -->
+              <div class="editor__placeholders">
+                <button
+                  type="button"
+                  class="editor__placeholders-trigger"
+                  (click)="togglePlaceholderCat(col.id)"
+                >
+                  <svg [lucideIcon]="'braces'" class="editor__placeholders-icon"></svg>
+                  Вставить плейсхолдер
+                </button>
+
+                @if (placeholderState()?.colId === col.id) {
+                  <div class="editor__placeholders-body">
+                    @for (cat of placeholderCategories; track cat) {
+                      <div class="editor__placeholders-group">
                         <button
                           type="button"
-                          class="editor__placeholder-chip"
-                          (click)="insertPlaceholder(i, ph.key, colTextarea)"
-                          [attr.title]="ph.description"
+                          class="editor__placeholders-cat-btn"
+                          [class.editor__placeholders-cat-btn--open]="placeholderState()?.category === cat"
+                          (click)="toggleCategory(cat)"
                         >
-                          <span class="editor__placeholder-key">{{ '{{' + ph.key + '}}' }}</span>
-                          <span class="editor__placeholder-label">{{ ph.label }}</span>
+                          <svg
+                            [lucideIcon]="placeholderState()?.category === cat ? 'chevron-down' : 'chevron-right'"
+                            class="editor__placeholders-cat-icon"
+                          ></svg>
+                          {{ cat }}
                         </button>
-                      }
-                    </div>
+                        @if (placeholderState()?.category === cat) {
+                          <div class="editor__placeholders-chips">
+                            @for (ph of placeholdersByCategory(cat); track ph.key) {
+                              <button
+                                type="button"
+                                class="editor__placeholder-chip"
+                                (click)="insertPlaceholder(i, ph.key, colTextarea)"
+                                [attr.title]="ph.description"
+                              >
+                                <span class="editor__placeholder-key">{{ '{{' + ph.key + '}}' }}</span>
+                                <span class="editor__placeholder-label">{{ ph.label }}</span>
+                              </button>
+                            }
+                          </div>
+                        }
+                      </div>
+                    }
                   </div>
                 }
               </div>
-            </details>
 
-            <!-- Панель форматирования: иконки -->
-            <div class="editor__col-toolbar">
-              <!-- Выравнивание -->
-              <div class="editor__toolbar-group">
-                <kp-button
-                  icon="pi pi-align-left"
-                  size="small"
-                  [severity]="(col.textAlign || 'left') === 'left' ? 'primary' : 'secondary'"
-                  [text]="(col.textAlign || 'left') !== 'left'"
-                  [rounded]="true"
-                  pTooltip="По левому краю"
-                  tooltipPosition="top"
-                  (buttonClick)="updateColumn(i, 'textAlign', 'left')"
-                />
-                <kp-button
-                  icon="pi pi-align-center"
-                  size="small"
-                  [severity]="col.textAlign === 'center' ? 'primary' : 'secondary'"
-                  [text]="col.textAlign !== 'center'"
-                  [rounded]="true"
-                  pTooltip="По центру"
-                  tooltipPosition="top"
-                  (buttonClick)="updateColumn(i, 'textAlign', 'center')"
-                />
-                <kp-button
-                  icon="pi pi-align-right"
-                  size="small"
-                  [severity]="col.textAlign === 'right' ? 'primary' : 'secondary'"
-                  [text]="col.textAlign !== 'right'"
-                  [rounded]="true"
-                  pTooltip="По правому краю"
-                  tooltipPosition="top"
-                  (buttonClick)="updateColumn(i, 'textAlign', 'right')"
-                />
-              </div>
+              <!-- Панель форматирования: иконки -->
+              <div class="editor__col-toolbar">
+                <!-- Выравнивание -->
+                <div class="editor__toolbar-group">
+                  <kp-button
+                    lucideIcon="align-left"
+                    size="small"
+                    [severity]="(col.textAlign || 'left') === 'left' ? 'primary' : 'secondary'"
+                    [text]="(col.textAlign || 'left') !== 'left'"
+                    [rounded]="true"
+                    pTooltip="По левому краю"
+                    tooltipPosition="top"
+                    (buttonClick)="updateColumn(i, 'textAlign', 'left')"
+                  />
+                  <kp-button
+                    lucideIcon="text-align-center"
+                    size="small"
+                    [severity]="col.textAlign === 'center' ? 'primary' : 'secondary'"
+                    [text]="col.textAlign !== 'center'"
+                    [rounded]="true"
+                    pTooltip="По центру"
+                    tooltipPosition="top"
+                    (buttonClick)="updateColumn(i, 'textAlign', 'center')"
+                  />
+                  <kp-button
+                    lucideIcon="text-align-end"
+                    size="small"
+                    [severity]="col.textAlign === 'right' ? 'primary' : 'secondary'"
+                    [text]="col.textAlign !== 'right'"
+                    [rounded]="true"
+                    pTooltip="По правому краю"
+                    tooltipPosition="top"
+                    (buttonClick)="updateColumn(i, 'textAlign', 'right')"
+                  />
+                </div>
 
-              <div class="editor__toolbar-divider"></div>
+                <div class="editor__toolbar-divider"></div>
 
-              <!-- Начертание: B, I, U -->
-              <div class="editor__toolbar-group">
-                <kp-button
-                  icon="pi pi-bold"
-                  size="small"
-                  [severity]="col.fontWeight === 'bold' ? 'primary' : 'secondary'"
-                  [text]="col.fontWeight !== 'bold'"
-                  [rounded]="true"
-                  pTooltip="Жирный"
-                  tooltipPosition="top"
-                  (buttonClick)="updateColumn(i, 'fontWeight', col.fontWeight === 'bold' ? 'normal' : 'bold')"
-                />
-                <kp-button
-                  icon="pi pi-italic"
-                  size="small"
-                  [severity]="col.fontStyle === 'italic' ? 'primary' : 'secondary'"
-                  [text]="col.fontStyle !== 'italic'"
-                  [rounded]="true"
-                  pTooltip="Курсив"
-                  tooltipPosition="top"
-                  (buttonClick)="updateColumn(i, 'fontStyle', col.fontStyle === 'italic' ? 'normal' : 'italic')"
-                />
-                <kp-button
-                  icon="pi pi-underline"
-                  size="small"
-                  [severity]="col.textDecoration === 'underline' ? 'primary' : 'secondary'"
-                  [text]="col.textDecoration !== 'underline'"
-                  [rounded]="true"
-                  pTooltip="Подчёркнутый"
-                  tooltipPosition="top"
-                  (buttonClick)="updateColumn(i, 'textDecoration', col.textDecoration === 'underline' ? 'none' : 'underline')"
-                />
-              </div>
+                <!-- Начертание: B, I, U -->
+                <div class="editor__toolbar-group">
+                  <kp-button
+                    lucideIcon="bold"
+                    size="small"
+                    [severity]="col.fontWeight === 'bold' ? 'primary' : 'secondary'"
+                    [text]="col.fontWeight !== 'bold'"
+                    [rounded]="true"
+                    pTooltip="Жирный"
+                    tooltipPosition="top"
+                    (buttonClick)="updateColumn(i, 'fontWeight', col.fontWeight === 'bold' ? 'normal' : 'bold')"
+                  />
+                  <kp-button
+                    lucideIcon="italic"
+                    size="small"
+                    [severity]="col.fontStyle === 'italic' ? 'primary' : 'secondary'"
+                    [text]="col.fontStyle !== 'italic'"
+                    [rounded]="true"
+                    pTooltip="Курсив"
+                    tooltipPosition="top"
+                    (buttonClick)="updateColumn(i, 'fontStyle', col.fontStyle === 'italic' ? 'normal' : 'italic')"
+                  />
+                  <kp-button
+                    lucideIcon="underline"
+                    size="small"
+                    [severity]="col.textDecoration === 'underline' ? 'primary' : 'secondary'"
+                    [text]="col.textDecoration !== 'underline'"
+                    [rounded]="true"
+                    pTooltip="Подчёркнутый"
+                    tooltipPosition="top"
+                    (buttonClick)="updateColumn(i, 'textDecoration', col.textDecoration === 'underline' ? 'none' : 'underline')"
+                  />
+                </div>
 
-              <div class="editor__toolbar-divider"></div>
+                <div class="editor__toolbar-divider"></div>
 
-              <!-- Ширина колонки -->
-              <div class="editor__width-field">
-                <kp-input
-                  label="Ширина"
-                  [placeholder]="'auto'"
-                  [(ngModel)]="col.width"
-                />
+                <!-- Ширина колонки -->
+                <div class="editor__width-field">
+                  <kp-input
+                    label="Ширина"
+                    [placeholder]="'auto'"
+                    [(ngModel)]="col.width"
+                  />
+                </div>
               </div>
             </div>
-          </div>
-        }
+          }
+        </div>
       </div>
 
       <div class="editor__footer">
-        <kp-button label="Сохранить" icon="pi pi-check" (buttonClick)="save()" />
-        <kp-button label="Отмена" severity="secondary" icon="pi pi-times" (buttonClick)="visible.set(false)" />
+        <kp-button label="Сохранить" lucideIcon="check" (buttonClick)="save()" />
+        <kp-button label="Отмена" severity="secondary" lucideIcon="x" (buttonClick)="visible.set(false)" />
       </div>
     </kp-dialog>
   `,
   styles: [`
     .editor { display: flex; flex-direction: column; gap: 12px; }
+    .editor__cols {
+      display: flex;
+      flex-direction: row;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
     .editor__col {
+      flex: 1 1 200px;
+      min-width: 180px;
       background: var(--color-surface-alt);
       border: 1px solid var(--color-border-light);
       border-radius: 6px;
@@ -281,19 +311,23 @@ const PLACEHOLDER_CATEGORIES = [...new Set(PLACEHOLDER_GROUPS.map(p => p.categor
       background: var(--color-surface);
     }
 
-    .editor__placeholders-summary {
+    .editor__placeholders-trigger {
       display: flex;
       align-items: center;
       gap: 6px;
+      width: 100%;
       padding: 6px 10px;
       font-size: 12px;
       font-weight: 600;
       color: var(--color-text-secondary);
+      background: none;
+      border: none;
       cursor: pointer;
       user-select: none;
       transition: color 0.15s;
+      font-family: inherit;
     }
-    .editor__placeholders-summary:hover {
+    .editor__placeholders-trigger:hover {
       color: var(--color-primary);
     }
     .editor__placeholders-icon {
@@ -306,15 +340,42 @@ const PLACEHOLDER_CATEGORIES = [...new Set(PLACEHOLDER_GROUPS.map(p => p.categor
       display: flex;
       flex-direction: column;
       gap: 10px;
+      max-height: 300px;
+      overflow-y: auto;
     }
-    .editor__placeholders-group {}
-    .editor__placeholders-cat {
-      font-size: 10px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      color: var(--color-text-muted);
-      margin-bottom: 4px;
+    .editor__placeholders-group {
+      border-bottom: 1px solid var(--color-border-light);
+      padding-bottom: 6px;
+    }
+    .editor__placeholders-group:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+    .editor__placeholders-cat-btn {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      width: 100%;
+      padding: 5px 0;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--color-text-secondary);
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-family: inherit;
+      transition: color 0.15s;
+    }
+    .editor__placeholders-cat-btn:hover {
+      color: var(--color-primary);
+    }
+    .editor__placeholders-cat-btn--open {
+      color: var(--color-primary);
+    }
+    .editor__placeholders-cat-icon {
+      width: 12px;
+      height: 12px;
+      flex-shrink: 0;
     }
     .editor__placeholders-chips {
       display: flex;
@@ -366,7 +427,12 @@ export class KpDocTextEditorDialogComponent {
     { value: 2, label: '2 колонки' },
     { value: 3, label: '3 колонки' },
     { value: 4, label: '4 колонки' },
+    { value: 5, label: '5 колонок' },
+    { value: 6, label: '6 колонок' },
   ];
+
+  /** Какая колонка и категория плейсхолдеров сейчас открыты */
+  placeholderState = signal<{ colId: string; category: string | null } | null>(null);
 
   open(block: DocBlock) {
     this.block.set(block);
@@ -392,6 +458,18 @@ export class KpDocTextEditorDialogComponent {
       arr[index] = { ...arr[index], [field]: value };
       return arr;
     });
+  }
+
+  togglePlaceholderCat(colId: string) {
+    this.placeholderState.update(cur =>
+      cur?.colId === colId ? null : { colId, category: null }
+    );
+  }
+
+  toggleCategory(category: string) {
+    this.placeholderState.update(cur =>
+      cur ? { ...cur, category: cur.category === category ? null : category } : null
+    );
   }
 
   placeholdersByCategory(category: string): PlaceholderDef[] {

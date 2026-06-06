@@ -9,7 +9,7 @@ import { CommonModule } from '@angular/common';
   template: `
     <div class="separator" [style.height.px]="height()" [class.separator--line]="showLine()">
       @if (showLine()) {
-        <hr class="separator__hr" />
+        <div class="separator__line"></div>
       }
     </div>
   `,
@@ -17,17 +17,18 @@ import { CommonModule } from '@angular/common';
     .separator {
       width: 100%;
       display: flex;
-      align-items: center;
+      align-items: flex-start;
       justify-content: center;
+      padding-top: 2px;
     }
     .separator--line {
-      padding: 0 5mm;
+      padding: 0;
     }
-    .separator__hr {
-      width: 100%;
-      border: none;
-      border-top: 1px solid #ccc;
-      margin: 0;
+    .separator__line {
+      width: calc(100% - 10mm);
+      max-width: calc(794px - 10mm);
+      border-top: 1px solid #9ca3af;
+      margin: 0 auto;
     }
   `]
 })

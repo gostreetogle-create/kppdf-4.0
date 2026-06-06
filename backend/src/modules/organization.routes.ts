@@ -15,12 +15,11 @@ const router = createCrudRouter(Organization, {
     const role = req.query.role;
     if (role) {
       const roleStr = Array.isArray(role) ? role[0] : role;
-      return { counterpartyRoleIds: roleStr as any };
+      // Фильтр по slug роли: ищем организации, у которых массив counterpartyRoleIds содержит значение
+      return { counterpartyRoleIds: { $in: [roleStr] } };
     }
     return {};
   },
 });
 
-// Фильтр по ролям (множественные): GET /?role=supplier&role=buyer
-// createCrudRouter уже обрабатывает это через listFilter
 export default router;

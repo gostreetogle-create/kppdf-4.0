@@ -1,9 +1,11 @@
-import { Component, input, output, ChangeDetectionStrategy } from '@angular/core';
+import { Component, input, output, OnInit, AfterViewInit, signal, ChangeDetectionStrategy, ElementRef, inject } from '@angular/core';
 import { TableModule } from 'primeng/table';
 import { TooltipModule } from 'primeng/tooltip';
 import { CommonModule } from '@angular/common';
 import { KpButtonComponent } from './kp-button.component';
 import { KpBadgeComponent } from './kp-badge.component';
+
+const STORAGE_PREFIX = 'kppdf:table-widths:';
 
 export interface TableColumn {
   field: string;
@@ -28,6 +30,9 @@ export interface TableColumn {
       [sortOrder]="sortOrder()"
       [globalFilterFields]="searchFields()"
       stripedRows
+      [resizableColumns]="resizable()"
+      [columnResizeMode]="'expand'"
+      (onColumnResize)="onColumnResize($event)"
       [rowsPerPageOptions]="[10, 20, 50]"
       [showCurrentPageReport]="true"
       currentPageReportTemplate="Показано {first}-{last} из {totalRecords}"
@@ -35,7 +40,7 @@ export interface TableColumn {
       <ng-template pTemplate="header" let-columns>
         <tr>
           @for (col of columns; track col.field) {
-            <th [pSortableColumn]="col.sortable ? col.field : ''" [style.width]="col.width || 'auto'" [class.kp-table__th--right]="col.type === 'number' || col.type === 'date'">
+            <th pResizableColumn [id]="col.field" [pSortableColumn]="col.sortable ? col.field : ''" [style.width]="colWidthOverride(col.field) || col.width || 'auto'" [class.kp-table__th--right]="col.type === 'number' || col.type === 'date'">
               <div class="kp-table__th-inner">
                 <span class="kp-table__th-text">{{ col.header }}</span>
                 @if (col.sortable) { <p-sortIcon [field]="col.field" /> }
@@ -64,6 +69,17 @@ export interface TableColumn {
           }
           @if (showActions()) {
             <td class="kp-table__actions">
+              @if (showAddToCart()) {
+                <kp-button
+                  lucideIcon="shopping-cart"
+                  severity="success"
+                  [text]="true"
+                  [rounded]="true"
+                  pTooltip="В корзину"
+                  tooltipPosition="top"
+                  (buttonClick)="rowAddToCart.emit(rowData)"
+                />
+              }
               @if (showView()) {
                 <kp-button
                   lucideIcon="eye"
@@ -120,6 +136,24 @@ export interface TableColumn {
   `,
   styles: [`
     .kp-table__actions-header { width: 175px; }
+
+    /* Resize handle для колонок */
+    :host ::ng-deep .p-column-resizer {
+      cursor: col-resize;
+      width: 8px;
+    }
+    :host ::ng-deep .p-column-resizer:hover {
+      background: var(--color-primary);
+      opacity: 0.3;
+    }
+
+    :host ::ng-deep .p-resizable-column {
+      position: relative;
+      overflow: hidden;
+    }
+    :host ::ng-deep .p-resizable-column:last-child .p-column-resizer {
+      display: none;
+    }
 
     .kp-table__th-inner {
       display: inline-flex;
@@ -179,6 +213,20 @@ export interface TableColumn {
       transform: scale(1.08);
     }
 
+    /* success (в корзину) */
+    .kp-table__actions ::ng-deep .p-button.p-button-text.p-button-success {
+      color: var(--color-text-muted);
+      background: var(--color-surface-alt);
+      border-color: var(--color-border);
+    }
+    .kp-table__actions ::ng-deep .p-button.p-button-text.p-button-success:hover {
+      color: var(--color-success, #22c55e);
+      background: color-mix(in srgb, var(--color-success, #22c55e) 8%, transparent);
+      border-color: var(--color-success, #22c55e);
+      box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-success, #22c55e) 15%, transparent);
+      transform: scale(1.08);
+    }
+
     /* danger (удалить) */
     .kp-table__actions ::ng-deep .p-button.p-button-text.p-button-danger {
       color: var(--color-text-muted);
@@ -211,7 +259,8 @@ export interface TableColumn {
   `],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class KpTableComponent {
+export class KpTableComponent implements OnInit, AfterViewInit {
+  private elementRef = inject(ElementRef);
   data = input<unknown[]>([]);
   columns = input<TableColumn[]>([]);
   rows = input(20);
@@ -223,10 +272,93 @@ export class KpTableComponent {
   showActions = input(true);
   showClone = input(false);
   showView = input(false);
+  showAddToCart = input(false);
   emptyMessage = input('Нет данных');
+
+  /** Ключ для localStorage (например 'organizations', 'doc-templates') */
+  storageKey = input('');
+  /** Включает/отключает ресайз колонок */
+  resizable = input(true);
 
   readonly rowEdit = output<unknown>();
   readonly rowDelete = output<unknown>();
   readonly rowClone = output<unknown>();
   readonly rowView = output<unknown>();
+  readonly rowAddToCart = output<unknown>();
+
+  /** Событие при изменении ширины колонки */
+  readonly columnResized = output<{ field: string; header: string; width: string }>();
+
+  /** Локальный оверрайд ширин из localStorage */
+  private savedWidths = signal<Record<string, string>>({});
+
+  ngOnInit(): void {
+    // Восстанавливаем сохранённые ширины в сигнал
+    const saved = this.loadSavedWidths();
+    if (Object.keys(saved).length > 0) {
+      this.savedWidths.set(saved);
+    }
+  }
+
+  ngAfterViewInit(): void {
+    // Применяем сохранённые ширины ПОСЛЕ того, как PrimeNG инициализировал таблицу
+    // (PrimeNG перезаписывает [style.width] при init, поэтому применяем через DOM)
+    const saved = this.savedWidths();
+    const keys = Object.keys(saved);
+    if (keys.length === 0) return;
+
+    // Используем requestAnimationFrame чтобы дождаться полной отрисовки PrimeNG
+    requestAnimationFrame(() => {
+      for (const field of keys) {
+        const th = this.elementRef.nativeElement.querySelector(`th[id="${field}"]`) as HTMLElement | null;
+        if (th) {
+          th.style.width = saved[field];
+        }
+      }
+    });
+  }
+
+  /** Возвращает сохранённую ширину для колонки, если есть */
+  colWidthOverride(field: string): string | null {
+    return this.savedWidths()[field] || null;
+  }
+
+  onColumnResize(event: any): void {
+    const field = event?.element?.id || '';
+    const width = event?.element?.style?.width || '';
+    if (!field || !width) return;
+
+    const header = (event?.element as HTMLElement)?.innerText?.trim() || '';
+
+    // Сохраняем в localStorage
+    this.saveColumnWidth(field, width);
+    // Обновляем локальный сигнал
+    this.savedWidths.update(w => ({ ...w, [field]: width }));
+
+    // Оповещаем родителя
+    this.columnResized.emit({ field, header, width });
+  }
+
+  private loadSavedWidths(): Record<string, string> {
+    const key = this.storageKey();
+    if (!key) return {};
+    try {
+      const raw = localStorage.getItem(STORAGE_PREFIX + key);
+      return raw ? JSON.parse(raw) : {};
+    } catch {
+      return {};
+    }
+  }
+
+  private saveColumnWidth(field: string, width: string): void {
+    const key = this.storageKey();
+    if (!key) return;
+    try {
+      const saved = this.loadSavedWidths();
+      saved[field] = width;
+      localStorage.setItem(STORAGE_PREFIX + key, JSON.stringify(saved));
+    } catch {
+      // localStorage недоступен — игнорируем
+    }
+  }
 }

@@ -24,8 +24,14 @@ type ToggleSize = 'small' | 'normal' | 'large';
     </div>
   `,
   styles: [`
+    :host { display: block; }
     .kp-toggle-wrap { display: flex; align-items: center; gap: var(--space-2); }
-    .kp-toggle__label { font-size: var(--font-size-sm); font-weight: var(--font-weight-medium); cursor: pointer; }
+    .kp-toggle__label {
+      font-size: var(--form-label-font-size);
+      font-weight: var(--form-label-font-weight);
+      color: var(--form-label-color);
+      cursor: pointer;
+    }
 
     :host ::ng-deep .kp-toggle--small .p-toggleswitch {
       width: 2.5rem;

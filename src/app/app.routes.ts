@@ -78,6 +78,38 @@ export const routes: Routes = [
         loadComponent: () => import('./features/counterparty-roles/counterparty-role-editor.component').then(m => m.CounterpartyRoleEditorComponent)
       },
       {
+        path: 'references/doc-types',
+        loadComponent: () => import('./features/doc-types/doc-type-list.component').then(m => m.DocTypeListComponent)
+      },
+      {
+        path: 'app-guide',
+        loadComponent: () => import('./features/app-guide/app-guide.component').then(m => m.AppGuideComponent)
+      },
+      {
+        path: 'sales/cart',
+        loadComponent: () => import('./features/cart/cart.component').then(m => m.CartComponent)
+      },
+      {
+        path: 'sales/products',
+        loadComponent: () => import('./features/products/product-list.component').then(m => m.ProductListComponent)
+      },
+      {
+        path: 'sales/products/new',
+        loadComponent: () => import('./features/products/product-editor.component').then(m => m.ProductEditorComponent)
+      },
+      {
+        path: 'sales/products/:id/edit',
+        loadComponent: () => import('./features/products/product-editor.component').then(m => m.ProductEditorComponent)
+      },
+      {
+        path: 'references/clients',
+        loadComponent: () => import('./features/clients/client-list.component').then(m => m.ClientListComponent)
+      },
+      {
+        path: 'references/product-categories',
+        loadComponent: () => import('./features/products/product-category-list.component').then(m => m.ProductCategoryListComponent)
+      },
+      {
         path: 'admin/feature-flags',
         loadComponent: () => import('./features/feature-flags/feature-flags.component').then(m => m.FeatureFlagsComponent)
       }

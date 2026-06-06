@@ -36,10 +36,10 @@ describe('KpDocBlockSeparatorComponent', () => {
     expect(sep.style.height).toBe('20px');
   });
 
-  it('не показывает hr по умолчанию', () => {
+  it('не показывает .separator__line по умолчанию', () => {
     const f = TestBed.createComponent(KpDocBlockSeparatorComponent);
     f.detectChanges();
-    expect(f.nativeElement.querySelector('.separator__hr')).toBeNull();
+    expect(f.nativeElement.querySelector('.separator__line')).toBeNull();
   });
 
   it('нет класса separator--line по умолчанию', () => {

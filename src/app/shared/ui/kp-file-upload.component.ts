@@ -30,16 +30,31 @@ import { FileUploadModule, FileUploadEvent, FileUploadErrorEvent } from 'primeng
     </div>
   `,
   styles: [`
-    .kp-field { display: flex; flex-direction: column; gap: var(--space-2); }
-    .kp-field__label { font-size: var(--font-size-sm); font-weight: var(--font-weight-semibold); color: var(--color-text-secondary); }
+    :host { display: block; width: 100%; }
+
+    .kp-field {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-1);
+      width: 100%;
+    }
+
+    .kp-field__label {
+      font-size: var(--form-label-font-size);
+      font-weight: var(--form-label-font-weight);
+      color: var(--form-label-color);
+      margin-bottom: 0;
+    }
 
     :host ::ng-deep .p-fileupload-content {
-      border: 2px dashed var(--color-border-light);
-      border-radius: var(--radius-lg);
-      background: var(--color-surface-alt);
+      border: 2px dashed var(--color-border);
+      border-radius: var(--form-border-radius);
+      background: var(--form-bg);
       transition: border-color var(--transition-fast), background var(--transition-fast);
       padding: var(--space-6);
       text-align: center;
+      font-size: var(--form-font-size);
+      color: var(--form-text-color);
     }
     :host ::ng-deep .p-fileupload-content.p-fileupload-highlight {
       border-color: var(--color-primary);

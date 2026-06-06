@@ -96,26 +96,6 @@ const BLOCK_TYPE_LABELS: Record<string, string> = {
               @if (editable()) {
                 <div class="canvas__block-actions">
                   <kp-button
-                    lucideIcon="chevron-up"
-                    size="small"
-                    [text]="true"
-                    [rounded]="true"
-                    severity="secondary"
-                    pTooltip="Переместить вверх"
-                    tooltipPosition="left"
-                    (buttonClick)="blockMoveUp.emit(block.id)"
-                  />
-                  <kp-button
-                    lucideIcon="chevron-down"
-                    size="small"
-                    [text]="true"
-                    [rounded]="true"
-                    severity="secondary"
-                    pTooltip="Переместить вниз"
-                    tooltipPosition="left"
-                    (buttonClick)="blockMoveDown.emit(block.id)"
-                  />
-                  <kp-button
                     lucideIcon="pencil"
                     size="small"
                     [text]="true"
@@ -169,15 +149,23 @@ const BLOCK_TYPE_LABELS: Record<string, string> = {
 
     .canvas__block {
       position: relative;
-      transition: outline var(--transition-spring);
-      outline: 2px solid transparent;
-      outline-offset: -2px;
+      transition: outline var(--transition-spring), box-shadow var(--transition-spring);
+      outline: 1px solid transparent;
+      outline-offset: -1px;
+      border-radius: 4px;
     }
     .canvas__block:hover {
-      outline-color: #bfdbfe;
+      outline-color: #d1d5db;
+      box-shadow: 0 0 0 1px #e5e7eb;
+    }
+    .canvas__block--selected:hover {
+      outline-color: #f97316;
     }
     .canvas__block--selected {
-      outline-color: #3b82f6;
+      outline: 3px solid #f97316;
+      outline-offset: -3px;
+      border-radius: 6px;
+      box-shadow: 0 0 0 1px rgba(249, 115, 22, 0.2);
     }
 
     /* === CDK Drag: кастомный превью === */

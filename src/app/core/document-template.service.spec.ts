@@ -66,7 +66,7 @@ describe('DocumentTemplateService', () => {
   it('updateTemplate — возвращает ошибку для несуществующего id', async () => {
     const res = await firstValueFrom(service.updateTemplate('nonexistent', { name: 'Test' }));
     expect(res.success).toBe(false);
-    expect(res.message).toBe('Шаблон не найден');
+    expect(res.message).toBe('Сущность не найдена');
   });
 
   it('deleteTemplate — удаляет шаблон', async () => {
@@ -81,7 +81,7 @@ describe('DocumentTemplateService', () => {
   it('deleteTemplate — возвращает ошибку для несуществующего id', async () => {
     const res = await firstValueFrom(service.deleteTemplate('nonexistent'));
     expect(res.success).toBe(false);
-    expect(res.message).toBe('Шаблон не найден');
+    expect(res.message).toBe('Сущность не найдена');
   });
 
   it('cloneTemplate — клонирует шаблон с суффиксом (копия)', async () => {

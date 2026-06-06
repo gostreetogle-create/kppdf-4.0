@@ -17,28 +17,14 @@
       <span class="tt-preview__sep">·</span>
       <span class="tt-preview__label">Таблицы: {{ getTableNames(tmpl) }}</span>
     </div>
-    <div class="tt-preview__wrap">
-      <table class="tt-preview__table">
-        <thead>
-          <tr>
-            <th class="tt-preview__th--num">#</th>
-            @for (col of tmpl.columns; track col.fieldName; let i = $index) {
-              <th [style.width]="col.width || 'auto'">
-                {{ getFieldLabel(col) }}
-              </th>
-            }
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td class="tt-preview__td--num">1</td>
-            @for (col of tmpl.columns; track col.fieldName) {
-              <td class="tt-preview__cell">{{ '{' + '{' + col.fieldName + '}' + '}' }}</td>
-            }
-          </tr>
-        </tbody>
-      </table>
-    </div>
+    <kp-table
+      [data]="previewData()"
+      [columns]="previewColumns()"
+      [paginator]="false"
+      [showActions]="false"
+      [resizable]="true"
+      storageKey="tt-preview-{{ tmpl.id }}"
+    />
     <div class="tt-preview__footer">
       <kp-button
         label="Редактировать"
@@ -69,6 +55,7 @@
   </div>
 
   <kp-table
+    storageKey="table-templates"
     [data]="templates()"
     [columns]="tableColumns"
     [rows]="20"

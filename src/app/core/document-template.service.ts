@@ -1,14 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Observable, of, delay } from 'rxjs';
-import type { ApiResponse, DocumentTemplate } from '../../../shared/types/index.js';
-
-function generateId(): string {
-  return crypto.randomUUID?.() ?? Math.random().toString(36).slice(2, 11);
-}
-
-function nowISO(): string {
-  return new Date().toISOString();
-}
+import type { ApiResponse, DocumentTemplate, DocBlock } from '../../../shared/types/index.js';
+import { BaseCrudService, generateId, nowISO } from './crud-factory.js';
 
 /** Мок-данные: 2 примера шаблонов */
 const MOCK_TEMPLATES: DocumentTemplate[] = [
@@ -52,58 +45,45 @@ const MOCK_TEMPLATES: DocumentTemplate[] = [
   },
 ];
 
-/**
- * Сервис шаблонов документов — CRUD с хранением в памяти.
- * Позже заменяется на HTTP-сервис через ApiService.
- */
 @Injectable({ providedIn: 'root' })
-export class DocumentTemplateService {
-  private templates: DocumentTemplate[] = [...MOCK_TEMPLATES];
+export class DocumentTemplateService extends BaseCrudService<DocumentTemplate> {
+  constructor() {
+    super();
+    this.items = MOCK_TEMPLATES.map(t => this.cloneItem(t));
+  }
+
+  // ─── Совместимые методы (тонкие обёртки) ───
 
   /** Получить все шаблоны */
   getTemplates(): Observable<ApiResponse<DocumentTemplate[]>> {
-    return of({ success: true, data: [...this.templates] }).pipe(delay(100));
+    return this.getAll();
   }
 
   /** Получить шаблон по id */
   getTemplate(id: string): Observable<ApiResponse<DocumentTemplate | undefined>> {
-    const template = this.templates.find(t => t.id === id);
-    return of({ success: !!template, data: template ? this.deepClone(template) : undefined }).pipe(delay(100));
+    return this.getById(id);
   }
 
   /** Создать новый шаблон */
   createTemplate(data: Omit<DocumentTemplate, 'id' | 'createdAt' | 'updatedAt'>): Observable<ApiResponse<DocumentTemplate>> {
-    const now = nowISO();
-    const template: DocumentTemplate = { ...data, id: generateId(), createdAt: now, updatedAt: now };
-    this.templates.push(template);
-    return of({ success: true, data: { ...template } }).pipe(delay(100));
+    return this.create(data);
   }
 
   /** Обновить существующий шаблон */
   updateTemplate(id: string, data: Partial<Omit<DocumentTemplate, 'id' | 'createdAt'>>): Observable<ApiResponse<DocumentTemplate>> {
-    const index = this.templates.findIndex(t => t.id === id);
-    if (index === -1) {
-      return of({ success: false, data: undefined as unknown as DocumentTemplate, message: 'Шаблон не найден' }).pipe(delay(100));
-    }
-    this.templates[index] = { ...this.templates[index], ...data, id, updatedAt: nowISO() };
-    return of({ success: true, data: { ...this.templates[index] } }).pipe(delay(100));
+    return this.update(id, data);
   }
 
   /** Удалить шаблон */
   deleteTemplate(id: string): Observable<ApiResponse<void>> {
-    const index = this.templates.findIndex(t => t.id === id);
-    if (index === -1) {
-      return of({ success: false, data: undefined, message: 'Шаблон не найден' }).pipe(delay(100));
-    }
-    this.templates.splice(index, 1);
-    return of({ success: true, data: undefined }).pipe(delay(100));
+    return this.delete(id);
   }
 
   /** Клонировать шаблон */
   cloneTemplate(id: string): Observable<ApiResponse<DocumentTemplate>> {
-    const original = this.templates.find(t => t.id === id);
+    const original = this.items.find(t => t.id === id);
     if (!original) {
-      return of({ success: false, data: undefined as unknown as DocumentTemplate, message: 'Шаблон не найден' }).pipe(delay(100));
+      return of({ success: false, data: undefined as unknown as DocumentTemplate, message: 'Шаблон не найден' }).pipe(delay(this.delayMs));
     }
     const now = nowISO();
     const clone: DocumentTemplate = {
@@ -118,12 +98,12 @@ export class DocumentTemplateService {
         settings: b.settings ? { ...b.settings } : undefined,
       })),
     };
-    this.templates.push(clone);
-    return of({ success: true, data: { ...clone } }).pipe(delay(100));
+    this.items.push(clone);
+    return of({ success: true, data: { ...clone } }).pipe(delay(this.delayMs));
   }
 
-  /** Глубокое клонирование шаблона */
-  private deepClone(t: DocumentTemplate): DocumentTemplate {
+  /** Переопределяем cloneItem для глубокого клонирования блоков */
+  protected override cloneItem(t: DocumentTemplate): DocumentTemplate {
     return {
       ...t,
       blocks: t.blocks.map(b => ({

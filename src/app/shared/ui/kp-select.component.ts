@@ -16,7 +16,7 @@ export interface SelectOption {
   template: `
     <div class="kp-select-field" [class.kp-select-field--error]="!!error()">
       @if (label()) {
-        <p-floatlabel>
+        <p-floatlabel variant="on">
           <p-select
             [inputId]="inputId()"
             [options]="options()"
@@ -24,7 +24,6 @@ export interface SelectOption {
             (ngModelChange)="onValueChange($event)"
             [optionLabel]="optionLabel()"
             [optionValue]="optionValue()"
-            [placeholder]="placeholder()"
             [disabled]="disabled()"
             [showClear]="showClear()"
             [filter]="filter()"
@@ -63,21 +62,72 @@ export interface SelectOption {
     </div>
   `,
   styles: [`
+    /* === Хост — полная ширина по умолчанию === */
+    :host {
+      display: block;
+      width: 100%;
+    }
+
     .kp-select-field {
       display: flex;
       flex-direction: column;
       gap: var(--space-1);
+      width: 100%;
+    }
+
+    /* === Float label — PrimeNG нативная механика === */
+    /* display:block (не flex!) — PrimeNG использует absolute для label */
+    :host ::ng-deep p-floatlabel {
+      display: block;
+      width: 100%;
+      position: relative;
+    }
+
+    /* Label — внутри поля как placeholder, всплывает наверх при фокусе/значении */
+    :host ::ng-deep p-floatlabel label {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: var(--form-label-font-size);
+      font-weight: var(--form-label-font-weight);
+      color: var(--form-label-color);
+      background: transparent;
+      pointer-events: none;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+    }
+
+    /* При фокусе или заполненном значении — лейбл всплывает наверх */
+    :host ::ng-deep p-floatlabel:has(.p-focus) label,
+    :host ::ng-deep p-floatlabel:has(.p-inputwrapper-focus) label,
+    :host ::ng-deep p-floatlabel:has(.p-filled) label {
+      top: 0;
+      transform: translateY(-50%);
+      font-size: 11px;
+      color: var(--form-label-color-floating);
+      background: var(--color-surface);
+      padding: 0 4px;
+    }
+
+    /* При ошибке — лейбл красный */
+    :host ::ng-deep p-floatlabel:has(.kp-select--error) label {
+      color: var(--form-label-color-error);
     }
 
     /* === Триггер (поле выбора) === */
     :host ::ng-deep .kp-select__trigger {
-      min-height: 42px;
-      border-radius: var(--radius-md);
-      border: 1.5px solid var(--color-border);
-      background: var(--color-surface);
-      font-size: var(--font-size-base);
-      color: var(--color-text);
+      width: 100%;
+      min-height: var(--form-height);
+      height: var(--form-height);
+      align-items: center;
+      border-radius: var(--form-border-radius);
+      border: 1px solid var(--form-border-color);
+      background: var(--form-bg);
+      font-size: var(--form-font-size);
+      color: var(--form-text-color);
       transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+      padding: 0 var(--form-padding-x);
     }
 
     :host ::ng-deep .kp-select__trigger:hover {
@@ -110,7 +160,7 @@ export interface SelectOption {
 
     /* Placeholder цвет */
     :host ::ng-deep .kp-select__trigger .p-select-label.p-placeholder {
-      color: var(--color-text-muted);
+      color: var(--form-placeholder-color);
     }
 
     /* Clear-кнопка (крестик) */
@@ -191,25 +241,11 @@ export interface SelectOption {
       overflow-y: auto;
     }
 
-    /* === Float label позиционирование === */
-    :host ::ng-deep p-floatlabel {
-      display: flex;
-      flex-direction: column;
-    }
-
-    :host ::ng-deep p-floatlabel label {
-      order: -1;
-      margin-bottom: var(--space-1);
-      font-size: var(--font-size-sm);
-      font-weight: var(--font-weight-medium);
-      color: var(--color-text-secondary);
-    }
-
     /* Сообщение об ошибке */
     .kp-select__error {
-      color: var(--color-error);
-      font-size: var(--font-size-xs);
-      margin-top: var(--space-1);
+      color: var(--form-error-color);
+      font-size: var(--form-error-font-size);
+      margin-top: var(--form-error-margin-top);
       line-height: 1.3;
     }
   `],

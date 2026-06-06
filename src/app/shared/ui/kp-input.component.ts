@@ -12,33 +12,35 @@ import { LucideDynamicIcon } from '@lucide/angular';
   imports: [CommonModule, FormsModule, InputTextModule, InputNumberModule, FloatLabelModule, LucideDynamicIcon],
   template: `
     <div class="kp-input-field" [class.kp-input-field--error]="!!error()">
-      @if (label()) { <p-floatlabel>
+      @if (label()) {
         @if (type() === 'number') {
-          <p-inputnumber
-            [inputId]="inputId()"
-            [(ngModel)]="value"
-            (ngModelChange)="onValueChange($event)"
-            [disabled]="disabled()"
-            [styleClass]="'kp-input__number' + (error() ? ' ng-invalid' : '')"
-            [placeholder]="placeholder()"
-            [attr.aria-label]="label() || placeholder() || 'Поле ввода'"
-            [attr.aria-describedby]="error() ? inputId() + '-error' : null"
-          />
-          <label [for]="inputId()">{{ label() }}</label>
-        } @else {
-          <div class="kp-input__wrapper">
-            <input
-              [id]="inputId()"
-              [type]="showPassword() ? 'text' : type()"
-              pInputText
+          <p-floatlabel variant="on">
+            <p-inputnumber
+              [inputId]="inputId()"
               [(ngModel)]="value"
               (ngModelChange)="onValueChange($event)"
               [disabled]="disabled()"
-              [placeholder]="placeholder()"
-              [class.ng-invalid]="!!error()"
-              [attr.aria-label]="label() || placeholder() || 'Поле ввода'"
+              [attr.aria-label]="label() || 'Числовое поле'"
               [attr.aria-describedby]="error() ? inputId() + '-error' : null"
             />
+            <label [for]="inputId()">{{ label() }}</label>
+          </p-floatlabel>
+        } @else {
+          <div class="kp-input__wrapper">
+            <p-floatlabel variant="on">
+              <input
+                [id]="inputId()"
+                [type]="showPassword() ? 'text' : type()"
+                pInputText
+                [(ngModel)]="value"
+                (ngModelChange)="onValueChange($event)"
+                [disabled]="disabled()"
+                [class.ng-invalid]="!!error()"
+                [attr.aria-label]="label() || 'Поле ввода'"
+                [attr.aria-describedby]="error() ? inputId() + '-error' : null"
+              />
+              <label [for]="inputId()">{{ label() }}</label>
+            </p-floatlabel>
             @if (showClear() && value) {
               <button type="button" class="kp-input__action" (click)="clear()" tabindex="-1" aria-label="Очистить">
                 <svg lucideIcon="x"></svg>
@@ -54,9 +56,8 @@ import { LucideDynamicIcon } from '@lucide/angular';
               </button>
             }
           </div>
-          <label [for]="inputId()">{{ label() }}</label>
         }
-      </p-floatlabel> }
+      }
 
       @if (!label()) {
         @if (type() === 'number') {
@@ -103,12 +104,99 @@ import { LucideDynamicIcon } from '@lucide/angular';
     </div>
   `,
   styles: [`
-    .kp-input-field { display: flex; flex-direction: column; gap: var(--space-2); }
-    .kp-input-field--error :host ::ng-deep .p-inputtext { border-color: var(--color-error); }
-    .kp-input__error { color: var(--color-error); font-size: var(--font-size-xs); margin-top: var(--space-1); }
-    .kp-input__number { width: 100%; }
+    :host { display: block; width: 100%; }
+
+    .kp-input-field {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-1);
+      width: 100%;
+    }
+
+    /* Float label */
+    :host ::ng-deep p-floatlabel {
+      display: block;
+      width: 100%;
+      position: relative;
+    }
+
+    :host ::ng-deep p-floatlabel label {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: var(--form-label-font-size);
+      font-weight: var(--form-label-font-weight);
+      color: var(--form-label-color);
+      background: transparent;
+      pointer-events: none;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+    }
+
+    :host ::ng-deep p-floatlabel:has(.p-inputwrapper-focus) label,
+    :host ::ng-deep p-floatlabel:has(.p-focus) label,
+    :host ::ng-deep p-floatlabel:has(.p-filled) label {
+      top: 0;
+      transform: translateY(-50%);
+      font-size: 11px;
+      color: var(--form-label-color-floating);
+      background: var(--color-surface);
+      padding: 0 4px;
+    }
+
+    .kp-input-field--error :host ::ng-deep p-floatlabel:has(.ng-invalid) label {
+      color: var(--form-label-color-error);
+    }
+
+    /* Input styling */
+    :host ::ng-deep .p-inputtext {
+      width: 100%;
+      height: var(--form-height);
+      border-radius: var(--form-border-radius);
+      border: 1px solid var(--form-border-color);
+      background: var(--form-bg);
+      font-size: var(--form-font-size);
+      color: var(--form-text-color);
+      padding: 0 var(--form-padding-x);
+      transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+    }
+
+    :host ::ng-deep .p-inputtext:hover {
+      border-color: var(--form-border-color-hover);
+    }
+
+    :host ::ng-deep .p-inputtext:focus,
+    :host ::ng-deep .p-inputtext.p-filled {
+      border-color: var(--form-border-color-focus);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 20%, transparent);
+    }
+
+    .kp-input-field--error :host ::ng-deep .p-inputtext {
+      border-color: var(--form-border-color-error);
+    }
+
+    .kp-input-field--error :host ::ng-deep .p-inputtext:focus {
+      border-color: var(--form-border-color-error);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-error) 20%, transparent);
+    }
+
+    /* Disabled */
+    :host ::ng-deep .p-inputtext:disabled {
+      opacity: 0.55;
+      background: var(--form-bg-disabled);
+      cursor: not-allowed;
+    }
+
+    /* Placeholder */
+    :host ::ng-deep .p-inputtext::placeholder {
+      color: var(--form-placeholder-color);
+    }
+
     .kp-input__wrapper { position: relative; display: flex; align-items: center; }
     .kp-input__wrapper input { width: 100%; padding-right: 2.5rem; }
+    .kp-input__number { width: 100%; }
+
     .kp-input__action {
       position: absolute;
       right: 6px;
@@ -130,6 +218,12 @@ import { LucideDynamicIcon } from '@lucide/angular';
     .kp-input__action:hover {
       color: var(--color-text);
       background: var(--color-surface-hover);
+    }
+
+    .kp-input__error {
+      color: var(--form-error-color);
+      font-size: var(--form-error-font-size);
+      margin-top: var(--form-error-margin-top);
     }
   `],
   providers: [

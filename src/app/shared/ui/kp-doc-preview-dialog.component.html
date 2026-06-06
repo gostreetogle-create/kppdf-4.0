@@ -1,0 +1,95 @@
+<kp-dialog
+  [header]="'Предпросмотр: ' + templateName()"
+  [visible]="visible()"
+  (visibleChange)="visible.set($event)"
+  width="1000px"
+>
+  <div class="preview">
+    <div class="preview__info">
+      <span class="preview__label">{{ docTypeLabel() }}</span>
+      <span class="preview__sep">·</span>
+      <span class="preview__label">{{ blocks().length }} блоков</span>
+      <span class="preview__sep">·</span>
+      <span class="preview__label">Формат A4</span>
+    </div>
+
+    <div class="preview__canvas-wrap">
+      <kp-doc-canvas
+        [blocks]="blocks()"
+        [editable]="false"
+        [backgroundImage]="backgroundImage()"
+      />
+    </div>
+
+    <div class="preview__footer no-print">
+      <kp-button
+        label="Скачать PDF"
+        lucideIcon="download"
+        severity="success"
+        [loading]="pdfLoading()"
+        (buttonClick)="downloadPdf()"
+      />
+      <kp-button
+        label="Печать"
+        lucideIcon="printer"
+        (buttonClick)="print()"
+      />
+      <kp-button
+        label="Закрыть"
+        lucideIcon="x"
+        severity="secondary"
+        (buttonClick)="visible.set(false)"
+      />
+    </div>
+  </div>
+</kp-dialog>
+
+<!-- Hidden print template — rendered only when printing -->
+@if (printing()) {
+  <div class="print-only">
+    <div class="print-page">
+      @for (block of blocks(); track block.id) {
+        <div class="print-block">
+          @switch (block.type) {
+            @case ('text') {
+              @if (block.title) {
+                <div class="print-block__title">{{ block.title }}</div>
+              }
+              @if (block.columns && block.columns.length > 0) {
+                <div class="print-block__columns" [style.grid-template-columns]="columnsGrid(block)">
+                  @for (col of block.columns; track col.id) {
+                    <div
+                      class="print-block__col"
+                      [style.text-align]="col.textAlign || 'left'"
+                      [style.font-weight]="col.fontWeight || 'normal'"
+                      [style.font-style]="col.fontStyle || 'normal'"
+                      [style.text-decoration]="col.textDecoration || 'none'"
+                      [style.color]="col.color || 'inherit'"
+                    >{{ col.content }}</div>
+                  }
+                </div>
+              } @else if (block.content) {
+                <div class="print-block__content">{{ block.content }}</div>
+              }
+            }
+            @case ('separator') {
+              <div class="print-block__separator" [style.height.px]="block.height ?? 20">
+                @if (block.showLine) {
+                  <hr class="print-block__hr" />
+                }
+              </div>
+            }
+            @case ('table') {
+              @if (block.title) {
+                <div class="print-block__title">{{ block.title }}</div>
+              }
+              <div class="print-block__table-placeholder">
+                [Таблица: {{ block.tableTemplateId || 'не выбрана' }}]
+              </div>
+            }
+          }
+        </div>
+      }
+    </div>
+  </div>
+}

@@ -1,14 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Observable, of, delay } from 'rxjs';
 import type { ApiResponse, CounterpartyRoleDef } from '../../../shared/types/index.js';
-
-function generateId(): string {
-  return crypto.randomUUID?.() ?? Math.random().toString(36).slice(2, 11);
-}
-
-function nowISO(): string {
-  return new Date().toISOString();
-}
+import { BaseCrudService, generateId, nowISO, type CreateData } from './crud-factory.js';
 
 function makeSlug(name: string): string {
   return name.toLowerCase().replace(/[^a-zа-яё0-9]+/g, '_').replace(/^_|_$/g, '');
@@ -37,21 +30,25 @@ const SEED_ROLES: CounterpartyRoleDef[] = [
 ];
 
 @Injectable({ providedIn: 'root' })
-export class CounterpartyRoleService {
-  private roles: CounterpartyRoleDef[] = [...SEED_ROLES];
+export class CounterpartyRoleService extends BaseCrudService<CounterpartyRoleDef> {
+  constructor() {
+    super();
+    this.items = [...SEED_ROLES];
+  }
+
+  // ─── Совместимые методы (тонкие обёртки) ───
 
   /** Получить все виды контрагентов */
   getRoles(): Observable<ApiResponse<CounterpartyRoleDef[]>> {
-    return of({ success: true, data: [...this.roles] }).pipe(delay(100));
+    return this.getAll();
   }
 
   /** Получить один вид по ID */
   getRole(id: string): Observable<ApiResponse<CounterpartyRoleDef | undefined>> {
-    const role = this.roles.find(r => r.id === id);
-    return of({ success: !!role, data: role ? { ...role } : undefined }).pipe(delay(100));
+    return this.getById(id);
   }
 
-  /** Создать новый вид */
+  /** Создать новый вид (с авто-генерацией slug) */
   createRole(data: Omit<CounterpartyRoleDef, 'id' | 'slug' | 'createdAt' | 'updatedAt'>): Observable<ApiResponse<CounterpartyRoleDef>> {
     const now = nowISO();
     const slug = makeSlug(data.name);
@@ -62,37 +59,29 @@ export class CounterpartyRoleService {
       createdAt: now,
       updatedAt: now,
     };
-    this.roles.push(role);
-    return of({ success: true, data: { ...role } }).pipe(delay(100));
+    this.items.push(role);
+    return of({ success: true, data: { ...role } }).pipe(delay(this.delayMs));
   }
 
   /** Обновить вид */
   updateRole(id: string, data: Partial<Omit<CounterpartyRoleDef, 'id' | 'slug' | 'createdAt'>>): Observable<ApiResponse<CounterpartyRoleDef>> {
-    const index = this.roles.findIndex(r => r.id === id);
-    if (index === -1) {
-      return of({ success: false, data: undefined as unknown as CounterpartyRoleDef, message: 'Вид контрагента не найден' }).pipe(delay(100));
-    }
-    this.roles[index] = { ...this.roles[index], ...data, id, updatedAt: nowISO() };
-    return of({ success: true, data: { ...this.roles[index] } }).pipe(delay(100));
+    return this.update(id, data);
   }
 
   /** Удалить вид */
   deleteRole(id: string): Observable<ApiResponse<void>> {
-    const index = this.roles.findIndex(r => r.id === id);
-    if (index === -1) {
-      return of({ success: false, data: undefined, message: 'Вид контрагента не найден' }).pipe(delay(100));
-    }
-    this.roles.splice(index, 1);
-    return of({ success: true, data: undefined }).pipe(delay(100));
+    return this.delete(id);
   }
+
+  // ─── Дополнительные методы ───
 
   /** Получить роль по slug (для быстрой фильтрации) */
   getRoleBySlug(slug: string): CounterpartyRoleDef | undefined {
-    return this.roles.find(r => r.slug === slug);
+    return this.items.find(r => r.slug === slug);
   }
 
   /** Получить ID роли по slug */
   getRoleIdBySlug(slug: string): string | undefined {
-    return this.roles.find(r => r.slug === slug)?.id;
+    return this.items.find(r => r.slug === slug)?.id;
   }
 }

@@ -79,9 +79,37 @@
   --shadow-card-hover: 0 8px 24px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(37, 99, 235, 0.1);
 
   // === Высоты контролов ===
-  --control-height: 36px;
-  --control-height-sm: 30px;
-  --control-height-lg: 42px;
+  --control-height: 40px;
+  --control-height-sm: 36px;
+  --control-height-lg: 44px;
+
+  // === Form-контролы (общие для input/select/datepicker и т.д.) ===
+  --form-height: 40px;
+  --form-padding-x: 12px;
+  --form-padding-y: 0;
+  --form-border-radius: 8px;
+  --form-border-color: var(--color-border);
+  --form-border-color-hover: var(--color-text-muted);
+  --form-border-color-focus: var(--color-primary);
+  --form-border-color-error: var(--color-error);
+  --form-bg: var(--color-surface);
+  --form-bg-disabled: var(--color-surface-alt);
+  --form-font-size: var(--font-size-base);
+  --form-text-color: var(--color-text);
+  --form-placeholder-color: var(--color-text-muted);
+
+  // === Label (floating) ===
+  --form-label-font-size: var(--font-size-sm);
+  --form-label-font-size-floating: 11px;
+  --form-label-color: var(--color-text-secondary);
+  --form-label-color-floating: var(--color-primary);
+  --form-label-color-error: var(--color-error);
+  --form-label-font-weight: 500;
+
+  // === Error message ===
+  --form-error-font-size: var(--font-size-xs);
+  --form-error-color: var(--color-error);
+  --form-error-margin-top: var(--space-1);
 
   // === Переходы ===
   --transition-fast: 0.15s ease;

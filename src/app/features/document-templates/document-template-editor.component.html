@@ -73,6 +73,15 @@
       />
     </div>
     <div class="dt-editor__table-edit-footer">
+      @if (editingTableTemplateId()) {
+        <kp-button
+          label="Редактировать шаблон"
+          lucideIcon="pencil"
+          severity="info"
+          [text]="true"
+          (buttonClick)="editTableTemplate()"
+        />
+      }
       <kp-button
         label="Сохранить"
         lucideIcon="check"
@@ -114,7 +123,7 @@
         <div class="dt-editor__field">
           <kp-select
             label="Тип документа"
-            [options]="docTypeOptions"
+            [options]="docTypeOptions()"
             [ngModel]="docType()"
             (ngModelChange)="docType.set($event)"
           />

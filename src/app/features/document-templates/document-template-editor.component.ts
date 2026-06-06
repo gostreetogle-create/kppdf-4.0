@@ -20,18 +20,12 @@ import { KpDocPreviewDialogComponent } from '../../shared/ui/kp-doc-preview-dial
 import { NotificationService } from '../../core/notification.service';
 import { DocumentTemplateService } from '../../core/document-template.service';
 import { TableTemplateService } from '../../core/table-template.service';
+import { DocTypeService } from '../../core/doc-type.service';
 import type { DocBlock, DocBlockType, DocumentTemplate, TableTemplate } from '../../../../shared/types/index.js';
 
 function genId(): string {
   return Math.random().toString(36).slice(2, 10);
 }
-
-const DOC_TYPE_OPTIONS: SelectOption[] = [
-  { value: 'quotation', label: 'Коммерческое предложение' },
-  { value: 'contract', label: 'Договор' },
-  { value: 'invoice', label: 'Счёт' },
-  { value: 'shipping', label: 'Отгрузка' },
-];
 
 @Component({
   selector: 'app-document-template-editor',
@@ -51,11 +45,12 @@ export class DocumentTemplateEditorComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private templateService = inject(DocumentTemplateService);
   private tableTemplateService = inject(TableTemplateService);
+  private docTypeService = inject(DocTypeService);
   private notification = inject(NotificationService);
 
   isNew = signal(true);
   templateId = signal<string | null>(null);
-  templateName = signal('');
+  templateName = signal('Новый документ');
   nameError = signal('');
   description = signal('');
   docType = signal<string>('quotation');
@@ -81,7 +76,11 @@ export class DocumentTemplateEditorComponent implements OnInit {
     this.tableTemplateList().map(t => ({ value: t.id, label: t.name }))
   );
 
-  docTypeOptions = DOC_TYPE_OPTIONS;
+  docTypes = signal<{ slug: string; name: string }[]>([]);
+
+  docTypeOptions = computed<SelectOption[]>(() =>
+    this.docTypes().map(dt => ({ value: dt.slug, label: dt.name }))
+  );
 
   breadcrumbs: MenuItem[] = [
     { label: 'Администрирование', routerLink: '/admin' },
@@ -92,6 +91,12 @@ export class DocumentTemplateEditorComponent implements OnInit {
   async ngOnInit() {
     this.loading.set(true);
     try {
+      // Загружаем типы документов из справочника
+      const docTypesRes = await firstValueFrom(this.docTypeService.getDocTypes());
+      if (docTypesRes.success) {
+        this.docTypes.set(docTypesRes.data.filter(dt => dt.isActive).map(dt => ({ slug: dt.slug, name: dt.name })));
+      }
+
       const id = this.route.snapshot.paramMap.get('id');
       if (id) {
         this.isNew.set(false);
@@ -181,6 +186,17 @@ export class DocumentTemplateEditorComponent implements OnInit {
       this.openTableBlockEditor(block);
     } else if (block.type === 'separator') {
       this.openSepEditor(block);
+    }
+  }
+
+  /** Открыть редактор шаблона таблицы в новой вкладке */
+  editTableTemplate() {
+    const tid = this.editingTableTemplateId();
+    if (tid) {
+      const url = this.router.serializeUrl(
+        this.router.createUrlTree([`/admin/table-templates/${tid}/edit`])
+      );
+      window.open(url, '_blank');
     }
   }
 

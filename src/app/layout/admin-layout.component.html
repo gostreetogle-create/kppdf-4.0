@@ -47,9 +47,10 @@
       <kp-button
         [text]="true"
         size="small"
-        [label]="sidebarVisible() ? 'Свернуть меню' : 'Развернуть меню'"
         [lucideIcon]="sidebarVisible() ? 'chevron-left' : 'chevron-right'"
         styleClass="sidebar__toggle"
+        [pTooltip]="sidebarVisible() ? 'Свернуть меню' : 'Развернуть меню'"
+        tooltipPosition="right"
         (buttonClick)="toggleSidebar()"
       />
     </div>
@@ -100,7 +101,6 @@
       <kp-button
         [text]="true"
         size="small"
-        [label]="isDark() ? 'Светлая тема' : 'Тёмная тема'"
         [lucideIcon]="isDark() ? 'sun' : 'moon'"
         styleClass="sidebar__theme-btn"
         [pTooltip]="isDark() ? 'Светлая тема' : 'Тёмная тема'"

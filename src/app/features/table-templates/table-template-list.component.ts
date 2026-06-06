@@ -1,4 +1,4 @@
-import { Component, inject, signal, OnInit, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, signal, computed, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { MenuItem } from 'primeng/api';
@@ -52,6 +52,29 @@ export class TableTemplateListComponent implements OnInit {
   previewFields = signal<Record<string, string>>({});
   previewTableLabels = signal<Record<string, string>>({});
   previewLoading = signal(false);
+
+  /** Колонки для kp-table в предпросмотре */
+  previewColumns = computed<TableColumn[]>(() => {
+    const tmpl = this.previewTemplate();
+    const fieldLabels = this.previewFields();
+    if (!tmpl) return [];
+    return tmpl.columns.map(c => ({
+      field: c.fieldName,
+      header: c.label || fieldLabels[c.fieldName] || c.fieldName,
+      width: c.width || undefined,
+    }));
+  });
+
+  /** Фейковые данные для предпросмотра (1 строка с плейсхолдерами) */
+  previewData = computed<Record<string, string>[]>(() => {
+    const cols = this.previewColumns();
+    if (cols.length === 0) return [];
+    const row: Record<string, string> = {};
+    for (const col of cols) {
+      row[col.field] = '{{' + col.field + '}}';
+    }
+    return [row];
+  });
 
   breadcrumbs: MenuItem[] = [
     { label: 'Администрирование', routerLink: '/admin' },

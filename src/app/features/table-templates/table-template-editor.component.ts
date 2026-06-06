@@ -14,12 +14,18 @@ import { KpBreadcrumbComponent } from '../../shared/ui/kp-breadcrumb.component';
 import { KpCardComponent } from '../../shared/ui/kp-card.component';
 import { KpToastComponent } from '../../shared/ui/kp-toast.component';
 import { KpDialogComponent } from '../../shared/ui/kp-dialog.component';
+import { KpTableComponent, TableColumn } from '../../shared/ui/kp-table.component';
 import { NotificationService } from '../../core/notification.service';
 import { TableRegistryService } from '../../core/table-registry.service';
 import { TableTemplateService } from '../../core/table-template.service';
 import type { TableMeta, TemplateColumn } from '../../../../shared/types/index.js';
 
+function colId(): string {
+  return Math.random().toString(36).slice(2, 10);
+}
+
 interface EditableColumn {
+  uid: string;
   fieldName: string;
   label: string;
   width: string;
@@ -34,7 +40,7 @@ interface EditableColumn {
     CommonModule, FormsModule, DragDropModule,
     KpInputComponent, KpSelectComponent, KpButtonComponent,
     KpBreadcrumbComponent, KpCardComponent, KpToastComponent,
-    KpDialogComponent, LucideDynamicIcon,
+    KpDialogComponent, KpTableComponent, LucideDynamicIcon,
   ],
   templateUrl: './table-template-editor.component.html',
   styleUrls: ['./table-template-editor.component.scss'],
@@ -60,6 +66,28 @@ export class TableTemplateEditorComponent implements OnInit {
   saving = signal(false);
 
   previewVisible = signal(false);
+
+  /** Колонки для kp-table в предпросмотре (только с выбранным полем) */
+  previewColumns = computed<TableColumn[]>(() =>
+    this.columns()
+      .filter(c => !!c.fieldName)
+      .map(c => ({
+        field: c.fieldName,
+        header: c.label || this.getFieldLabel(c.fieldName) || c.fieldName,
+        width: c.width || undefined,
+      }))
+  );
+
+  /** Фейковые данные для предпросмотра (1 строка с плейсхолдерами) */
+  previewData = computed<Record<string, string>[]>(() => {
+    const cols = this.previewColumns();
+    if (cols.length === 0) return [];
+    const row: Record<string, string> = {};
+    for (const col of cols) {
+      row[col.field] = '{{' + col.field + '}}';
+    }
+    return [row];
+  });
 
   tableOptions = computed<SelectOption[]>(() =>
     this.tables().map(t => ({ value: t.name, label: t.label }))
@@ -108,6 +136,7 @@ export class TableTemplateEditorComponent implements OnInit {
 
   private columnToEditable(c: TemplateColumn, index: number): EditableColumn {
     return {
+      uid: colId(),
       fieldName: c.fieldName,
       label: c.label,
       width: c.width ?? '',
@@ -121,6 +150,11 @@ export class TableTemplateEditorComponent implements OnInit {
     this.tableError.set('');
     if (this.isNew()) {
       this.columns.set([]);
+      // Подставляем название таблицы как имя шаблона (если ещё не ввели вручную)
+      const table = this.tables().find(t => t.name === tableName);
+      if (table && !this.templateName().trim()) {
+        this.templateName.set(table.label);
+      }
     }
   }
 
@@ -137,6 +171,7 @@ export class TableTemplateEditorComponent implements OnInit {
     this.columns.update(cols => [
       ...cols,
       {
+        uid: colId(),
         fieldName: '',
         label: '',
         width: '',
@@ -165,26 +200,17 @@ export class TableTemplateEditorComponent implements OnInit {
     this.previewVisible.set(true);
   }
 
+  /** Обновить ширину колонки из предпросмотра */
+  onColumnResized(event: { field: string; width: string }) {
+    this.columns.update(cols =>
+      cols.map(c =>
+        c.fieldName === event.field ? { ...c, width: event.width } : c
+      )
+    );
+  }
+
   removeColumn(index: number) {
     this.columns.update(cols => cols.filter((_, i) => i !== index));
-  }
-
-  moveColumnUp(index: number) {
-    if (index === 0) return;
-    this.columns.update(cols => {
-      const arr = [...cols];
-      [arr[index - 1], arr[index]] = [arr[index], arr[index - 1]];
-      return arr;
-    });
-  }
-
-  moveColumnDown(index: number) {
-    if (index >= this.columns().length - 1) return;
-    this.columns.update(cols => {
-      const arr = [...cols];
-      [arr[index], arr[index + 1]] = [arr[index + 1], arr[index]];
-      return arr;
-    });
   }
 
   onFieldChange(index: number, fieldName: string) {
