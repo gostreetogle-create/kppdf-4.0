@@ -1,6 +1,10 @@
 <kp-toast />
 <kp-confirm-dialog />
-<kp-doc-preview-dialog />
+
+<!-- Preview dialog (загружается, когда браузер свободен) -->
+@defer (on idle) {
+  <kp-doc-preview-dialog />
+}
 
 <kp-card>
   <kp-breadcrumb [items]="breadcrumbs" />

@@ -10,9 +10,17 @@ describe('TableRegistryService', () => {
     service = TestBed.inject(TableRegistryService);
   });
 
-  it('должен вернуть 4 таблицы', async () => {
+  it('должен вернуть 5 таблиц', async () => {
     const tables = await firstValueFrom(service.getTables());
-    expect(tables.length).toBe(4);
+    expect(tables.length).toBe(5);
+  });
+
+  it('должен вернуть таблицу counterparties с 19 полями', async () => {
+    const table = await firstValueFrom(service.getTable('counterparties'));
+    expect(table).toBeDefined();
+    expect(table!.name).toBe('counterparties');
+    expect(table!.label).toBe('Контрагенты');
+    expect(table!.fields.length).toBe(19);
   });
 
   it('должен вернуть таблицу products с 12 полями', async () => {
@@ -29,21 +37,23 @@ describe('TableRegistryService', () => {
     expect(fields[0].name).toBe('lastName');
   });
 
-  it('должен вернуть таблицу organizations с 16 полями', async () => {
+  it('должен вернуть таблицу organizations с 19 полями', async () => {
     const table = await firstValueFrom(service.getTable('organizations'));
     expect(table).toBeDefined();
     expect(table!.name).toBe('organizations');
-    expect(table!.label).toBe('Организации');
-    expect(table!.fields.length).toBe(16);
+    expect(table!.label).toBe('Контрагенты');
+    expect(table!.fields.length).toBe(19);
   });
 
-  it('должен вернуть таблицу suppliers с 8 полями', async () => {
-    const table = await firstValueFrom(service.getTable('suppliers'));
+  it('должен вернуть таблицу counterparty-role-types с 4 полями', async () => {
+    const table = await firstValueFrom(service.getTable('counterparty-role-types'));
     expect(table).toBeDefined();
-    expect(table!.name).toBe('suppliers');
-    expect(table!.label).toBe('Поставщики');
-    expect(table!.fields.length).toBe(8);
+    expect(table!.name).toBe('counterparty-role-types');
+    expect(table!.label).toBe('Виды контрагентов');
+    expect(table!.fields.length).toBe(4);
   });
+
+
 
   it('должен вернуть undefined для несуществующей таблицы', async () => {
     const table = await firstValueFrom(service.getTable('nonexistent'));

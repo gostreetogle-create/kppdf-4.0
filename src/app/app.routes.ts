@@ -52,15 +52,34 @@ export const routes: Routes = [
       },
       {
         path: 'references/suppliers',
-        loadComponent: () => import('./features/suppliers/supplier-list.component').then(m => m.SupplierListComponent)
+        redirectTo: '/references/organizations?role=supplier',
+        pathMatch: 'full'
       },
       {
         path: 'references/suppliers/new',
-        loadComponent: () => import('./features/suppliers/supplier-editor.component').then(m => m.SupplierEditorComponent)
+        redirectTo: '/references/organizations/new',
+        pathMatch: 'full'
       },
       {
         path: 'references/suppliers/:id/edit',
-        loadComponent: () => import('./features/suppliers/supplier-editor.component').then(m => m.SupplierEditorComponent)
+        redirectTo: '/references/organizations',
+        pathMatch: 'full'
+      },
+      {
+        path: 'references/counterparty-roles',
+        loadComponent: () => import('./features/counterparty-roles/counterparty-role-list.component').then(m => m.CounterpartyRoleListComponent)
+      },
+      {
+        path: 'references/counterparty-roles/new',
+        loadComponent: () => import('./features/counterparty-roles/counterparty-role-editor.component').then(m => m.CounterpartyRoleEditorComponent)
+      },
+      {
+        path: 'references/counterparty-roles/:id/edit',
+        loadComponent: () => import('./features/counterparty-roles/counterparty-role-editor.component').then(m => m.CounterpartyRoleEditorComponent)
+      },
+      {
+        path: 'admin/feature-flags',
+        loadComponent: () => import('./features/feature-flags/feature-flags.component').then(m => m.FeatureFlagsComponent)
       }
     ]
   },

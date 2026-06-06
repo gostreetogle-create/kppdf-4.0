@@ -5,16 +5,62 @@ import { KpDialogComponent } from './kp-dialog.component.js';
 import { KpInputComponent } from './kp-input.component.js';
 import { KpSelectComponent, SelectOption } from './kp-select.component.js';
 import { KpButtonComponent } from './kp-button.component.js';
+import { LucideDynamicIcon } from '@lucide/angular';
 import type { DocBlock, DocTextColumn } from '../../../../shared/types/index.js';
 
 function genId(): string {
   return Math.random().toString(36).slice(2, 10);
 }
 
+interface PlaceholderDef {
+  /** Плейсхолдер без {{}} */
+  key: string;
+  /** Человеческое название */
+  label: string;
+  /** Категория для группировки */
+  category: string;
+  /** Описание */
+  description: string;
+}
+
+/** Плейсхолдеры, доступные в текстовых блоках */
+const PLACEHOLDER_GROUPS: PlaceholderDef[] = [
+  // Документ
+  { key: 'number', label: 'Номер документа', category: 'Документ', description: 'Номер документа' },
+  { key: 'date', label: 'Дата', category: 'Документ', description: 'Текущая дата' },
+  { key: 'city', label: 'Город', category: 'Документ', description: 'Город составления' },
+  { key: 'delivery_days', label: 'Срок поставки (дн)', category: 'Документ', description: 'Срок поставки в рабочих днях' },
+  // Клиент
+  { key: 'client.name', label: 'Наименование клиента', category: 'Клиент', description: 'Полное наименование организации-клиента' },
+  { key: 'client.short_name', label: 'Краткое наименование', category: 'Клиент', description: 'Краткое наименование клиента' },
+  { key: 'client.inn', label: 'ИНН клиента', category: 'Клиент', description: 'ИНН клиента' },
+  { key: 'client.phone', label: 'Телефон клиента', category: 'Клиент', description: 'Контактный телефон клиента' },
+  { key: 'client.email', label: 'Email клиента', category: 'Клиент', description: 'Электронная почта клиента' },
+  { key: 'client.address', label: 'Адрес клиента', category: 'Клиент', description: 'Юридический адрес клиента' },
+  // Наша компания
+  { key: 'our_company.name', label: 'Наша компания', category: 'Наша компания', description: 'Полное наименование нашей организации' },
+  { key: 'our_company.short_name', label: 'Наша компания (кратко)', category: 'Наша компания', description: 'Краткое наименование нашей организации' },
+  { key: 'our_company.inn', label: 'Наш ИНН', category: 'Наша компания', description: 'ИНН нашей организации' },
+  { key: 'our_company.phone', label: 'Наш телефон', category: 'Наша компания', description: 'Контактный телефон нашей организации' },
+  { key: 'our_company.email', label: 'Наш email', category: 'Наша компания', description: 'Электронная почта нашей организации' },
+  { key: 'our_company.address', label: 'Наш адрес', category: 'Наша компания', description: 'Юридический адрес нашей организации' },
+  // Поставщик
+  { key: 'supplier.name', label: 'Поставщик', category: 'Поставщик', description: 'Наименование поставщика' },
+  { key: 'supplier.contact_person', label: 'Контактное лицо', category: 'Поставщик', description: 'Контактное лицо поставщика' },
+  { key: 'supplier.phone', label: 'Телефон поставщика', category: 'Поставщик', description: 'Контактный телефон поставщика' },
+  // Суммы
+  { key: 'total_amount', label: 'Сумма всего', category: 'Суммы', description: 'Общая сумма документа' },
+  { key: 'total_amount_words', label: 'Сумма прописью', category: 'Суммы', description: 'Общая сумма прописью' },
+  { key: 'vat', label: 'НДС', category: 'Суммы', description: 'Сумма НДС' },
+];
+
+/** Получить уникальные категории */
+const PLACEHOLDER_CATEGORIES = [...new Set(PLACEHOLDER_GROUPS.map(p => p.category))];
+
 @Component({
   selector: 'kp-doc-text-editor-dialog',
   standalone: true,
-  imports: [CommonModule, FormsModule, KpDialogComponent, KpInputComponent, KpSelectComponent, KpButtonComponent],
+  imports: [CommonModule, FormsModule, KpDialogComponent, KpInputComponent, KpSelectComponent, KpButtonComponent, LucideDynamicIcon],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <kp-dialog
@@ -40,12 +86,41 @@ function genId(): string {
             </div>
 
             <textarea
+              #colTextarea
               class="editor__textarea"
               [ngModel]="col.content"
               (ngModelChange)="updateColumn(i, 'content', $event)"
               [placeholder]="'Текст колонки ' + (i + 1) + '...'"
               rows="3"
             ></textarea>
+
+            <!-- Панель плейсхолдеров -->
+            <details class="editor__placeholders">
+              <summary class="editor__placeholders-summary">
+                <svg [lucideIcon]="'curly-braces'" class="editor__placeholders-icon"></svg>
+                Вставить плейсхолдер
+              </summary>
+              <div class="editor__placeholders-body">
+                @for (cat of placeholderCategories; track cat) {
+                  <div class="editor__placeholders-group">
+                    <div class="editor__placeholders-cat">{{ cat }}</div>
+                    <div class="editor__placeholders-chips">
+                      @for (ph of placeholdersByCategory(cat); track ph.key) {
+                        <button
+                          type="button"
+                          class="editor__placeholder-chip"
+                          (click)="insertPlaceholder(i, ph.key, colTextarea)"
+                          [attr.title]="ph.description"
+                        >
+                          <span class="editor__placeholder-key">{{ '{{' + ph.key + '}}' }}</span>
+                          <span class="editor__placeholder-label">{{ ph.label }}</span>
+                        </button>
+                      }
+                    </div>
+                  </div>
+                }
+              </div>
+            </details>
 
             <!-- Панель форматирования: иконки -->
             <div class="editor__col-toolbar">
@@ -197,6 +272,82 @@ function genId(): string {
       justify-content: flex-end;
       margin-top: 16px;
     }
+
+    /* === Placeholders Panel === */
+    .editor__placeholders {
+      margin-top: 8px;
+      border: 1px solid var(--color-border-light);
+      border-radius: 6px;
+      background: var(--color-surface);
+    }
+
+    .editor__placeholders-summary {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--color-text-secondary);
+      cursor: pointer;
+      user-select: none;
+      transition: color 0.15s;
+    }
+    .editor__placeholders-summary:hover {
+      color: var(--color-primary);
+    }
+    .editor__placeholders-icon {
+      width: 14px;
+      height: 14px;
+    }
+    .editor__placeholders-body {
+      padding: 6px 10px 10px;
+      border-top: 1px solid var(--color-border-light);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .editor__placeholders-group {}
+    .editor__placeholders-cat {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--color-text-muted);
+      margin-bottom: 4px;
+    }
+    .editor__placeholders-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+    .editor__placeholder-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 8px;
+      font-size: 11px;
+      border: 1px solid var(--color-border-light);
+      border-radius: 4px;
+      background: var(--color-surface-alt);
+      color: var(--color-text-secondary);
+      cursor: pointer;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+    .editor__placeholder-chip:hover {
+      border-color: var(--color-primary-border);
+      background: var(--color-primary-light);
+      color: var(--color-primary);
+    }
+    .editor__placeholder-key {
+      font-family: monospace;
+      font-weight: 600;
+      color: var(--color-primary);
+    }
+    .editor__placeholder-label {
+      color: var(--color-text-muted);
+    }
   `]
 })
 export class KpDocTextEditorDialogComponent {
@@ -207,6 +358,8 @@ export class KpDocTextEditorDialogComponent {
   title = '';
   columnCount = signal(1);
   columns = signal<DocTextColumn[]>([]);
+
+  placeholderCategories = PLACEHOLDER_CATEGORIES;
 
   columnCountOptions: SelectOption[] = [
     { value: 1, label: '1 колонка' },
@@ -237,6 +390,46 @@ export class KpDocTextEditorDialogComponent {
     this.columns.update(cols => {
       const arr = [...cols];
       arr[index] = { ...arr[index], [field]: value };
+      return arr;
+    });
+  }
+
+  placeholdersByCategory(category: string): PlaceholderDef[] {
+    return PLACEHOLDER_GROUPS.filter(p => p.category === category);
+  }
+
+  /**
+   * Вставляет плейсхолдер в textarea под курсором.
+   * Если курсор не в фокусе — добавляет в конец.
+   */
+  insertPlaceholder(colIndex: number, key: string, textarea: HTMLTextAreaElement) {
+    const cols = this.columns();
+    const currentContent = cols[colIndex]?.content ?? '';
+    const placeholder = `{{${key}}}`;
+
+    let newContent: string;
+
+    // Пробуем вставить под курсором
+    if (textarea && typeof textarea.selectionStart === 'number') {
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      newContent = currentContent.slice(0, start) + placeholder + currentContent.slice(end);
+      // После вставки возвращаем фокус и ставим курсор после вставленного плейсхолдера
+      setTimeout(() => {
+        textarea.focus();
+        const pos = start + placeholder.length;
+        textarea.setSelectionRange(pos, pos);
+      });
+    } else {
+      // Если не можем определить позицию — добавляем в конец
+      newContent = currentContent + (currentContent ? ' ' : '') + placeholder;
+    }
+
+    this.columns.update(cols => {
+      const arr = [...cols];
+      if (arr[colIndex]) {
+        arr[colIndex] = { ...arr[colIndex], content: newContent };
+      }
       return arr;
     });
   }

@@ -50,7 +50,7 @@ export class DocumentTemplateListComponent implements OnInit {
   templates = signal<DocTemplateRow[]>([]);
   loading = signal(false);
 
-  previewDialog = viewChild.required(KpDocPreviewDialogComponent);
+  previewDialog = viewChild(KpDocPreviewDialogComponent);
 
   breadcrumbs: MenuItem[] = [
     { label: 'Администрирование', routerLink: '/admin' },
@@ -120,7 +120,7 @@ export class DocumentTemplateListComponent implements OnInit {
 
   onViewRow(row: unknown) {
     const tmpl = row as DocTemplateRow;
-    this.previewDialog().open(
+    this.previewDialog()?.open(
       tmpl.name,
       tmpl.docType,
       tmpl.blocks,

@@ -1,10 +1,14 @@
 <kp-toast />
 
-<!-- Text editor dialog -->
-<kp-doc-text-editor-dialog (saved)="onTextBlockSave($event)" />
+<!-- Text editor dialog (загружается, когда браузер свободен) -->
+@defer (on idle) {
+  <kp-doc-text-editor-dialog (saved)="onTextBlockSave($event)" />
+}
 
-<!-- Preview dialog -->
-<kp-doc-preview-dialog />
+<!-- Preview dialog (загружается, когда браузер свободен) -->
+@defer (on idle) {
+  <kp-doc-preview-dialog />
+}
 
 <!-- Separator block editor dialog -->
 <kp-dialog

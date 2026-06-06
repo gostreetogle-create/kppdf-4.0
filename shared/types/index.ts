@@ -122,7 +122,25 @@ export interface DocBlock {
 // Справочники (CRUD-сущности)
 // ========================================
 
-/** Организация — юр.лицо / ИП */
+/**
+ * Справочник «Виды контрагентов» — настраиваемый список ролей.
+ * Можно добавлять, редактировать, удалять через интерфейс.
+ */
+export interface CounterpartyRoleDef {
+  id: string;
+  name: string;
+  description: string;
+  /** Системный ключ для быстрой фильтрации (заполняется автоматически) */
+  slug: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/**
+ * Контрагент — юр.лицо / ИП, которое может выступать в разных ролях.
+ * Объединяет бывшие справочники «Организации» и «Поставщики».
+ */
 export interface Organization {
   id: string;
   name: string;
@@ -140,25 +158,22 @@ export interface Organization {
   bankAccount: string;
   signerName: string;
   signerPosition: string;
-  isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
-}
-
-/** Поставщик */
-export interface Supplier {
-  id: string;
-  name: string;
+  /** ID ролей контрагента из справочника "Виды контрагентов" */
+  counterpartyRoleIds: string[];
+  /** Контактное лицо (для поставщиков) */
   contactPerson: string;
-  phone: string;
-  email: string;
-  inn: string;
-  bankAccount: string;
+  /** Отсрочка платежа в днях (для поставщиков) */
   paymentTermDays: number;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
 }
+
+/**
+ * @deprecated Используйте Organization с counterpartyRoleIds.
+ * Supplier удалён. Все поставщики теперь хранятся как Organization.
+ */
+export type Supplier = Organization;
 
 /** Шаблон документа */
 export interface DocumentTemplate {
@@ -172,3 +187,63 @@ export interface DocumentTemplate {
   createdAt: string;
   updatedAt: string;
 }
+
+// ========================================
+// Feature Flags (флаги возможностей)
+// ========================================
+
+/** Один флаг возможности */
+export interface FeatureFlagDef {
+  /** Ключ флага (уникальный) */
+  key: string;
+  /** Название для отображения */
+  label: string;
+  /** Описание — что делает этот флаг */
+  description: string;
+  /** Включён по умолчанию */
+  enabledByDefault: boolean;
+  /** Категория для группировки */
+  category: string;
+}
+
+/**
+ * Все доступные флаги возможностей.
+ * Добавляйте сюда новые флаги по мере появления.
+ */
+export const FEATURE_FLAGS: FeatureFlagDef[] = [
+  {
+    key: 'placeholders',
+    label: 'Заготовки для подстановки',
+    description: 'Панель «Вставить заготовку» в редакторе текстовых блоков ({{...}})',
+    enabledByDefault: true,
+    category: 'Документы',
+  },
+  {
+    key: 'pdfExport',
+    label: 'Экспорт PDF',
+    description: 'Кнопка «Скачать PDF» в предпросмотре документов',
+    enabledByDefault: true,
+    category: 'Документы',
+  },
+  {
+    key: 'counterpartyRoles',
+    label: 'Динамические роли контрагентов',
+    description: 'Справочник «Виды контрагентов» с возможностью добавлять/редактировать роли',
+    enabledByDefault: true,
+    category: 'Справочники',
+  },
+  {
+    key: 'deferDialogs',
+    label: 'Ленивая загрузка диалогов',
+    description: 'Диалоги и предпросмотр загружаются только когда браузер свободен',
+    enabledByDefault: true,
+    category: 'Производительность',
+  },
+  {
+    key: 'advancedSearch',
+    label: 'Расширенный поиск',
+    description: 'Фильтры и поиск по нескольким полям в таблицах (в разработке)',
+    enabledByDefault: false,
+    category: 'Экспериментальное',
+  },
+];

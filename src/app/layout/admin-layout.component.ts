@@ -47,8 +47,10 @@ export class AdminLayoutComponent {
       label: 'Справочники',
       icon: 'book',
       items: [
-        { id: 'nav-orgs', label: 'Организации', icon: 'building', routerLink: '/references/organizations' },
-        { id: 'nav-suppliers', label: 'Поставщики', icon: 'truck', routerLink: '/references/suppliers' }
+        { id: 'nav-orgs', label: 'Контрагенты', icon: 'building', routerLink: '/references/organizations' },
+        { id: 'nav-role-types', label: 'Виды контрагентов', icon: 'tag', routerLink: '/references/counterparty-roles' },
+        { id: 'nav-suppliers', label: '— Поставщики', icon: 'truck', routerLink: '/references/organizations?role=supplier' },
+        { id: 'nav-buyers', label: '— Покупатели', icon: 'shopping-cart', routerLink: '/references/organizations?role=buyer' }
       ]
     },
     { id: 'nav-sep-2', separator: true },
@@ -58,7 +60,9 @@ export class AdminLayoutComponent {
       icon: 'cog',
       items: [
         { id: 'nav-table-tpl', label: 'Шаблоны таблиц', icon: 'table', routerLink: '/admin/table-templates' },
-        { id: 'nav-doc-tpl', label: 'Шаблоны документов', icon: 'file', routerLink: '/admin/document-templates' }
+        { id: 'nav-table-tpl', label: 'Шаблоны таблиц', icon: 'table', routerLink: '/admin/table-templates' },
+        { id: 'nav-doc-tpl', label: 'Шаблоны документов', icon: 'file', routerLink: '/admin/document-templates' },
+        { id: 'nav-feature-flags', label: 'Флаги возможностей', icon: 'flag', routerLink: '/admin/feature-flags' }
       ]
     }
   ];

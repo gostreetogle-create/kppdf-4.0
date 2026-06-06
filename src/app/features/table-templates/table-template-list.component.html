@@ -1,7 +1,8 @@
 <kp-toast />
 <kp-confirm-dialog />
 
-<!-- Preview dialog -->
+<!-- Preview dialog (загружается, когда браузер свободен) -->
+@defer (on idle) {
 <kp-dialog
   header="Предпросмотр: {{ previewTemplate()?.name || '' }}"
   [visible]="previewVisible()"
@@ -53,6 +54,7 @@
     </div>
   }
 </kp-dialog>
+}
 
 <kp-card>
   <kp-breadcrumb [items]="breadcrumbs" />

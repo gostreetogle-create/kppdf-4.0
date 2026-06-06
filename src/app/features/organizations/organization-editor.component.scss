@@ -64,10 +64,87 @@
   max-width: 220px;
 }
 
-/* === Status === */
-.org-editor__status {
-  margin-bottom: var(--space-6);
+/* === Status === *//* === Roles === */
+.org-editor__roles {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
 }
+
+.org-editor__roles-manage {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-normal);
+  text-transform: none;
+  letter-spacing: normal;
+  color: var(--color-primary);
+  text-decoration: none;
+  margin-left: var(--space-3);
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.org-editor__roles-empty {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  padding: var(--space-3);
+  text-align: center;
+  a {
+    color: var(--color-primary);
+    text-decoration: none;
+    &:hover { text-decoration: underline; }
+  }
+}
+
+.org-editor__role-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.org-editor__role-checkbox {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: border-color var(--transition-fast), background var(--transition-fast);
+
+  &:has(input:checked) {
+    border-color: var(--color-primary);
+    background: var(--color-primary-light);
+  }
+
+  &:hover {
+    border-color: var(--color-primary-border);
+  }
+
+  input[type="checkbox"] {
+    margin-top: 3px;
+    width: 16px;
+    height: 16px;
+    accent-color: var(--color-primary);
+    cursor: pointer;
+  }
+}
+
+.org-editor__role-label {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+}
+
+.org-editor__role-hint {
+  display: block;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-normal);
+  color: var(--color-text-muted);
+  margin-top: 2px;
+}
+
+.org-editor__status { margin-bottom: var(--space-6); }
 
 .org-editor__status-row {
   display: flex;

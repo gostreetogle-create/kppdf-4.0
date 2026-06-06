@@ -1,0 +1,32 @@
+#!/usr/bin/env sh
+# Pre-commit hook: lint → build → test
+# Если хоть одна команда падает — коммит блокируется
+
+echo "🔍 Проверка кода перед коммитом..."
+
+echo ""
+echo "📋 1/3 — Линтер..."
+npx --no ng lint
+if [ $? -ne 0 ]; then
+  echo "❌ Линтер не прошёл. Коммит отменён."
+  exit 1
+fi
+
+echo ""
+echo "🔨 2/3 — Сборка..."
+npx --no ng build
+if [ $? -ne 0 ]; then
+  echo "❌ Сборка не удалась. Коммит отменён."
+  exit 1
+fi
+
+echo ""
+echo "🧪 3/3 — Тесты..."
+npx --no vitest run
+if [ $? -ne 0 ]; then
+  echo "❌ Тесты не прошли. Коммит отменён."
+  exit 1
+fi
+
+echo ""
+echo "✅ Все проверки пройдены! Коммит разрешён."

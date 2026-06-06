@@ -20,6 +20,12 @@ export interface IOrganization extends Document {
   bankAccount: string;
   signerName: string;
   signerPosition: string;
+  /** ID ролей контрагента из справочника "Виды контрагентов" */
+  counterpartyRoleIds: string[];
+  /** Контактное лицо (для поставщиков) */
+  contactPerson: string;
+  /** Отсрочка платежа в днях (для поставщиков) */
+  paymentTermDays: number;
   isActive: boolean;
 }
 
@@ -39,6 +45,9 @@ const organizationSchema = new Schema<IOrganization>({
   bankAccount: { type: String, trim: true, default: '' },
   signerName: { type: String, trim: true, default: '' },
   signerPosition: { type: String, trim: true, default: '' },
+  counterpartyRoleIds: { type: [String], default: [] },
+  contactPerson: { type: String, trim: true, default: '' },
+  paymentTermDays: { type: Number, default: 0 },
   isActive: { type: Boolean, default: true }
 }, { timestamps: true });
 

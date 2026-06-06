@@ -7,12 +7,13 @@ import { MessageService, ConfirmationService } from 'primeng/api';
 import {
   provideLucideIcons,
   LucidePencil, LucideTrash2, LucideEye, LucideCopy, LucideGripVertical,
-  LucideDownload, LucidePrinter,
+  LucideDownload, LucidePrinter, LucideShoppingCart, LucideTag,
   LucideChevronUp, LucideChevronDown, LucideAlignLeft, LucideTable, LucideMinus,
   LucideArrowUpDown, LucideBox, LucideCheck, LucideSearch,
   LucideExternalLink, LucideTriangleAlert,
   LucideChevronLeft, LucideChevronRight, LucideSun, LucideMoon, LucideMenu, LucideBell,      LucideHome, LucidePalette, LucideBook, LucideBuilding, LucideCog, LucideFile,
   LucideEyeOff, LucideX, LucidePlus,
+  LucideFlag, LucideRotateCcw,
 } from '@lucide/angular';
 import Aura from '@primeuix/themes/aura';
 
@@ -44,7 +45,8 @@ export const appConfig: ApplicationConfig = {
       LucideExternalLink, LucideTriangleAlert,
       LucideChevronLeft, LucideChevronRight, LucideSun, LucideMoon, LucideMenu, LucideBell,      LucideHome, LucidePalette, LucideBook, LucideBuilding, LucideCog, LucideFile,
   LucideEyeOff, LucideX, LucidePlus,
-  LucideDownload, LucidePrinter,
+  LucideDownload, LucidePrinter, LucideShoppingCart, LucideTag,
+  LucideFlag, LucideRotateCcw,
     ),
   ]
 };

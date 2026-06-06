@@ -16,7 +16,8 @@ import { logger } from './utils/logger.js';
 import { setupSwagger } from './docs/swagger.js';
 import authRoutes from './modules/auth.routes.js';
 import organizationRoutes from './modules/organization.routes.js';
-import supplierRoutes from './modules/supplier.routes.js';
+import counterpartyRoleRoutes from './modules/counterparty-role.routes.js';
+
 import { User } from './modules/user.model.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -46,7 +47,7 @@ app.use('/uploads', express.static(path.resolve(__dirname, '../uploads')));
 app.use('/api/v1/auth/login', authLimiter);
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/organizations', organizationRoutes);
-app.use('/api/v1/suppliers', supplierRoutes);
+app.use('/api/v1/counterparty-roles', counterpartyRoleRoutes);
 
 // Swagger docs
 setupSwagger(app);

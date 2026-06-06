@@ -92,8 +92,9 @@ describe('AuthService', () => {
       expect(service.isAuthenticated()).toBe(false);
     });
 
-    it('возвращает true с валидным токеном', () => {
+    it('возвращает true с валидным токеном', async () => {
       setup(makeToken({ ...mockUser, exp: Math.floor(Date.now() / 1000) + 3600 }));
+      await new Promise(r => setTimeout(r, 0));
       expect(service.isAuthenticated()).toBe(true);
     });
 
@@ -109,15 +110,17 @@ describe('AuthService', () => {
       expect(service.currentUser()).toBeNull();
     });
 
-    it('загружает пользователя из токена при старте', () => {
+    it('загружает пользователя из токена при старте', async () => {
       setup(makeToken({ ...mockUser, exp: Math.floor(Date.now() / 1000) + 3600 }));
+      await new Promise(r => setTimeout(r, 0));
       expect(service.currentUser()).toBeTruthy();
       expect(service.currentUser()?.username).toBe('admin');
       expect(service.currentUser()?.displayName).toBe('Administrator');
     });
 
-    it('сбрасывает пользователя при просроченном токене', () => {
+    it('сбрасывает пользователя при просроченном токене', async () => {
       setup(makeToken({ ...mockUser, exp: Math.floor(Date.now() / 1000) - 3600 }));
+      await new Promise(r => setTimeout(r, 0));
       expect(service.currentUser()).toBeNull();
     });
   });
@@ -212,15 +215,17 @@ describe('AuthService', () => {
       expect(service.currentUser()).toBeNull();
     });
 
-    it('сбрасывает сессию при просроченном токене', () => {
+    it('сбрасывает сессию при просроченном токене', async () => {
       setup(makeToken({ ...mockUser, exp: Math.floor(Date.now() / 1000) - 3600 }));
+      await new Promise(r => setTimeout(r, 0));
       expect(service.currentUser()).toBeNull();
       expect(localStorage.getItem('accessToken')).toBeNull();
     });
 
-    it('загружает пользователя при валидном неистёкшем токене без exp', () => {
+    it('загружает пользователя при валидном неистёкшем токене без exp', async () => {
       const token = makeToken(mockUser); // без exp
       setup(token);
+      await new Promise(r => setTimeout(r, 0));
       expect(service.currentUser()?.username).toBe('admin');
     });
   });

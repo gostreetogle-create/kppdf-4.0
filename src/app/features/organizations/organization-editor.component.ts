@@ -14,7 +14,8 @@ import { KpToastComponent } from '../../shared/ui/kp-toast.component';
 import { KpToggleComponent } from '../../shared/ui/kp-toggle.component';
 import { NotificationService } from '../../core/notification.service';
 import { OrganizationService } from '../../core/organization.service';
-import type { Organization } from '../../../../shared/types/index.js';
+import { CounterpartyRoleService } from '../../core/counterparty-role.service';
+import type { Organization, CounterpartyRoleDef } from '../../../../shared/types/index.js';
 
 const LEGAL_FORM_OPTIONS: SelectOption[] = [
   { value: 'ООО', label: 'ООО — Общество с ограниченной ответственностью' },
@@ -42,6 +43,7 @@ export class OrganizationEditorComponent implements OnInit {
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private orgService = inject(OrganizationService);
+  private roleService = inject(CounterpartyRoleService);
   private notification = inject(NotificationService);
 
   isNew = signal(true);
@@ -65,6 +67,15 @@ export class OrganizationEditorComponent implements OnInit {
   bankAccount = signal('');
   signerName = signal('');
   signerPosition = signal('');
+
+  /** Роли контрагента (динамически загружаются из справочника) */
+  allRoles = signal<CounterpartyRoleDef[]>([]);
+  selectedRoleIds = signal<string[]>([]);
+
+  /** Поля для поставщика */
+  contactPerson = signal('');
+  paymentTermDays = signal<number | null>(30);
+
   isActive = signal(true);
 
   /** Ошибки валидации */
@@ -75,11 +86,14 @@ export class OrganizationEditorComponent implements OnInit {
 
   breadcrumbs: MenuItem[] = [
     { label: 'Справочники', routerLink: '/references' },
-    { label: 'Организации', routerLink: '/references/organizations' },
-    { label: 'Новая организация' },
+    { label: 'Контрагенты', routerLink: '/references/organizations' },
+    { label: 'Новый контрагент' },
   ];
 
   async ngOnInit() {
+    // Загружаем все роли из справочника
+    await this.loadRoles();
+
     const id = this.route.snapshot.paramMap.get('id');
     if (id) {
       this.isNew.set(false);
@@ -89,15 +103,34 @@ export class OrganizationEditorComponent implements OnInit {
         const result = await firstValueFrom(this.orgService.getOrganization(id));
         if (result.success && result.data) {
           this.patchForm(result.data);
-          this.breadcrumbs[2] = { label: result.data.shortName };
+          this.breadcrumbs[2] = { label: result.data.shortName || result.data.name };
         } else {
-          this.notification.error('Организация не найдена');
+          this.notification.error('Контрагент не найден');
           this.router.navigate(['/references/organizations']);
         }
       } finally {
         this.loading.set(false);
       }
     }
+  }
+
+  private async loadRoles() {
+    const result = await firstValueFrom(this.roleService.getRoles());
+    this.allRoles.set(result.data.filter(r => r.isActive));
+  }
+
+  isRoleChecked(roleId: string): boolean {
+    return this.selectedRoleIds().includes(roleId);
+  }
+
+  onRoleCheckboxChange(roleId: string, event: Event) {
+    const checked = (event.target as HTMLInputElement).checked;
+    this.selectedRoleIds.update(ids => {
+      if (checked) {
+        return [...ids, roleId];
+      }
+      return ids.filter(id => id !== roleId);
+    });
   }
 
   private patchForm(org: Organization) {
@@ -116,6 +149,9 @@ export class OrganizationEditorComponent implements OnInit {
     this.bankAccount.set(org.bankAccount);
     this.signerName.set(org.signerName);
     this.signerPosition.set(org.signerPosition);
+    this.selectedRoleIds.set([...org.counterpartyRoleIds]);
+    this.contactPerson.set(org.contactPerson);
+    this.paymentTermDays.set(org.paymentTermDays);
     this.isActive.set(org.isActive);
   }
 
@@ -147,6 +183,8 @@ export class OrganizationEditorComponent implements OnInit {
 
     this.saving.set(true);
     try {
+      const hasAnyRole = this.selectedRoleIds().length > 0;
+
       const data = {
         name: this.name().trim(),
         shortName: this.shortName().trim(),
@@ -163,15 +201,18 @@ export class OrganizationEditorComponent implements OnInit {
         bankAccount: this.bankAccount().trim(),
         signerName: this.signerName().trim(),
         signerPosition: this.signerPosition().trim(),
+        counterpartyRoleIds: this.selectedRoleIds(),
+        contactPerson: hasAnyRole ? this.contactPerson().trim() : '',
+        paymentTermDays: hasAnyRole ? Number(this.paymentTermDays() ?? 0) : 0,
         isActive: this.isActive(),
       };
 
       if (this.isNew()) {
         await firstValueFrom(this.orgService.createOrganization(data));
-        this.notification.success('Организация создана');
+        this.notification.success('Контрагент создан');
       } else {
         await firstValueFrom(this.orgService.updateOrganization(this.orgId()!, data));
-        this.notification.success('Организация сохранена');
+        this.notification.success('Контрагент сохранён');
       }
 
       this.router.navigate(['/references/organizations']);

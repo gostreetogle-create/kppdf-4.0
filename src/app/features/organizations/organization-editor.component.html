@@ -4,12 +4,65 @@
   <kp-breadcrumb [items]="breadcrumbs" />
 
   <h2 class="org-editor__title">
-    {{ isNew() ? 'Новая организация' : 'Редактирование организации' }}
+    {{ isNew() ? 'Новый контрагент' : 'Редактирование контрагента' }}
   </h2>
 
   @if (loading()) {
     <div class="org-editor__loading">Загрузка...</div>
   } @else {
+    <!-- Роли контрагента (динамически из справочника) -->
+    <fieldset class="org-editor__section">
+      <legend class="org-editor__section-title">
+        Роли контрагента
+        <a class="org-editor__roles-manage" routerLink="/references/counterparty-roles">
+          Управлять видами
+        </a>
+      </legend>
+
+      <div class="org-editor__roles">
+        @for (role of allRoles(); track role.id) {
+          <label class="org-editor__role-checkbox">
+            <input
+              type="checkbox"
+              [checked]="isRoleChecked(role.id)"
+              (change)="onRoleCheckboxChange(role.id, $event)"
+            />
+            <div class="org-editor__role-info">
+              <span class="org-editor__role-label">{{ role.name }}</span>
+              @if (role.description) {
+                <span class="org-editor__role-hint">{{ role.description }}</span>
+              }
+            </div>
+          </label>
+        } @empty {
+          <div class="org-editor__roles-empty">
+            Нет доступных видов контрагентов.
+            <a routerLink="/references/counterparty-roles/new">Создать вид</a>
+          </div>
+        }
+      </div>
+
+      @if (selectedRoleIds().length > 0) {
+        <div class="org-editor__row" style="margin-top: var(--space-4);">
+          <div class="org-editor__field">
+            <kp-input
+              label="Контактное лицо"
+              placeholder="ФИО контактного лица"
+              [(ngModel)]="contactPerson"
+            />
+          </div>
+          <div class="org-editor__field org-editor__field--compact">
+            <kp-input
+              label="Отсрочка платежа (дн.)"
+              type="number"
+              placeholder="30"
+              [(ngModel)]="paymentTermDays"
+            />
+          </div>
+        </div>
+      }
+    </fieldset>
+
     <!-- Основные данные -->
     <fieldset class="org-editor__section">
       <legend class="org-editor__section-title">Основные данные</legend>
@@ -168,7 +221,7 @@
       <div class="org-editor__status-row">
         <kp-toggle
           [(ngModel)]="isActive"
-          label="Организация активна"
+          label="Контрагент активен"
         />
       </div>
     </div>
@@ -176,7 +229,7 @@
     <!-- Футер -->
     <div class="org-editor__footer">
       <kp-button
-        [label]="isNew() ? 'Создать организацию' : 'Сохранить'"
+        [label]="isNew() ? 'Создать контрагента' : 'Сохранить'"
         lucideIcon="check"
         [loading]="saving()"
         (buttonClick)="save()"

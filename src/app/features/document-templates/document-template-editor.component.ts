@@ -165,7 +165,7 @@ export class DocumentTemplateEditorComponent implements OnInit {
   /** Двойной клик по блоку — открыть соответствующий редактор */
   onBlockDblClick(block: DocBlock) {
     if (block.type === 'text') {
-      this.textEditor().open(block);
+      this.textEditor()?.open(block);
     } else if (block.type === 'table') {
       this.openTableBlockEditor(block);
     } else if (block.type === 'separator') {
@@ -176,7 +176,7 @@ export class DocumentTemplateEditorComponent implements OnInit {
   /** Клик по кнопке ✏️ — открыть редактор блока */
   onBlockEdit(block: DocBlock) {
     if (block.type === 'text') {
-      this.textEditor().open(block);
+      this.textEditor()?.open(block);
     } else if (block.type === 'table') {
       this.openTableBlockEditor(block);
     } else if (block.type === 'separator') {
@@ -272,8 +272,8 @@ export class DocumentTemplateEditorComponent implements OnInit {
     this.blocks.update(b => b.map(bl => bl.id === updated.id ? updated : bl));
   }
 
-  textEditor = viewChild.required(KpDocTextEditorDialogComponent);
-  previewDialog = viewChild.required(KpDocPreviewDialogComponent);
+  textEditor = viewChild(KpDocTextEditorDialogComponent);
+  previewDialog = viewChild(KpDocPreviewDialogComponent);
 
   validate(): boolean {
     let valid = true;
@@ -317,7 +317,7 @@ export class DocumentTemplateEditorComponent implements OnInit {
   }
 
   preview() {
-    this.previewDialog().open(
+    this.previewDialog()?.open(
       this.templateName() || 'Без названия',
       this.docType(),
       this.blocks(),
