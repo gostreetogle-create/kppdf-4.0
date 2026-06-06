@@ -56,8 +56,8 @@
 
     <!-- Футер -->
     <div class="org-editor__footer">
-      <kp-button [label]="isNew() ? 'Создать поставщика' : 'Сохранить'" icon="pi pi-check" [loading]="saving()" (buttonClick)="save()" />
-      <kp-button label="Отмена" icon="pi pi-times" severity="secondary" (buttonClick)="cancel()" />
+      <kp-button [label]="isNew() ? 'Создать поставщика' : 'Сохранить'" lucideIcon="check" [loading]="saving()" (buttonClick)="save()" />
+      <kp-button label="Отмена" lucideIcon="x" severity="secondary" (buttonClick)="cancel()" />
     </div>
   }
 </kp-card>

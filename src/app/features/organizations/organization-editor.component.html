@@ -177,13 +177,13 @@
     <div class="org-editor__footer">
       <kp-button
         [label]="isNew() ? 'Создать организацию' : 'Сохранить'"
-        icon="pi pi-check"
+        lucideIcon="check"
         [loading]="saving()"
         (buttonClick)="save()"
       />
       <kp-button
         label="Отмена"
-        icon="pi pi-times"
+        lucideIcon="x"
         severity="secondary"
         (buttonClick)="cancel()"
       />
