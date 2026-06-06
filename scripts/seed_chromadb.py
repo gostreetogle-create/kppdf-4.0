@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""seed_chromadb.py — Load база-знаний/извлечённое/*.md into ChromaDB.
-   Uses per-book collections to avoid HNSW index corruption on Windows."""
+"""seed_chromadb.py — Index project docs, knowledge base, and key sources into ChromaDB (Docker).
+   Uses HTTP client to connect to ChromaDB running at localhost:8000."""
 
 import chromadb
 from chromadb.config import Settings
@@ -10,157 +10,194 @@ import sys
 from pathlib import Path
 
 BASE = Path(__file__).resolve().parent.parent
-EXTRACTED = BASE / "база-знаний" / "извлечённое"
-CHROMA_DIR = Path(str(BASE / "база-знаний" / "chroma_db")).resolve()
 
-client = chromadb.Client(Settings(
-    persist_directory=str(CHROMA_DIR),
-    anonymized_telemetry=False,
-    is_persistent=True
-))
+# Connect to Docker ChromaDB
+client = chromadb.HttpClient(
+    host="localhost",
+    port=8000,
+    settings=Settings(anonymized_telemetry=False)
+)
 
-# Delete all old collections
+# ── Helper: safe collection name ────────────────────────────────────────────
+def safe_name(name: str, max_len: int = 58) -> str:
+    cleaned = re.sub(r'[^a-zA-Z0-9_-]', '_', name)
+    cleaned = re.sub(r'_{2,}', '_', cleaned)
+    cleaned = re.sub(r'^_+', '', cleaned)
+    if len(cleaned) <= max_len:
+        return cleaned or 'unnamed'
+    import hashlib
+    h = hashlib.md5(name.encode()).hexdigest()[:8]
+    return cleaned[:max_len - 9] + '_' + h
+
+# ── Delete all old collections ──────────────────────────────────────────────
+print("Cleaning old collections...")
 try:
     for c in client.list_collections():
         try:
             client.delete_collection(c.name)
-            print(f"  Deleted old collection: {c.name}")
+            print(f"  Deleted: {c.name}")
         except Exception:
             pass
 except Exception:
     pass
 
-def parse_md_sections(text: str) -> dict:
-    sections = {}
-    lines = text.split('\n')
-    current_section = 'header'
-    current_content = []
-    for line in lines:
-        if line.startswith('## '):
-            if current_content:
-                sections[current_section] = '\n'.join(current_content).strip()
-            current_section = line[3:].strip()
-            current_content = []
+# ── Chunk text for smaller documents ────────────────────────────────────────
+def chunk_text(text: str, max_chars: int = 2000) -> list:
+    """Split text into chunks of max_chars, trying to break at paragraph boundaries."""
+    if len(text) <= max_chars:
+        return [text]
+    chunks = []
+    paragraphs = text.split('\n\n')
+    current = ""
+    for p in paragraphs:
+        if len(current) + len(p) + 2 <= max_chars:
+            current = (current + '\n\n' + p) if current else p
         else:
-            current_content.append(line)
-    if current_content:
-        sections[current_section] = '\n'.join(current_content).strip()
-    return sections
+            if current:
+                chunks.append(current.strip())
+            current = p if len(p) <= max_chars else p[:max_chars]
+    if current:
+        chunks.append(current.strip())
+    return chunks
 
-def safe_name(name: str, max_len: int = 58) -> str:
-    cleaned = re.sub(r'[^a-zA-Z0-9_-]', '_', name)
-    # Collapse consecutive underscores
-    cleaned = re.sub(r'_{2,}', '_', cleaned)
-    # Remove leading underscore
-    cleaned = re.sub(r'^_+', '', cleaned)
-    if len(cleaned) <= max_len:
-        return cleaned or 'kb'
-    # Use hash suffix for uniqueness when truncating
-    import hashlib
-    h = hashlib.md5(name.encode()).hexdigest()[:8]
-    return cleaned[:max_len - 9] + '_' + h
+# ── Index a group of files into one collection ──────────────────────────────
+def index_files(collection_name: str, files: list, doc_type: str):
+    """Index all files into a single collection. Each file becomes one document (chunked if large)."""
+    if not files:
+        return 0
 
-# Index root-level markdown files too
-root_md_files = [
-    BASE / "AGENTS.md",
-    BASE / "README.md",
-    BASE / "CHANGELOG.md",
-    BASE / "протокол-сессии.md",
-]
-root_md_files = [f for f in root_md_files if f.exists()]
-
-md_files = sorted(EXTRACTED.glob("*.md")) + root_md_files
-
-total_docs = 0
-collections_created = []
-
-# Process each md file into its own collection
-for md_file in md_files:
-    project_name = md_file.stem if md_file.parent == EXTRACTED else f"root__{md_file.stem}"
-    collection_name = safe_name(f"kb__{project_name}", 55)
-    
-    # Skip if collection already exists
-    existing = [c for c in client.list_collections() if c.name == collection_name]
-    if existing:
-        print(f"  [SKIP] Collection {collection_name} already exists")
-        continue
-    
-    text = md_file.read_text(encoding="utf-8")
-    sections = parse_md_sections(text)
-    
-    if not text or len(text) < 100:
-        continue
-    
     try:
-        collection = client.create_collection(name=collection_name)
+        collection = client.get_or_create_collection(name=collection_name)
     except Exception as e:
-        print(f"  [WARN] Could not create collection {collection_name}: {e}")
-        continue
-    
-    id_counter = 0
+        print(f"  [ERROR] Cannot create collection {collection_name}: {e}")
+        return 0
+
     ids = []
     documents = []
     metadatas = []
-    
-    # Add full document
-    id_counter += 1
-    ids.append(safe_name(f"{collection_name}__full_{id_counter}"))
-    documents.append(text[:5000])
-    metadatas.append({
-        "project": project_name,
-        "type": "full",
-        "language": "typescript",
-        "tags": "project-brain,knowledge-base"
-    })
-    
-    # Add sections
-    for section_name, content in sections.items():
-        if len(content) > 50:
-            id_counter += 1
-            sec_safe = safe_name(section_name[:30], 30)
-            ids.append(safe_name(f"{collection_name}__{sec_safe}_{id_counter}"))
-            documents.append(content[:2000])
-            
-            doc_type = "finding"
-            sn = section_name.lower()
-            if "технологи" in sn or "technology" in sn or "архитектур" in sn or "architecture" in sn:
-                doc_type = "architecture"
-            elif "цель" in sn or "намерени" in sn:
-                doc_type = "intention"
-            elif "слои" in sn or "стандарт" in sn or "правил" in sn:
-                doc_type = "rule"
-            elif "структур" in sn or "ui kit" in sn or "компонент" in sn:
-                doc_type = "structure"
-            elif "запуск" in sn or "деплой" in sn or "deploy" in sn:
-                doc_type = "devops"
-            elif "база" in sn or "chromadb" in sn or "векторн" in sn:
-                doc_type = "vector_db"
-            elif "создание" in sn or "нового" in sn:
-                doc_type = "process"
-            elif "бизнес" in sn or "logic" in sn:
-                doc_type = "business"
-            
+
+    for fpath in files:
+        if not fpath.exists():
+            continue
+        try:
+            text = fpath.read_text(encoding="utf-8")
+        except Exception:
+            print(f"  [WARN] Cannot read: {fpath}")
+            continue
+
+        if len(text) < 20:
+            continue
+
+        rel = str(fpath.relative_to(BASE))
+
+        # Chunk large files
+        chunks = chunk_text(text, max_chars=2000)
+        for i, chunk in enumerate(chunks):
+            chunk_id = safe_name(f"{rel}__chunk{i}", 63)
+            ids.append(chunk_id)
+            documents.append(chunk)
             metadatas.append({
-                "project": project_name,
+                "file": rel,
+                "filename": fpath.name,
                 "type": doc_type,
-                "language": "typescript",
-                "tags": f"{project_name},{doc_type}"
+                "chunk": i,
+                "total_chunks": len(chunks),
+                "char_count": len(chunk)
             })
-    
-    # Add in small batches
-    batch_size = 5
+
+    # Add in batches of 10
+    batch_size = 10
+    total = 0
     for i in range(0, len(ids), batch_size):
-        collection.add(
-            ids=ids[i:i+batch_size],
-            documents=documents[i:i+batch_size],
-            metadatas=metadatas[i:i+batch_size]
-        )
-    
-    total_docs += len(ids)
-    collections_created.append(collection_name)
-    print(f"  [OK] {collection_name}: {len(ids)} docs")
+        try:
+            collection.add(
+                ids=ids[i:i+batch_size],
+                documents=documents[i:i+batch_size],
+                metadatas=metadatas[i:i+batch_size]
+            )
+            total += len(ids[i:i+batch_size])
+        except Exception as e:
+            print(f"  [WARN] Batch add failed at {i}: {e}")
+
+    print(f"  [OK] {collection_name}: {total} docs from {len(files)} files")
+    return total
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# INDEXING
+# ═══════════════════════════════════════════════════════════════════════════════
 
 sys.stdout.reconfigure(encoding='utf-8')
-print(f"\n[OK] ChromaDB seeded: {total_docs} documents across {len(collections_created)} collections")
-print(f"     Location: {CHROMA_DIR}")
-print(f"     Collections: {collections_created}")
+total_docs = 0
+
+# ── 1. Project documentation ────────────────────────────────────────────────
+print("\n── Project docs ──")
+project_docs = [
+    BASE / "ARCHITECTURE.md",
+    BASE / "CONVENTIONS.md",
+    BASE / "AGENTS.md",
+    BASE / "README.md",
+    BASE / "CHANGELOG.md",
+    BASE / "ЧЕК-ЛИСТ-КОНСОЛИДИРОВАННЫЙ.md",
+    BASE / "протокол-сессии.md",
+]
+total_docs += index_files("project_docs", [f for f in project_docs if f.exists()], "project_doc")
+
+# ── 2. Knowledge base (извлечённые книги) ───────────────────────────────────
+print("\n── Knowledge base ──")
+kb_dir = BASE / "база-знаний" / "извлечённое"
+kb_files = sorted(kb_dir.glob("*.md")) if kb_dir.exists() else []
+# Also index prompts
+prompts_file = BASE / "база-знаний" / "prompts.md"
+if prompts_file.exists():
+    kb_files.append(prompts_file)
+total_docs += index_files("knowledge_base", kb_files, "knowledge")
+
+# ── 3. UI Kit components ────────────────────────────────────────────────────
+print("\n── UI Kit components ──")
+ui_files = sorted((BASE / "src" / "app" / "shared" / "ui").glob("kp-*.component.ts"))
+# Also index the index.ts barrel file
+index_ui = BASE / "src" / "app" / "shared" / "ui" / "index.ts"
+if index_ui.exists():
+    ui_files.append(index_ui)
+total_docs += index_files("source_ui_kit", ui_files, "ui_component")
+
+# ── 4. Core services ────────────────────────────────────────────────────────
+print("\n── Core services ──")
+core_dir = BASE / "src" / "app" / "core"
+core_files = sorted(core_dir.glob("*.ts")) if core_dir.exists() else []
+total_docs += index_files("source_core", core_files, "core_service")
+
+# ── 5. Backend ──────────────────────────────────────────────────────────────
+print("\n── Backend ──")
+backend_files = [
+    BASE / "backend" / "src" / "index.ts",
+    BASE / "backend" / "src" / "utils" / "crud-factory.ts",
+    BASE / "backend" / "src" / "utils" / "crud-factory.spec.ts",
+    BASE / "backend" / "src" / "utils" / "api-response.ts",
+    BASE / "backend" / "src" / "utils" / "logger.ts",
+    BASE / "backend" / "src" / "middleware" / "auth.ts",
+    BASE / "backend" / "src" / "middleware" / "error-handler.ts",
+    BASE / "backend" / "src" / "config" / "db.ts",
+    BASE / "backend" / "src" / "config" / "env.ts",
+]
+# Add model files
+backend_modules = sorted((BASE / "backend" / "src" / "modules").glob("*.ts"))
+backend_files.extend(backend_modules)
+total_docs += index_files("source_backend", [f for f in backend_files if f.exists()], "backend")
+
+# ── 6. Config & types ───────────────────────────────────────────────────────
+print("\n── Config & types ──")
+config_files = [
+    BASE / "shared" / "types" / "index.ts",
+    BASE / "src" / "app" / "app.config.ts",
+    BASE / "src" / "app" / "app.routes.ts",
+    BASE / "src" / "styles" / "_tokens.scss",
+    BASE / "src" / "styles" / "_global.scss",
+    BASE / "src" / "app" / "layout" / "admin-layout.component.ts",
+]
+total_docs += index_files("source_config", [f for f in config_files if f.exists()], "config")
+
+print(f"\n{'='*60}")
+print(f"  ChromaDB seeded: {total_docs} documents across all collections")
+print(f"  URL: http://localhost:8000")
+print(f"{'='*60}")
