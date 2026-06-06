@@ -50,7 +50,8 @@ export class AuthService {
   }
 
   constructor() {
-    this.loadUserFromStorage();
+    // Defer to avoid NG0200 circular dependency with Router during injector setup
+    Promise.resolve().then(() => this.loadUserFromStorage());
   }
 
   logout() {

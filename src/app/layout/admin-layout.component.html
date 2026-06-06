@@ -10,7 +10,7 @@
   <div class="sidebar-mobile-header">
     <span class="sidebar-logo-text">Project Core</span>
   </div>
-  <div class="sidebar-mobile-nav">      @for (item of navItems; track item.label) {
+  <div class="sidebar-mobile-nav">      @for (item of navItems; track item.id || item.label) {
         @if (!item.separator && !item.items) {
           <a
             [routerLink]="item.routerLink"
@@ -23,7 +23,7 @@
           </a>
         } @else if (item.items) {
           <div class="sidebar-mobile-group-label">{{ item.label }}</div>
-          @for (child of item.items; track child.label) {
+          @for (child of item.items; track child.id || child.label) {
             <a
               [routerLink]="child.routerLink"
               routerLinkActive="p-menuitem-link-active"
@@ -55,7 +55,7 @@
     </div>
 
     <nav class="sidebar__nav" role="navigation" aria-label="Главное меню">
-      @for (item of navItems; track item.label) {
+      @for (item of navItems; track item.id || item.label) {
         @if (item.separator) {
           <div class="nav__divider"></div>
         } @else if (item.items && item.items.length > 0) {
@@ -66,7 +66,7 @@
             </div>
             @if (sidebarVisible()) {
               <div class="nav__group-items">
-                @for (child of item.items; track child.label) {
+                @for (child of item.items; track child.id || child.label) {
                   <a
                     [routerLink]="child.routerLink"
                     routerLinkActive="nav__item--active"

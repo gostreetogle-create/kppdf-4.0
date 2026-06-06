@@ -39,33 +39,35 @@ export class AdminLayoutComponent {
   currentUser = this.authService.currentUser;
 
   navItems: MenuItem[] = [
-    { label: 'Главная', icon: 'home', routerLink: '/dashboard' },
-    { label: 'UI Kit', icon: 'palette', routerLink: '/ui-kit' },
-    { separator: true },
+    { id: 'nav-home', label: 'Главная', icon: 'home', routerLink: '/dashboard' },
+    { id: 'nav-uikit', label: 'UI Kit', icon: 'palette', routerLink: '/ui-kit' },
+    { id: 'nav-sep-1', separator: true },
     {
+      id: 'nav-refs',
       label: 'Справочники',
       icon: 'book',
       items: [
-        { label: 'Организации', icon: 'building', routerLink: '/references/organizations' },
-        { label: 'Поставщики', icon: 'truck', routerLink: '/references/suppliers' }
+        { id: 'nav-orgs', label: 'Организации', icon: 'building', routerLink: '/references/organizations' },
+        { id: 'nav-suppliers', label: 'Поставщики', icon: 'truck', routerLink: '/references/suppliers' }
       ]
     },
-    { separator: true },
+    { id: 'nav-sep-2', separator: true },
     {
+      id: 'nav-admin',
       label: 'Администрирование',
       icon: 'cog',
       items: [
-        { label: 'Шаблоны таблиц', icon: 'table', routerLink: '/admin/table-templates' },
-        { label: 'Шаблоны документов', icon: 'file', routerLink: '/admin/document-templates' }
+        { id: 'nav-table-tpl', label: 'Шаблоны таблиц', icon: 'table', routerLink: '/admin/table-templates' },
+        { id: 'nav-doc-tpl', label: 'Шаблоны документов', icon: 'file', routerLink: '/admin/document-templates' }
       ]
     }
   ];
 
   userMenuItems: MenuItem[] = [
-    { label: 'Профиль', icon: 'pi pi-user', command: () => {} },
-    { label: 'Настройки', icon: 'pi pi-cog', command: () => {} },
-    { separator: true },
-    { label: 'Выйти', icon: 'pi pi-sign-out', command: () => this.authService.logout() }
+    { id: 'user-profile', label: 'Профиль', icon: 'pi pi-user', command: () => {} },
+    { id: 'user-settings', label: 'Настройки', icon: 'pi pi-cog', command: () => {} },
+    { id: 'user-sep', separator: true },
+    { id: 'user-logout', label: 'Выйти', icon: 'pi pi-sign-out', command: () => this.authService.logout() }
   ];
 
   toggleSidebar() {
