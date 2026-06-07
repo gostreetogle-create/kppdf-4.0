@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Observable, of, delay } from 'rxjs';
 import type { ApiResponse, CounterpartyRoleDef } from '../../../shared/types/index.js';
-import { BaseCrudService, generateId, nowISO, type CreateData } from './crud-factory.js';
+import { BaseCrudService, generateId, nowISO } from './crud-factory.js';
 
 function makeSlug(name: string): string {
   return name.toLowerCase().replace(/[^a-zа-яё0-9]+/g, '_').replace(/^_|_$/g, '');

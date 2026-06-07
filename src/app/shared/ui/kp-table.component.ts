@@ -12,7 +12,16 @@ export interface TableColumn {
   header: string;
   sortable?: boolean;
   width?: string;
-  type?: 'text' | 'number' | 'date' | 'status' | 'badge';
+  type?: 'text' | 'number' | 'date' | 'status' | 'badge' | 'image';
+}
+
+/** Кастомная кнопка действия в строке таблицы */
+export interface TableExtraAction {
+  icon: string;
+  severity: 'success' | 'info' | 'warn' | 'danger' | 'secondary';
+  tooltip: string;
+  /** Если задано — кнопка показывается только когда предикат возвращает true */
+  visible?: (row: unknown) => boolean;
 }
 
 @Component({
@@ -61,6 +70,13 @@ export interface TableColumn {
                 @case ('badge') {
                   <kp-badge [value]="rowData[col.field]" />
                 }
+                @case ('image') {
+                  @if (rowData[col.field]) {
+                    <img [src]="rowData[col.field]" class="kp-table__img" loading="lazy" />
+                  } @else {
+                    <span class="kp-table__no-img">—</span>
+                  }
+                }
                 @default {
                   {{ rowData[col.field] }}
                 }
@@ -69,6 +85,19 @@ export interface TableColumn {
           }
           @if (showActions()) {
             <td class="kp-table__actions">
+              @for (act of extraActions(); track act.icon) {
+                @if (!act.visible || act.visible(rowData)) {
+                  <kp-button
+                    [lucideIcon]="act.icon"
+                    [severity]="act.severity"
+                    [text]="true"
+                    [rounded]="true"
+                    [pTooltip]="act.tooltip"
+                    tooltipPosition="top"
+                    (buttonClick)="rowExtraAction.emit({ icon: act.icon, row: rowData })"
+                  />
+                }
+              }
               @if (showAddToCart()) {
                 <kp-button
                   lucideIcon="shopping-cart"
@@ -135,7 +164,7 @@ export interface TableColumn {
     </p-table>
   `,
   styles: [`
-    .kp-table__actions-header { width: 175px; }
+    .kp-table__actions-header { min-width: 175px; white-space: nowrap; }
 
     /* Resize handle для колонок */
     :host ::ng-deep .p-column-resizer {
@@ -247,6 +276,19 @@ export interface TableColumn {
       color: var(--color-text-muted);
     }
 
+    /* Миниатюра в таблице */
+    .kp-table__img {
+      width: 48px; height: 48px;
+      object-fit: cover;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--color-border);
+      display: block;
+    }
+    .kp-table__no-img {
+      color: var(--color-text-muted);
+      font-size: var(--font-size-sm);
+    }
+
     /* Выравнивание данных в ячейках */
     :host ::ng-deep .p-datatable-table td {
       vertical-align: middle;
@@ -273,6 +315,8 @@ export class KpTableComponent implements OnInit, AfterViewInit {
   showClone = input(false);
   showView = input(false);
   showAddToCart = input(false);
+  /** Кастомные кнопки действий (статусы, workflow и т.д.) */
+  extraActions = input<TableExtraAction[]>([]);
   emptyMessage = input('Нет данных');
 
   /** Ключ для localStorage (например 'organizations', 'doc-templates') */
@@ -285,6 +329,8 @@ export class KpTableComponent implements OnInit, AfterViewInit {
   readonly rowClone = output<unknown>();
   readonly rowView = output<unknown>();
   readonly rowAddToCart = output<unknown>();
+  /** Срабатывает при клике на кастомную кнопку. payload = { icon, row } */
+  readonly rowExtraAction = output<{ icon: string; row: unknown }>();
 
   /** Событие при изменении ширины колонки */
   readonly columnResized = output<{ field: string; header: string; width: string }>();
@@ -323,12 +369,13 @@ export class KpTableComponent implements OnInit, AfterViewInit {
     return this.savedWidths()[field] || null;
   }
 
-  onColumnResize(event: any): void {
-    const field = event?.element?.id || '';
-    const width = event?.element?.style?.width || '';
+  onColumnResize(event: unknown): void {
+    const evt = event as { element?: HTMLElement } | undefined;
+    const field = evt?.element?.id || '';
+    const width = evt?.element?.style?.width || '';
     if (!field || !width) return;
 
-    const header = (event?.element as HTMLElement)?.innerText?.trim() || '';
+    const header = evt?.element?.innerText?.trim() || '';
 
     // Сохраняем в localStorage
     this.saveColumnWidth(field, width);

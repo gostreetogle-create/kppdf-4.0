@@ -409,6 +409,34 @@ export interface CartItem {
 }
 
 // ========================================
+// Модуль «Коммерческие предложения» (Phase 1.3)
+// ========================================
+
+// Реэкспорт из отдельного файла для чистоты
+export type { ProposalStatus, ProposalItem, CommercialProposal } from './proposal.js';
+
+export type { ContractStatus, ContractItem, Contract } from './contract.js';
+
+export type {
+  ProductComponent, ComponentMaterial, ComponentWorkType,
+} from './product-component.js';
+
+export type {
+  StorageItem, Warehouse, InventoryItem, InventoryMovement,
+  InventoryEntityType, MovementType,
+  PurchaseRequest, PurchaseRequestStatus,
+  SupplierOrder, SupplierOrderItem, SupplierOrderStatus,
+  IncomingInvoice, InvoiceStatus,
+} from './warehouse.js';
+
+export type {
+  WorkType, WorkCenter, Worker,
+  ProductionOrder, ProductionOrderStatus,
+  OrderTask, TaskStatus,
+  MissingDataType, MissingDataIssue,
+} from './production.js';
+
+// ========================================
 // Feature Flags (флаги возможностей)
 // ========================================
 

@@ -50,6 +50,33 @@ export class AdminLayoutComponent {
       items: [
         { id: 'nav-products', label: '🏪 Товары и услуги', icon: 'box', routerLink: '/sales/products' },
         { id: 'nav-cart', label: '🛒 Корзина', icon: 'shopping-cart', routerLink: '/sales/cart' },
+        { id: 'nav-proposals', label: '📄 Коммерческие предложения', icon: 'file', routerLink: '/sales/proposals' },
+        { id: 'nav-contracts', label: '📑 Договоры', routerLink: '/sales/contracts' },
+      ]
+    },
+    {
+      id: 'nav-production',
+      label: '🏭 Производство',
+      icon: 'box',
+      items: [
+        { id: 'nav-prod-orders', label: '📋 Заказы', routerLink: '/production/orders' },
+        { id: 'nav-prod-tasks', label: '📝 Задачи', routerLink: '/production/tasks' },
+        { id: 'nav-prod-gantt', label: '📊 Диаграмма Ганта', routerLink: '/production/gantt' },
+        { id: 'nav-prod-wt', label: '🔧 Виды работ', routerLink: '/production/work-types' },
+        { id: 'nav-prod-wc', label: '🖥️ Рабочие центры', routerLink: '/production/work-centers' },
+        { id: 'nav-prod-wkr', label: '👷 Работники', routerLink: '/production/workers' },
+      ]
+    },
+    {
+      id: 'nav-warehouse',
+      label: '📦 Склад',
+      icon: 'box',
+      items: [
+        { id: 'nav-wh-dash', label: '🏭 Обзор складов', routerLink: '/warehouse' },
+        { id: 'nav-wh-items', label: '📦 Инвентарь', routerLink: '/warehouse/storage-items' },
+        { id: 'nav-wh-pr', label: '📋 Заявки на закупку', routerLink: '/warehouse/purchase-requests' },
+        { id: 'nav-wh-so', label: '🚚 Заказы поставщикам', routerLink: '/warehouse/supplier-orders' },
+        { id: 'nav-wh-inv', label: '🧾 Входящие счета', routerLink: '/warehouse/incoming-invoices' },
       ]
     },
     {

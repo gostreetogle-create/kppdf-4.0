@@ -93,6 +93,11 @@ export class BaseCrudService<T extends { id: string }> {
     return of({ success: true, data: undefined }).pipe(delay(this.delayMs));
   }
 
+  /** Получить сырой массив (синхронно, для внутреннего использования сервисами) */
+  getRawItems(): T[] {
+    return this.items;
+  }
+
   // ─────────── Защищённые хелперы ───────────
 
   /** Клонировать один элемент (переопределите для deep clone) */

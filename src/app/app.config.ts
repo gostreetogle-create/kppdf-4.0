@@ -11,9 +11,13 @@ import {
   LucideChevronUp, LucideChevronDown, LucideAlignLeft, LucideTable, LucideMinus,
   LucideArrowUpDown, LucideBox, LucideCheck, LucideSearch,
   LucideExternalLink, LucideTriangleAlert,
-  LucideChevronLeft, LucideChevronRight, LucideSun, LucideMoon, LucideMenu, LucideBell,      LucideHome, LucidePalette, LucideBook, LucideBuilding, LucideCog, LucideFile,
+  LucideChevronLeft, LucideChevronRight, LucideSun, LucideMoon, LucideMenu, LucideBell,
+  LucideHome, LucidePalette, LucideBook, LucideBuilding, LucideCog, LucideFile,
   LucideEyeOff, LucideX, LucidePlus,
   LucideFlag, LucideRotateCcw,
+  LucideSend, LucideThumbsUp, LucideThumbsDown,
+  LucidePlay, LucideTruck, LucidePackageCheck,
+  LucideCamera, LucideStar,
 } from '@lucide/angular';
 import Aura from '@primeuix/themes/aura';
 
@@ -43,10 +47,14 @@ export const appConfig: ApplicationConfig = {
       LucideChevronUp, LucideChevronDown, LucideAlignLeft, LucideTable, LucideMinus,
       LucideArrowUpDown, LucideBox, LucideCheck, LucideSearch,
       LucideExternalLink, LucideTriangleAlert,
-      LucideChevronLeft, LucideChevronRight, LucideSun, LucideMoon, LucideMenu, LucideBell,      LucideHome, LucidePalette, LucideBook, LucideBuilding, LucideCog, LucideFile,
-  LucideEyeOff, LucideX, LucidePlus,
-  LucideDownload, LucidePrinter, LucideShoppingCart, LucideTag,
-  LucideFlag, LucideRotateCcw,
+      LucideChevronLeft, LucideChevronRight, LucideSun, LucideMoon, LucideMenu, LucideBell,
+      LucideHome, LucidePalette, LucideBook, LucideBuilding, LucideCog, LucideFile,
+      LucideEyeOff, LucideX, LucidePlus,
+      LucideDownload, LucidePrinter, LucideShoppingCart, LucideTag,
+      LucideFlag, LucideRotateCcw,
+      LucideSend, LucideThumbsUp, LucideThumbsDown,
+      LucidePlay, LucideTruck, LucidePackageCheck,
+      LucideCamera, LucideStar,
     ),
   ]
 };

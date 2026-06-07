@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Observable, of, delay } from 'rxjs';
-import type { ApiResponse, DocumentTemplate, DocBlock } from '../../../shared/types/index.js';
+import type { ApiResponse, DocumentTemplate } from '../../../shared/types/index.js';
 import { BaseCrudService, generateId, nowISO } from './crud-factory.js';
 
 /** Мок-данные: 2 примера шаблонов */

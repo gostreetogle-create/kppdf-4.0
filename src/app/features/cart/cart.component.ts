@@ -131,7 +131,7 @@ import type { CartItem, Product } from '../../../../shared/types/index.js';
                   </div>
                 </div>
                 <div class="cart__cell cart__cell--total">
-                  <span class="cart__subtotal">{{\n                    (item.price * item.quantity).toLocaleString('ru-RU') }} ₽</span>
+                  <span class="cart__subtotal">{{ (item.price * item.quantity).toLocaleString('ru-RU') }} ₽</span>
                 </div>
                 <div class="cart__cell cart__cell--action">
                   <button
@@ -683,6 +683,10 @@ export class CartComponent {
   }
 
   onCreateCp() {
-    this.notification.info('Функция «Создать КП» будет доступна в следующем обновлении');
+    if (this.cart.isEmpty()) {
+      this.notification.warn('Добавьте товары в корзину перед созданием КП');
+      return;
+    }
+    this.router.navigate(['/sales/proposals/new']);
   }
 }

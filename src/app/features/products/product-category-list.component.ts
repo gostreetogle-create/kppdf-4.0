@@ -191,7 +191,7 @@ export class ProductCategoryListComponent {
         await firstValueFrom(this.categoryService.update(this.editId()!, data));
         this.notification.success('Категория обновлена');
       } else {
-        await firstValueFrom(this.categoryService.create(data as any));
+        await firstValueFrom(this.categoryService.create(data as Omit<ProductCategory, 'id' | 'createdAt' | 'updatedAt'>));
         this.notification.success('Категория создана');
       }
 

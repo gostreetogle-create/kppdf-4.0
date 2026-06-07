@@ -90,6 +90,30 @@ export const routes: Routes = [
         loadComponent: () => import('./features/cart/cart.component').then(m => m.CartComponent)
       },
       {
+        path: 'sales/proposals',
+        loadComponent: () => import('./features/proposals/proposal-list.component').then(m => m.ProposalListComponent)
+      },
+      {
+        path: 'sales/proposals/new',
+        loadComponent: () => import('./features/proposals/proposal-editor.component').then(m => m.ProposalEditorComponent)
+      },
+      {
+        path: 'sales/proposals/:id/edit',
+        loadComponent: () => import('./features/proposals/proposal-editor.component').then(m => m.ProposalEditorComponent)
+      },
+      {
+        path: 'sales/contracts',
+        loadComponent: () => import('./features/contracts/contract-list.component').then(m => m.ContractListComponent)
+      },
+      {
+        path: 'sales/contracts/new',
+        loadComponent: () => import('./features/contracts/contract-editor.component').then(m => m.ContractEditorComponent)
+      },
+      {
+        path: 'sales/contracts/:id/edit',
+        loadComponent: () => import('./features/contracts/contract-editor.component').then(m => m.ContractEditorComponent)
+      },
+      {
         path: 'sales/products',
         loadComponent: () => import('./features/products/product-list.component').then(m => m.ProductListComponent)
       },
@@ -112,6 +136,90 @@ export const routes: Routes = [
       {
         path: 'admin/feature-flags',
         loadComponent: () => import('./features/feature-flags/feature-flags.component').then(m => m.FeatureFlagsComponent)
+      },
+      // ===== Производство (Фаза 2) =====
+      {
+        path: 'production/work-types',
+        loadComponent: () => import('./features/production/work-type-list.component').then(m => m.WorkTypeListComponent)
+      },
+      {
+        path: 'production/work-centers',
+        loadComponent: () => import('./features/production/work-center-list.component').then(m => m.WorkCenterListComponent)
+      },
+      {
+        path: 'production/workers',
+        loadComponent: () => import('./features/production/worker-list.component').then(m => m.WorkerListComponent)
+      },
+      {
+        path: 'production/orders',
+        loadComponent: () => import('./features/production/production-order-list.component').then(m => m.ProductionOrderListComponent)
+      },
+      {
+        path: 'production/tasks',
+        loadComponent: () => import('./features/production/order-task-list.component').then(m => m.OrderTaskListComponent)
+      },
+      {
+        path: 'production/gantt',
+        loadComponent: () => import('./features/production/gantt-chart.component').then(m => m.GanttChartComponent)
+      },
+      // ===== Склад и Закупки (Фаза 3) =====
+      {
+        path: 'warehouse',
+        loadComponent: () => import('./features/warehouse/warehouse-dashboard.component').then(m => m.WarehouseDashboardComponent)
+      },
+      {
+        path: 'warehouse/new',
+        loadComponent: () => import('./features/warehouse/warehouse-editor.component').then(m => m.WarehouseEditorComponent)
+      },
+      {
+        path: 'warehouse/storage-items',
+        loadComponent: () => import('./features/warehouse/storage-item-list.component').then(m => m.StorageItemListComponent)
+      },
+      // procurement (literal paths BEFORE :id)
+      {
+        path: 'warehouse/purchase-requests',
+        loadComponent: () => import('./features/warehouse/purchase-request-list.component').then(m => m.PurchaseRequestListComponent)
+      },
+      {
+        path: 'warehouse/purchase-requests/new',
+        loadComponent: () => import('./features/warehouse/purchase-request-list.component').then(m => m.PurchaseRequestListComponent)
+      },
+      {
+        path: 'warehouse/purchase-requests/:id/edit',
+        loadComponent: () => import('./features/warehouse/purchase-request-list.component').then(m => m.PurchaseRequestListComponent)
+      },
+      {
+        path: 'warehouse/supplier-orders',
+        loadComponent: () => import('./features/warehouse/supplier-order-list.component').then(m => m.SupplierOrderListComponent)
+      },
+      {
+        path: 'warehouse/supplier-orders/new',
+        loadComponent: () => import('./features/warehouse/supplier-order-list.component').then(m => m.SupplierOrderListComponent)
+      },
+      {
+        path: 'warehouse/supplier-orders/:id/edit',
+        loadComponent: () => import('./features/warehouse/supplier-order-list.component').then(m => m.SupplierOrderListComponent)
+      },
+      {
+        path: 'warehouse/incoming-invoices',
+        loadComponent: () => import('./features/warehouse/invoice-list.component').then(m => m.InvoiceListComponent)
+      },
+      {
+        path: 'warehouse/incoming-invoices/new',
+        loadComponent: () => import('./features/warehouse/invoice-list.component').then(m => m.InvoiceListComponent)
+      },
+      {
+        path: 'warehouse/incoming-invoices/:id/edit',
+        loadComponent: () => import('./features/warehouse/invoice-list.component').then(m => m.InvoiceListComponent)
+      },
+      // :id goes LAST
+      {
+        path: 'warehouse/:id',
+        loadComponent: () => import('./features/warehouse/warehouse-detail.component').then(m => m.WarehouseDetailComponent)
+      },
+      {
+        path: 'warehouse/:id/edit',
+        loadComponent: () => import('./features/warehouse/warehouse-editor.component').then(m => m.WarehouseEditorComponent)
       }
     ]
   },

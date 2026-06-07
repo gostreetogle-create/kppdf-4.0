@@ -10,9 +10,9 @@ describe('TableRegistryService', () => {
     service = TestBed.inject(TableRegistryService);
   });
 
-  it('должен вернуть 5 таблиц', async () => {
+  it('должен вернуть 6 таблиц', async () => {
     const tables = await firstValueFrom(service.getTables());
-    expect(tables.length).toBe(5);
+    expect(tables.length).toBe(6);
   });
 
   it('должен вернуть таблицу counterparties с 19 полями', async () => {
@@ -23,12 +23,12 @@ describe('TableRegistryService', () => {
     expect(table!.fields.length).toBe(19);
   });
 
-  it('должен вернуть таблицу products с 12 полями', async () => {
+  it('должен вернуть таблицу products с 14 полями', async () => {
     const table = await firstValueFrom(service.getTable('products'));
     expect(table).toBeDefined();
     expect(table!.name).toBe('products');
     expect(table!.label).toBe('Товары');
-    expect(table!.fields.length).toBe(12);
+    expect(table!.fields.length).toBe(14);
   });
 
   it('должен вернуть поля таблицы clients', async () => {
@@ -43,6 +43,14 @@ describe('TableRegistryService', () => {
     expect(table!.name).toBe('organizations');
     expect(table!.label).toBe('Контрагенты');
     expect(table!.fields.length).toBe(19);
+  });
+
+  it('должен вернуть таблицу product-categories с 5 полями', async () => {
+    const table = await firstValueFrom(service.getTable('product-categories'));
+    expect(table).toBeDefined();
+    expect(table!.name).toBe('product-categories');
+    expect(table!.label).toBe('Категории товаров');
+    expect(table!.fields.length).toBe(5);
   });
 
   it('должен вернуть таблицу counterparty-role-types с 4 полями', async () => {

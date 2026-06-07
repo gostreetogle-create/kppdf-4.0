@@ -1,4 +1,4 @@
-import { Injectable, inject } from '@angular/core';
+import { Injectable } from '@angular/core';
 import { Observable, of, delay } from 'rxjs';
 import { BaseCrudService, generateId, nowISO } from './crud-factory.js';
 import { ProductCategoryService } from './product-category.service.js';
@@ -213,7 +213,11 @@ const SEED_PRODUCTS: Product[] = [
 
 @Injectable({ providedIn: 'root' })
 export class ProductService extends BaseCrudService<Product> {
-  private categoryService = inject(ProductCategoryService);
+  private _categoryService?: ProductCategoryService;
+  private get categoryService(): ProductCategoryService {
+    if (!this._categoryService) this._categoryService = new ProductCategoryService();
+    return this._categoryService;
+  }
 
   constructor() {
     super();

@@ -45,7 +45,7 @@ describe('DocumentTemplateEditorComponent', () => {
     const c = createComponent();
     expect(c.isNew()).toBe(true);
     expect(c.templateId()).toBeNull();
-    expect(c.templateName()).toBe('');
+    expect(c.templateName()).toBe('Новый документ');
     expect(c.nameError()).toBe('');
     expect(c.description()).toBe('');
     expect(c.docType()).toBe('quotation');
@@ -53,7 +53,7 @@ describe('DocumentTemplateEditorComponent', () => {
     expect(c.selectedBlockId()).toBe('');
     expect(c.loading()).toBe(false);
     expect(c.saving()).toBe(false);
-    expect(c.docTypeOptions.length).toBe(4);
+    expect(c.docTypeOptions().length).toBe(0); // загружаются асинхронно в ngOnInit
     expect(c.breadcrumbs.length).toBe(3);
   });
 
@@ -155,6 +155,7 @@ describe('DocumentTemplateEditorComponent', () => {
 
   it('validate возвращает false если имя пустое', () => {
     const c = createComponent();
+    c.templateName.set('');
     c.addBlock('text');
     expect(c.validate()).toBe(false);
     expect(c.nameError()).toBe('Название обязательно');

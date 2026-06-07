@@ -34,13 +34,20 @@ kppdf-4.0/
 │   │   ├── api-url.token.ts     # InjectionToken для URL API
 │   │   ├── auth.service.ts
 │   │   ├── auth.interceptor.ts
+│   │   ├── cart.service.ts      # Корзина (snapshot товаров)
+│   │   ├── client.service.ts    # Клиенты-физ.лица
+│   │   ├── counterparty-role.service.ts  # Виды контрагентов
+│   │   ├── crud-factory.ts      # Базовая in-memory CRUD-реализация
+│   │   ├── doc-type.service.ts  # Типы документов
 │   │   ├── document-template.service.ts
-│   │   ├── table-template.service.ts
-│   │   ├── table-registry.service.ts
+│   │   ├── feature-flag.service.ts  # Флаги возможностей
 │   │   ├── notification.service.ts
+│   │   ├── organization.service.ts   # Контрагенты (юр.лица/ИП)
+│   │   ├── product-category.service.ts  # Категории товаров
+│   │   ├── product.service.ts   # Товары (CRUD + авто-SKU)
+│   │   ├── table-registry.service.ts
+│   │   ├── table-template.service.ts
 │   │   ├── theme.service.ts
-│   │   ├── organization.service.ts
-│   │   ├── supplier.service.ts
 │   │   └── global-error-handler.ts
 │   │
 │   ├── shared/ui/               # UI Kit — обёртки над PrimeNG (kp-*)
@@ -68,13 +75,19 @@ kppdf-4.0/
 │   │   └── kp-doc-preview-dialog.component.ts
 │   │
 │   ├── features/                # Страницы (НЕ зависят друг от друга)
+│   │   ├── app-guide/           # 🗺️ Карта приложения (бизнес-логика)
+│   │   ├── cart/                # 🛒 Корзина (snapshot товаров → КП)
+│   │   ├── clients/             # 👤 Клиенты-физ.лица (CRUD)
+│   │   ├── counterparty-roles/  # 🏷️ Виды контрагентов (CRUD)
 │   │   ├── dashboard/
-│   │   ├── login/
-│   │   ├── ui-kit/              # Демо-страница UI Kit
+│   │   ├── doc-types/           # 📄 Типы документов (CRUD)
 │   │   ├── document-templates/  # Шаблоны документов (список + редактор)
+│   │   ├── feature-flags/       # 🚩 Флаги возможностей
+│   │   ├── login/
+│   │   ├── organizations/       # 🏢 Контрагенты (CRUD, замена suppliers)
+│   │   ├── products/            # 🏪 Товары + категории (CRUD + витрина)
 │   │   ├── table-templates/     # Шаблоны таблиц (список + редактор)
-│   │   ├── organizations/       # CRUD-справочник организаций
-│   │   └── suppliers/           # CRUD-справочник поставщиков
+│   │   └── ui-kit/              # Демо-страница UI Kit
 │   │
 │   ├── layout/
 │   │   └── admin-layout.component.*  # Оболочка (sidebar, topbar, theme toggle)
@@ -82,10 +95,10 @@ kppdf-4.0/
 │   ├── app.config.ts            # provideLucideIcons, providePrimeNG, роутинг
 │   └── app.routes.ts            # Lazy-loaded маршруты
 │
-├── shared/types/index.ts        # Общие типы (DocBlock, DocumentTemplate, TableTemplate, Supplier, Organization)
+├── shared/types/index.ts        # Общие типы (Organization, Client, Product, CartItem, CounterpartyRoleDef, DocTypeDef, FeatureFlagDef, DocBlock, DocumentTemplate, TableTemplate, ...)
 ├── backend/                     # Express API
 │   └── src/
-│       ├── modules/             # Модели Mongoose + CRUD-роутеры
+│       ├── modules/             # Модели Mongoose: user, organization, counterparty-role + CRUD-роутеры
 │       ├── middleware/           # auth.ts, error-handler.ts
 │       └── utils/               # crud-factory.ts, logger.ts, api-response.ts
 ├── src/styles/
@@ -115,8 +128,8 @@ core ← shared ← features ← layout
 
 ## 4. Ключевые паттерны
 
-### 4.1 CRUD-сущности (Организации, Поставщики)
-Образец: `features/organizations/`
+### 4.1 CRUD-сущности (Организации, Клиенты, Товары, ...)
+Образец: `features/organizations/` или `features/products/`
 - `*-list.component.*` — список с kp-table + поиск
 - `*-editor.component.*` — форма создания/редактирования (2-4 секции полей)
 - `core/*.service.ts` — mock CRUD + seed-данные (позже заменить на HttpClient)
@@ -152,19 +165,28 @@ core ← shared ← features ← layout
 | `/references/organizations` | OrganizationListComponent | features |
 | `/references/organizations/new` | OrganizationEditorComponent | features |
 | `/references/organizations/:id/edit` | OrganizationEditorComponent | features |
-| `/references/suppliers` | SupplierListComponent | features |
-| `/references/suppliers/new` | SupplierEditorComponent | features |
-| `/references/suppliers/:id/edit` | SupplierEditorComponent | features |
+| `/references/clients` | ClientListComponent | features |
+| `/references/counterparty-roles` | CounterpartyRoleListComponent | features |
+| `/references/counterparty-roles/new` | CounterpartyRoleEditorComponent | features |
+| `/references/counterparty-roles/:id/edit` | CounterpartyRoleEditorComponent | features |
+| `/references/doc-types` | DocTypeListComponent | features |
+| `/references/product-categories` | ProductCategoryListComponent | features |
+| `/sales/cart` | CartComponent | features |
+| `/sales/products` | ProductListComponent | features |
+| `/sales/products/new` | ProductEditorComponent | features |
+| `/sales/products/:id/edit` | ProductEditorComponent | features |
+| `/app-guide` | AppGuideComponent | features |
+| `/admin/feature-flags` | FeatureFlagsComponent | features |
 
 ---
 
 ## 6. Зарегистрированные lucide-иконки (app.config.ts)
 
-Всего **30 иконок**: Pencil, Trash2, Eye, Copy, GripVertical, ChevronUp, ChevronDown,
+Всего **38 иконок**: Pencil, Trash2, Eye, Copy, GripVertical, ChevronUp, ChevronDown,
 AlignLeft, Table, Minus, ArrowUpDown, Box, Check, Search, ExternalLink, TriangleAlert,
 ChevronLeft, ChevronRight, Sun, Moon, Menu, Bell, Home, Palette, Book, Building, Cog, File,
-EyeOff, X
+EyeOff, X, Plus, Download, Printer, ShoppingCart, Tag, Flag, RotateCcw
 
 ---
 
-*Обновлён: 2026-06-06*
+*Обновлён: 2026-06-07 (Buffy — аудит: убраны supplier, добавлены cart/products/clients/app-guide/counterparty-roles/doc-types/feature-flags)*

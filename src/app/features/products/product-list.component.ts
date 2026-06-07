@@ -18,6 +18,7 @@ import { KpConfirmDialogComponent } from '../../shared/ui/kp-confirm-dialog.comp
 import { NotificationService } from '../../core/notification.service';
 import { ProductService } from '../../core/product.service';
 import { ProductCategoryService } from '../../core/product-category.service';
+import { ProductPhotoService } from '../../core/product-photo.service';
 import { CartService } from '../../core/cart.service';
 import { ConfirmationService } from 'primeng/api';
 import type { Product, ProductCategory } from '../../../../shared/types/index.js';
@@ -26,6 +27,7 @@ interface ProductRow extends Product {
   categoryName: string;
   typeLabel: string;
   statusLabel: string;
+  mainPhotoUrl?: string;
 }
 
 @Component({
@@ -112,6 +114,7 @@ export class ProductListComponent {
   private notification = inject(NotificationService);
   private confirmationService = inject(ConfirmationService);
   private cartService = inject(CartService);
+  private photoService = inject(ProductPhotoService);
 
   products = signal<Product[]>([]);
   categories = signal<ProductCategory[]>([]);
@@ -140,6 +143,7 @@ export class ProductListComponent {
   ];
 
   tableColumns: TableColumn[] = [
+    { field: 'mainPhotoUrl', header: 'Фото', width: '70px', type: 'image' },
     { field: 'sku', header: 'Артикул', width: '110px', sortable: true },
     { field: 'name', header: 'Наименование', sortable: true },
     { field: 'categoryName', header: 'Категория', width: '180px', sortable: true },
@@ -165,15 +169,21 @@ export class ProductListComponent {
     if (type) items = items.filter(p => p.productType === type);
 
     const catMap = new Map(cats.map(c => [c.id, c.name]));
-    return items.map(p => ({
-      ...p,
-      categoryName: catMap.get(p.categoryId) || '—',
-      typeLabel: p.productType === 'purchased' ? '🛒 Покупной' : '🔧 Изготавливаемый',
-      statusLabel: p.isActive ? 'Активен' : 'Неактивен',
-    }));
+    return items.map(p => {
+      const photos = p.photos || [];
+      const mainPhoto = photos.find(ph => ph.isMain) || photos[0];
+      return {
+        ...p,
+        categoryName: catMap.get(p.categoryId) || '—',
+        typeLabel: p.productType === 'purchased' ? '🛒 Покупной' : '🔧 Изготавливаемый',
+        statusLabel: p.isActive ? 'Активен' : 'Неактивен',
+        mainPhotoUrl: mainPhoto?.url,
+      };
+    });
   });
 
   constructor() {
+    this.photoService.seedPhotos();
     this.load();
   }
 

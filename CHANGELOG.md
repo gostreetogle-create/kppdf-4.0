@@ -6,6 +6,79 @@
 
 ---
 
+## [1.12.0] — 2026-06-07 — Фаза 1.3-1.4: Варианты КП + Договоры (Contract)
+
+### Added — 1.3: 3 варианта КП
+- **createVariants():** кнопка «Создать варианты» в редакторе КП — генерирует 3 КП с наценками 0%/5%/10%
+- **Логика:** `lucideIcon="copy"`, авто-очистка корзины, навигация на список
+
+### Added — 1.4: Договоры (Contract)
+- **Типы:** `contract.ts` — `ContractStatus` (draft/active/completed/terminated), `ContractItem` (snapshot без цен), `Contract`
+- **Сервис:** `ContractService` — CRUD + авто-нумерация Д-0001 + `createFromProposal` + `changeStatus`
+- **Список:** `contract-list.component.ts` — kp-table, статус-бейджи, statusActions (активировать/завершить/расторгнуть)
+- **Редактор:** `contract-editor.component.ts` — выбор КП (только approved), загрузка позиций из КП (snapshot без цен)
+- **Маршруты:** 3 lazy-маршрута `/sales/contracts`, `/new`, `/:id/edit`
+- **Меню:** пункт «📑 Договоры» в разделе «Продажи»
+- **Иконки:** `LucidePlay` (41→42)
+
+### Added — Доработки 1.2-1.3
+- **Персональная наценка:** `clientMarkupPercent` computed → авто-применение в `loadFromCart()`
+- **Привязка шаблона:** `templateId` в `CommercialProposal`, селектор шаблона в редакторе
+- **Печать КП:** `showView` + `KpDocPreviewDialogComponent` + `fillPlaceholders` ({{number}}, {{client.name}}, {{total}}...)
+- **Статус-кнопки:** `TableExtraAction` в kp-table, кнопки Отправить/Согласовать/Отклонить в списке КП
+
+### Tests
+- **313→334** (+21: contract.service 8 + contract-list 6 + contract-editor 4 + createVariants 1 + fillPlaceholders 1 + clientMarkupPercent 1)
+
+---
+
+## [1.11.0] — 2026-06-07 — Фаза 1.3: Коммерческие предложения (КП)
+
+### Added
+- **Типы:** `proposal.ts` — `ProposalStatus` (draft/sent/approved/rejected), `ProposalItem` (snapshot товаров), `CommercialProposal`
+- **Сервис:** `CommercialProposalService` — CRUD + авто-нумерация КП-0001 + `createWithItems` + `createFromCart`
+- **Список КП:** `proposal-list.component.ts` — kp-table, статус-бейджи, поиск по номеру/организации/клиенту
+- **Редактор КП:** `proposal-editor.component.ts` — выбор организации/клиента, загрузка товаров из корзины, правка цены/наценки/количества, валидация
+- **Маршруты:** 3 lazy-маршрута `/sales/proposals`, `/new`, `/:id/edit`
+- **Меню:** пункт «📄 Коммерческие предложения» в разделе «Продажи»
+- **Интеграция:** кнопка «Создать КП» в корзине → навигация в редактор с предзагрузкой товаров
+- **Тесты:** 265 (+0 новых spec-файлов, но 4 созданы ранее для cart/products/clients/doc-types: +39 тестов)
+
+### Design decisions
+- **Snapshot-модель:** товары копируются в ProposalItem (name, sku, unit, price) — редактирование каталога не меняет существующие КП
+- **Авто-нумерация:** КП-0001, КП-0002… (счётчик в сервисе)
+- **Наценка:** `unitPrice = basePrice × (1 + markupPercent / 100)`, рассчитывается реактивно через `computed()`
+
+---
+
+## [1.10.0] — 2026-06-07 — Глубокий аудит и полировка (сессия Buffy)
+
+### Added
+- **Пакеты:** `@lucide/angular`, `html2canvas`, `jspdf` (пропущены при git pull)
+- **Аудит-отчёт:** `AUDIT_REPORT.md` — полный анализ состояния проекта на 07.06.2026
+- **Тесты:** 225 (+39 от v1.9.0)
+
+### Fixed
+- **Сборка:** бюджет стилей `anyComponentStyle` 10→15 KB (app-guide 11.72 KB)
+- **Линт:** 10→0 ошибок:
+  - `client.service.ts` — неиспользуемые `of`, `delay`, `generateId`, `nowISO`
+  - `counterparty-role.service.ts` — неиспользуемый `CreateData`
+  - `document-template.service.ts` — неиспользуемый `DocBlock`
+  - `doc-type-list.component.ts` — неиспользуемый `computed`
+  - `cart.component.ts` — перенос строки в шаблоне (parser error)
+  - `product-category-list.component.ts` — `as any` → `as Omit<ProductCategory, ...>`
+  - `kp-table.component.ts` — `event: any` → `event: unknown` + type guard
+- **Тесты table-registry:** 5→6 таблиц (добавлены product-categories), 12→14 полей products
+- **Тесты document-template-editor:** `templateName` по умолчанию `'Новый документ'`, `docTypeOptions` асинхронный
+
+### Verified
+- **Архитектура:** слои `core → shared → features → layout` соблюдены ✅
+- **Запреты:** 0 `any` (кроме обоснованных), 0 NgModules, 0 constructor DI, все Standalone+OnPush ✅
+- **Бизнес-логика:** синхронизирована с BUSINESS_LOGIC_RU.md v4.2 ✅
+- **Чек-лист:** 82/132 пунктов ✅
+
+---
+
 ## [1.9.0] — 2026-06-06 — UI/UX финализация: float-лейблы, превью, ▲▼, реестр
 
 ### Added
