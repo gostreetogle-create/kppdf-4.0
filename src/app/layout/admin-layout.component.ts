@@ -1,6 +1,7 @@
-import { Component, inject, signal, viewChild, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, signal, computed, viewChild, ChangeDetectionStrategy } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { TooltipModule } from 'primeng/tooltip';
 import { MenuItem } from 'primeng/api';
 
@@ -8,6 +9,7 @@ import { AuthService } from '../core/auth.service';
 import { ThemeService } from '../core/theme.service';
 import { KpToastComponent } from '../shared/ui/kp-toast.component';
 import { KpButtonComponent } from '../shared/ui/kp-button.component';
+import { KpSelectComponent, SelectOption } from '../shared/ui/kp-select.component';
 import { KpDrawerComponent } from '../shared/ui/kp-drawer.component';
 import { KpAvatarComponent } from '../shared/ui/kp-avatar.component';
 import { KpTieredMenuComponent } from '../shared/ui/kp-tiered-menu.component';
@@ -17,10 +19,10 @@ import { LucideDynamicIcon } from '@lucide/angular';
   selector: 'app-admin-layout',
   standalone: true,
   imports: [
-    CommonModule,
+    CommonModule, FormsModule,
     RouterOutlet, RouterLink, RouterLinkActive,
     TooltipModule,
-    KpToastComponent, KpButtonComponent,
+    KpToastComponent, KpButtonComponent, KpSelectComponent,
     KpDrawerComponent, KpAvatarComponent, KpTieredMenuComponent, LucideDynamicIcon,
   ],
   templateUrl: './admin-layout.component.html',
@@ -38,13 +40,44 @@ export class AdminLayoutComponent {
   isDark = this.themeService.isDark;
   currentUser = this.authService.currentUser;
 
-  navItems: MenuItem[] = [
+  /** Демо-выбор роли (переопределяет роль из AuthService) */
+  demoRole = signal('');
+
+  /** Все возможные роли для переключателя */
+  roleOptions: SelectOption[] = [
+    { label: '👑 Администратор (всё)', value: 'admin' },
+    { label: '💰 Менеджер продаж', value: 'manager' },
+    { label: '🏭 Руководитель производства', value: 'production' },
+    { label: '📦 Кладовщик', value: 'storekeeper' },
+    { label: '🧾 Бухгалтер', value: 'accountant' },
+    { label: '👁️ Наблюдатель', value: 'viewer' },
+  ];
+
+  /** Привязка роли к доступным разделам */
+  private readonly ROLE_SECTIONS: Record<string, string[]> = {
+    admin: ['sales', 'production', 'warehouse', 'finance', 'references', 'admin'],
+    manager: ['sales', 'references'],
+    production: ['production', 'references'],
+    storekeeper: ['warehouse'],
+    accountant: ['finance'],
+    viewer: [],
+  };
+
+  /** Разрешённые секции для текущей роли */
+  allowedSections = computed(() => {
+    const demo = this.demoRole();
+    const role = demo || this.currentUser()?.role || 'viewer';
+    return this.ROLE_SECTIONS[role] || [];
+  });
+
+  /** Полный список пунктов меню (до фильтрации) */
+  private allNavItems: MenuItem[] = [
     { id: 'nav-home', label: 'Главная', icon: 'house', routerLink: '/dashboard' },
     { id: 'nav-app-guide', label: '🗺️ Карта приложения', routerLink: '/app-guide' },
     { id: 'nav-uikit', label: 'UI Kit', icon: 'palette', routerLink: '/ui-kit' },
     { id: 'nav-sep-1', separator: true },
     {
-      id: 'nav-sales',
+      id: 'nav-sales', sectionId: 'sales',
       label: 'Продажи',
       icon: 'shopping-cart',
       items: [
@@ -55,7 +88,7 @@ export class AdminLayoutComponent {
       ]
     },
     {
-      id: 'nav-production',
+      id: 'nav-production', sectionId: 'production',
       label: '🏭 Производство',
       icon: 'box',
       items: [
@@ -68,7 +101,7 @@ export class AdminLayoutComponent {
       ]
     },
     {
-      id: 'nav-warehouse',
+      id: 'nav-warehouse', sectionId: 'warehouse',
       label: '📦 Склад',
       icon: 'box',
       items: [
@@ -80,7 +113,7 @@ export class AdminLayoutComponent {
       ]
     },
     {
-      id: 'nav-refs',
+      id: 'nav-refs', sectionId: 'references',
       label: 'Справочники',
       icon: 'book',
       items: [
@@ -95,16 +128,43 @@ export class AdminLayoutComponent {
     },
     { id: 'nav-sep-2', separator: true },
     {
-      id: 'nav-admin',
+      id: 'nav-admin', sectionId: 'admin',
       label: 'Администрирование',
       icon: 'cog',
       items: [
         { id: 'nav-table-tpl', label: 'Шаблоны таблиц', icon: 'table', routerLink: '/admin/table-templates' },
         { id: 'nav-doc-tpl', label: 'Шаблоны документов', icon: 'file', routerLink: '/admin/document-templates' },
-        { id: 'nav-feature-flags', label: 'Флаги возможностей', icon: 'flag', routerLink: '/admin/feature-flags' }
+        { id: 'nav-feature-flags', label: 'Флаги возможностей', icon: 'flag', routerLink: '/admin/feature-flags' },
+        { id: 'nav-users', label: '👥 Пользователи и роли', routerLink: '/admin/users' },
+        { id: 'nav-status-wf', label: '📊 Статусные модели', routerLink: '/admin/status-workflows' },
+        { id: 'nav-tenders', label: '📋 Тендеры', routerLink: '/admin/tenders' },
+        { id: 'nav-rpp', label: '📋 Реестр РПП', routerLink: '/admin/rpp' },
+        { id: 'nav-certs', label: '📜 Сертификаты ЕАЭС', routerLink: '/admin/certificates' },
+        { id: 'nav-cad', label: '📁 CAD-файлы', routerLink: '/admin/cad-files' },
       ]
     }
   ];
+
+  /** Отфильтрованное меню по роли */
+  navItems = computed((): MenuItem[] => {
+    const allowed = this.allowedSections();
+    const filtered = this.allNavItems.filter(item => {
+      if (item.separator) return true;
+      const sectionId = (item as MenuItem & { sectionId?: string }).sectionId;
+      if (!sectionId) return true;
+      return allowed.includes(sectionId);
+    });
+    // Убираем дублирующиеся разделители
+    return filtered.filter((item, i, arr) => {
+      if (!item.separator) return true;
+      const prev = arr[i - 1];
+      const next = arr[i + 1];
+      // Убираем разделитель если перед ним тоже разделитель или после нет элементов
+      if (prev?.separator) return false;
+      if (!next) return false;
+      return true;
+    });
+  });
 
   userMenuItems: MenuItem[] = [
     { id: 'user-profile', label: 'Профиль', icon: 'pi pi-user', command: () => {} },

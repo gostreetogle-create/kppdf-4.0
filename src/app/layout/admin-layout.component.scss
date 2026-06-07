@@ -208,6 +208,11 @@
   gap: var(--space-3);
 }
 
+.topbar__role-select {
+  width: 200px;
+  font-size: var(--font-size-xs);
+}
+
 .topbar__user {
   display: flex;
   align-items: center;

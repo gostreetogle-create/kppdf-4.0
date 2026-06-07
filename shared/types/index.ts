@@ -436,6 +436,15 @@ export type {
   MissingDataType, MissingDataIssue,
 } from './production.js';
 
+export type {
+  Tender, TenderDocument, TenderType, TenderStatus,
+  StatusWorkflow, StatusTransition,
+  RoleDef, Section,
+  RppEntry, RppStatus,
+  Certificate, CertStatus,
+  InventorFile, CadFileType,
+} from './administration.js';
+
 // ========================================
 // Feature Flags (флаги возможностей)
 // ========================================

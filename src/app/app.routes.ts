@@ -137,6 +137,30 @@ export const routes: Routes = [
         path: 'admin/feature-flags',
         loadComponent: () => import('./features/feature-flags/feature-flags.component').then(m => m.FeatureFlagsComponent)
       },
+      {
+        path: 'admin/tenders',
+        loadComponent: () => import('./features/admin/tender-list.component').then(m => m.TenderListComponent)
+      },
+      {
+        path: 'admin/status-workflows',
+        loadComponent: () => import('./features/admin/status-workflow-list.component').then(m => m.StatusWorkflowListComponent)
+      },
+      {
+        path: 'admin/users',
+        loadComponent: () => import('./features/admin/role-list.component').then(m => m.RoleListComponent)
+      },
+      {
+        path: 'admin/rpp',
+        loadComponent: () => import('./features/admin/rpp-list.component').then(m => m.RppListComponent)
+      },
+      {
+        path: 'admin/certificates',
+        loadComponent: () => import('./features/admin/certificate-list.component').then(m => m.CertificateListComponent)
+      },
+      {
+        path: 'admin/cad-files',
+        loadComponent: () => import('./features/admin/inventor-file-list.component').then(m => m.InventorFileListComponent)
+      },
       // ===== Производство (Фаза 2) =====
       {
         path: 'production/work-types',

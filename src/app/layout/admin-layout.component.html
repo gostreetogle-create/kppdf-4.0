@@ -10,7 +10,7 @@
   <div class="sidebar-mobile-header">
     <span class="sidebar-logo-text">Project Core</span>
   </div>
-  <div class="sidebar-mobile-nav">      @for (item of navItems; track item.id || item.label) {
+  <div class="sidebar-mobile-nav">      @for (item of navItems(); track item.id || item.label) {
         @if (!item.separator && !item.items) {
           <a
             [routerLink]="item.routerLink"
@@ -56,7 +56,7 @@
     </div>
 
     <nav class="sidebar__nav" role="navigation" aria-label="Главное меню">
-      @for (item of navItems; track item.id || item.label) {
+      @for (item of navItems(); track item.id || item.label) {
         @if (item.separator) {
           <div class="nav__divider"></div>
         } @else if (item.items && item.items.length > 0) {
@@ -126,6 +126,13 @@
       </div>
 
       <div class="topbar__right">
+        <kp-select
+          [options]="roleOptions"
+          [(ngModel)]="demoRole"
+          placeholder="Роль"
+          styleClass="topbar__role-select"
+          (ngModelChange)="mobileSidebarVisible.set(false)"
+        />
         <kp-button
           [text]="true"
           size="small"
