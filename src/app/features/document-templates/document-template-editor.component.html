@@ -100,8 +100,9 @@
 <kp-card styleClass="dt-editor">
   <kp-breadcrumb [items]="breadcrumbs" />
 
+  @let isCreating = isNew();
   <h2 class="dt-editor__title">
-    {{ isNew() ? 'Новый шаблон документа' : 'Редактирование шаблона' }}
+    {{ isCreating ? 'Новый шаблон документа' : 'Редактирование шаблона' }}
   </h2>
 
   @if (loading()) {
@@ -197,7 +198,7 @@
     <!-- Футер -->
     <div class="dt-editor__footer">
       <kp-button
-        [label]="isNew() ? 'Создать шаблон' : 'Сохранить'"
+        [label]="isCreating ? 'Создать шаблон' : 'Сохранить'"
         lucideIcon="check"
         [loading]="saving()"
         (buttonClick)="save()"

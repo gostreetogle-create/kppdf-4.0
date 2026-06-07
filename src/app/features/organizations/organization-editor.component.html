@@ -3,11 +3,13 @@
 <kp-card styleClass="org-editor">
   <kp-breadcrumb [items]="breadcrumbs" />
 
+  @let isCreating = isNew();
+  @let isLoading = loading();
   <h2 class="org-editor__title">
-    {{ isNew() ? 'Новый контрагент' : 'Редактирование контрагента' }}
+    {{ isCreating ? 'Новый контрагент' : 'Редактирование контрагента' }}
   </h2>
 
-  @if (loading()) {
+  @if (isLoading) {
     <div class="org-editor__loading">Загрузка...</div>
   } @else {
     <!-- Роли контрагента (динамически из справочника) -->
@@ -229,7 +231,7 @@
     <!-- Футер -->
     <div class="org-editor__footer">
       <kp-button
-        [label]="isNew() ? 'Создать контрагента' : 'Сохранить'"
+        [label]="isCreating ? 'Создать контрагента' : 'Сохранить'"
         lucideIcon="check"
         [loading]="saving()"
         (buttonClick)="save()"

@@ -16,11 +16,12 @@
   <!-- Табы по ролям -->
   <div class="org-list__tabs" role="tablist">
     @for (tab of tabs(); track tab.id) {
+      @let isTabActive = activeTab() === tab.id;
       <button
         class="org-list__tab"
-        [class.org-list__tab--active]="activeTab() === tab.id"
+        [class.org-list__tab--active]="isTabActive"
         role="tab"
-        [attr.aria-selected]="activeTab() === tab.id"
+        [attr.aria-selected]="isTabActive"
         (click)="onTabChange(tab.id)"
       >
         {{ tab.label }}

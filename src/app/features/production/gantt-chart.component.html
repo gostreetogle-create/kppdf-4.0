@@ -3,10 +3,11 @@
   <div class="gantt-header">
     <h2 class="gantt-title">📊 Диаграмма Ганта</h2>
     <div class="gantt-controls">
+      @let z = zoom();
       <div class="gantt-zoom">
-        <kp-button label="День" [severity]="zoom() === 'day' ? 'info' : 'secondary'" size="small" (buttonClick)="zoom.set('day')" />
-        <kp-button label="Неделя" [severity]="zoom() === 'week' ? 'info' : 'secondary'" size="small" (buttonClick)="zoom.set('week')" />
-        <kp-button label="Месяц" [severity]="zoom() === 'month' ? 'info' : 'secondary'" size="small" (buttonClick)="zoom.set('month')" />
+        <kp-button label="День" [severity]="z === 'day' ? 'info' : 'secondary'" size="small" (buttonClick)="zoom.set('day')" />
+        <kp-button label="Неделя" [severity]="z === 'week' ? 'info' : 'secondary'" size="small" (buttonClick)="zoom.set('week')" />
+        <kp-button label="Месяц" [severity]="z === 'month' ? 'info' : 'secondary'" size="small" (buttonClick)="zoom.set('month')" />
       </div>
       <kp-select [options]="orderOptions()" [(ngModel)]="selectedOrderId" placeholder="Выберите заказ" styleClass="gantt-filter" (ngModelChange)="loadTasks()" />
     </div>
@@ -101,9 +102,11 @@
             </div>
           }
           }
+          @let todayPos = todayColumnIndex();
           <!-- Линия сегодня -->
-          @if (todayColumnIndex() >= 0) {
-            <div class="gantt-today-line" [style.left.px]="todayColumnIndex() * colWidth() + colWidth() / 2"></div>
+          @if (todayPos >= 0) {
+            @let cw = colWidth();
+            <div class="gantt-today-line" [style.left.px]="todayPos * cw + cw / 2"></div>
           }
 
 

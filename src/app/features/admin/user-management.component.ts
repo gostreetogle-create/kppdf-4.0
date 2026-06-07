@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, signal, computed, linkedSignal, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MenuItem } from 'primeng/api';
@@ -158,15 +158,34 @@ export class UserManagementComponent {
     return this.roles().map(r => ({ ...r, sectionsStr: r.sectionIds.map(s => labels[s] || s).join(', '), activeLabel: r.isActive ? 'Активна' : 'Неактивна' }));
   });
 
-  // ─── Форма пользователя ───
+  // ─── Форма пользователя (linkedSignal — авто-сброс при смене editingUserId) ───
   userDialogVisible = signal(false);
   editingUserId = signal<string | null>(null);
-  formUsername = signal('');
-  formDisplayName = signal('');
-  formEmail = signal('');
-  formPhone = signal('');
-  formPassword = signal('');
-  formRole = signal('');
+
+  formUsername = linkedSignal<string | null, string>({
+    source: () => this.editingUserId(),
+    computation: (id) => id ? this.userSvc.getRawItems().find(u => u.id === id)?.username ?? '' : '',
+  });
+  formDisplayName = linkedSignal<string | null, string>({
+    source: () => this.editingUserId(),
+    computation: (id) => id ? this.userSvc.getRawItems().find(u => u.id === id)?.displayName ?? '' : '',
+  });
+  formEmail = linkedSignal<string | null, string>({
+    source: () => this.editingUserId(),
+    computation: (id) => id ? this.userSvc.getRawItems().find(u => u.id === id)?.email ?? '' : '',
+  });
+  formPhone = linkedSignal<string | null, string>({
+    source: () => this.editingUserId(),
+    computation: (id) => id ? this.userSvc.getRawItems().find(u => u.id === id)?.phone ?? '' : '',
+  });
+  formPassword = linkedSignal<string | null, string>({
+    source: () => this.editingUserId(),
+    computation: () => '', // пароль всегда сбрасывается
+  });
+  formRole = linkedSignal<string | null, string>({
+    source: () => this.editingUserId(),
+    computation: (id) => id ? this.userSvc.getRawItems().find(u => u.id === id)?.role ?? '' : '',
+  });
 
   constructor() {
     this.loadUsers();
@@ -185,21 +204,12 @@ export class UserManagementComponent {
 
   openCreate() {
     this.editingUserId.set(null);
-    this.formUsername.set(''); this.formDisplayName.set('');
-    this.formEmail.set(''); this.formPhone.set('');
-    this.formPassword.set(''); this.formRole.set('');
     this.userDialogVisible.set(true);
   }
 
   onEditUser(row: unknown) {
     const u = row as User;
     this.editingUserId.set(u.id);
-    this.formUsername.set(u.username);
-    this.formDisplayName.set(u.displayName);
-    this.formEmail.set(u.email || '');
-    this.formPhone.set(u.phone || '');
-    this.formPassword.set('');
-    this.formRole.set(u.role);
     this.userDialogVisible.set(true);
   }
 

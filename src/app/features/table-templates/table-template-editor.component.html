@@ -3,8 +3,9 @@
 <kp-card styleClass="tt-editor">
   <kp-breadcrumb [items]="breadcrumbs" />
 
+  @let isCreating = isNew();
   <h2 class="tt-editor__title">
-    {{ isNew() ? 'Новый шаблон' : 'Редактирование шаблона' }}
+    {{ isCreating ? 'Новый шаблон' : 'Редактирование шаблона' }}
   </h2>
 
   @if (loading()) {
@@ -154,7 +155,7 @@
     <!-- Футер -->
     <div class="tt-editor__footer">
       <kp-button
-        [label]="isNew() ? 'Создать шаблон' : 'Сохранить'"
+        [label]="isCreating ? 'Создать шаблон' : 'Сохранить'"
         lucideIcon="check"
         [loading]="saving()"
         (buttonClick)="save()"
