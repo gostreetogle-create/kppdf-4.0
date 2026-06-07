@@ -4,26 +4,15 @@
     <h2 class="gantt-title">📊 Диаграмма Ганта</h2>
     <div class="gantt-controls">
       <div class="gantt-zoom">
-        <kp-button label="День" [severity]="zoom() === 'day' ? 'info' : 'secondary'" size="small" (clicked)="zoom.set('day')" />
-        <kp-button label="Неделя" [severity]="zoom() === 'week' ? 'info' : 'secondary'" size="small" (clicked)="zoom.set('week')" />
-        <kp-button label="Месяц" [severity]="zoom() === 'month' ? 'info' : 'secondary'" size="small" (clicked)="zoom.set('month')" />
+        <kp-button label="День" [severity]="zoom() === 'day' ? 'info' : 'secondary'" size="small" (buttonClick)="zoom.set('day')" />
+        <kp-button label="Неделя" [severity]="zoom() === 'week' ? 'info' : 'secondary'" size="small" (buttonClick)="zoom.set('week')" />
+        <kp-button label="Месяц" [severity]="zoom() === 'month' ? 'info' : 'secondary'" size="small" (buttonClick)="zoom.set('month')" />
       </div>
       <kp-select [options]="orderOptions()" [(ngModel)]="selectedOrderId" placeholder="Выберите заказ" styleClass="gantt-filter" (ngModelChange)="loadTasks()" />
     </div>
   </div>
 
-  @if (selectedOrderId() && bars().length > 0) {
-
-    <!-- Панель работников -->
-    <div class="gantt-workers">
-      <span class="gantt-workers__title">👷 Работники:</span>
-      @for (w of workerSummary(); track w.id) {
-        <span class="gantt-worker-badge" [class.gantt-worker-badge--busy]="w.busy" [class.gantt-worker-badge--free]="!w.busy"
-          [title]="w.name + (w.busy ? ' — занят до ' + w.busyUntil : ' — свободен') + ' · ' + w.rate + '₽/ч'">
-          {{ w.name }}
-        </span>
-      }
-    </div>
+  @if (bars().length > 0) {
 
     <!-- Фильтры статусов -->
     <div class="gantt-filters">
@@ -37,18 +26,22 @@
     </div>
 
     <div class="gantt-chart" (mousemove)="onMouseMove($event)" (mouseup)="onMouseUp()" (mouseleave)="onMouseUp()">
-      <!-- Хедер с фиксированными лейблами и скроллящейся шкалой -->
       <div class="gantt-grid">
         <div class="gantt-grid__labels">
-          <div class="gantt-grid__axis-label">Компонент / Работа</div>
-          @for (bar of visibleBars(); track bar.task.id) {
-            <div class="gantt-grid__row-label" [style.background]="bar.task.dependsOnTaskIds.length ? 'var(--color-surface)' : 'transparent'">
-              <span class="gantt-grid__comp">{{ bar.task.componentName }}</span>
-              <span class="gantt-grid__work">
-                {{ bar.task.workTypeName }}
-                @if (bar.task.workerId) { · 👷{{ workerName(bar.task.workerId) }} }
-              </span>
-            </div>
+          <div class="gantt-grid__axis-label">Вид работы / Компонент / Исполнитель</div>
+          @for (row of layoutRows(); track row.bar ? row.bar.task.id : ('grp-' + row.groupId)) {
+            @if (row.type === 'group') {
+              <div class="gantt-group-header" [style.--group-color]="groupColor(row.groupId!)">
+                <span class="gantt-group-header__icon">{{ groupIcon(row.groupId!) }}</span>
+                <span class="gantt-group-header__name">{{ row.groupName }}</span>
+                <span class="gantt-group-header__count">{{ row.barCount }}</span>
+              </div>
+            } @else {
+              <div class="gantt-grid__row-label">
+                <span class="gantt-grid__comp">{{ row.bar!.task.componentName }}</span>
+                <span class="gantt-grid__work">👷 {{ workerFullName(row.bar!.task.workerId) }}</span>
+              </div>
+            }
           }
         </div>
 
@@ -57,18 +50,32 @@
           <div class="gantt-axis">
             @for (col of timelineColumns(); track col.label) {
               <div class="gantt-axis__cell" [style.width.px]="colWidth()">
-                <span class="gantt-axis__label" [class.gantt-axis__label--today]="col.isToday">{{ col.label }}</span>
+                <span class="gantt-axis__label"
+                  [class.gantt-axis__label--today]="col.isToday"
+                  [class.gantt-axis__label--month]="zoom() === 'month'"
+                  [class.gantt-axis__label--week]="zoom() === 'week'">{{ col.label }}</span>
               </div>
             }
           </div>
           <!-- Строки с полосами -->
-          @for (bar of visibleBars(); track bar.task.id) {
-            <div class="gantt-row">
-              <div class="gantt-row__track">
-                <!-- Фоновая сетка -->
-                @for (col of timelineColumns(); track col.label) {
-                  <div class="gantt-row__cell" [style.width.px]="colWidth()" [class.gantt-row__cell--weekend]="col.isWeekend" [class.gantt-row__cell--today]="col.isToday"></div>
-                }
+          @for (row of layoutRows(); track row.bar ? row.bar.task.id : ('grp-' + row.groupId)) {
+            @if (row.type === 'group') {
+              <div class="gantt-row gantt-row--group" [style.--group-color]="groupColor(row.groupId!)">
+                <div class="gantt-row__track">
+                  @for (col of timelineColumns(); track col.label) {
+                    <div class="gantt-row__cell" [style.width.px]="colWidth()"
+                         [class.gantt-row__cell--weekend]="col.isWeekend" [class.gantt-row__cell--today]="col.isToday"></div>
+                  }
+                </div>
+              </div>
+            } @else {
+              @let bar = row.bar!;
+              <div class="gantt-row">
+                <div class="gantt-row__track">
+                  <!-- Фоновая сетка -->
+                  @for (col of timelineColumns(); track col.label) {
+                    <div class="gantt-row__cell" [style.width.px]="colWidth()" [class.gantt-row__cell--weekend]="col.isWeekend" [class.gantt-row__cell--today]="col.isToday"></div>
+                  }
                 <!-- Полоса задачи -->
                 <div class="gantt-bar"
                   [style.left.px]="bar.left"
@@ -93,28 +100,15 @@
               </div>
             </div>
           }
+          }
           <!-- Линия сегодня -->
           @if (todayColumnIndex() >= 0) {
             <div class="gantt-today-line" [style.left.px]="todayColumnIndex() * colWidth() + colWidth() / 2"></div>
           }
+
+
         </div>
       </div>
-
-      <!-- SVG зависимости -->
-      <svg class="gantt-svg" [attr.viewBox]="'0 0 ' + svgW() + ' ' + svgH()">
-        @for (arrow of depArrows(); track arrow.from + '-' + arrow.to) {
-          <line [attr.x1]="arrow.x1" [attr.y1]="arrow.y1" [attr.x2]="arrow.x2" [attr.y2]="arrow.y2"
-            stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#arrowhead)" />
-        }
-        @for (arrow of depArrows(); track arrow.from + '-corner-' + arrow.to) {
-          <path [attr.d]="arrow.path" fill="none" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#arrowhead)" />
-        }
-        <defs>
-          <marker id="arrowhead" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
-            <polygon points="0 0, 6 3, 0 6" fill="#94a3b8" />
-          </marker>
-        </defs>
-      </svg>
     </div>
 
     <!-- Тултип -->
@@ -166,15 +160,77 @@
       <div class="gantt-legend__item"><span class="gantt-legend__swatch gantt-legend__swatch--plan"></span> План</div>
       <div class="gantt-legend__item"><span class="gantt-legend__swatch gantt-legend__swatch--actual"></span> Факт</div>
       <div class="gantt-legend__item"><span class="gantt-legend__swatch gantt-legend__swatch--today"></span> Сегодня</div>
-      <div class="gantt-legend__item"><span style="color:#94a3b8;">- - →</span> Зависимость</div>
+
       @for (s of statuses(); track s.key) {
         <div class="gantt-legend__item"><span class="gantt-legend__swatch" [style.background]="s.color"></span> {{ s.label }}</div>
       }
     </div>
 
-  } @else if (selectedOrderId()) {
-    <p class="gantt-empty">Нет задач для выбранного заказа</p>
   } @else {
-    <p class="gantt-empty">Выберите производственный заказ для отображения диаграммы</p>
+    <p class="gantt-empty">Нет задач для отображения. Создайте производственный заказ с задачами.</p>
   }
+
+  <!-- ─── Диалог создания заказа ─── -->
+  <kp-dialog
+    header="📋 Новый производственный заказ"
+    [(visible)]="dialogVisible"
+    width="520px"
+    (onHide)="closeCreateDialog()"
+  >
+    <div class="gantt-order-form">
+      <div class="gantt-order-form__row">
+        <kp-select
+          label="Товар"
+          [options]="productOptions()"
+          [(ngModel)]="formProductId"
+          placeholder="Выберите товар..."
+          [filter]="true"
+          [showClear]="true"
+        />
+      </div>
+      <div class="gantt-order-form__row">
+        <kp-select
+          label="Заказчик"
+          [options]="orgOptions()"
+          [(ngModel)]="formOrgId"
+          placeholder="Выберите организацию..."
+          [filter]="true"
+          [showClear]="true"
+        />
+      </div>
+      <div class="gantt-order-form__row gantt-order-form__row--cols">
+        <kp-input
+          label="Количество"
+          type="number"
+          [(ngModel)]="formQuantity"
+        />
+        <kp-datepicker
+          label="Дата начала"
+          [(selectedDate)]="formStartDate"
+        />
+        <kp-datepicker
+          label="Дата окончания"
+          [(selectedDate)]="formEndDate"
+        />
+      </div>
+      <div class="gantt-order-form__row">
+        <kp-input
+          label="Примечание"
+          [(ngModel)]="formNotes"
+          placeholder="Опционально..."
+        />
+      </div>
+    </div>
+    <div class="gantt-order-form__actions">
+      <kp-button label="Отмена" severity="secondary" (buttonClick)="closeCreateDialog()" />
+      <kp-button
+        label="Создать заказ"
+        lucideIcon="plus"
+        severity="info"
+        [loading]="formSubmitting()"
+        [disabled]="!formProductId() || !formOrgId() || formQuantity() < 1"
+        (buttonClick)="createOrder()"
+      />
+    </div>
+  </kp-dialog>
 </kp-card>

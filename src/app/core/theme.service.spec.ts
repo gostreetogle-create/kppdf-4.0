@@ -20,26 +20,26 @@ describe('ThemeService', () => {
     expect(service).toBeTruthy();
   });
 
-  it('isDark по умолчанию false (светлая тема)', () => {
-    expect(service.isDark()).toBe(false);
+  it('isDark по умолчанию true (тёмная тема)', () => {
+    expect(service.isDark()).toBe(true);
   });
 
   it('toggle() переключает тему', () => {
     service.toggle();
-    expect(service.isDark()).toBe(true);
-    expect(document.documentElement.getAttribute('data-theme')).toBe('dark');
+    expect(service.isDark()).toBe(false);
+    expect(document.documentElement.getAttribute('data-theme')).toBe('light');
   });
 
   it('toggle() переключает обратно', () => {
-    service.toggle(); // dark
     service.toggle(); // light
-    expect(service.isDark()).toBe(false);
-    expect(document.documentElement.getAttribute('data-theme')).toBe('light');
+    service.toggle(); // dark
+    expect(service.isDark()).toBe(true);
+    expect(document.documentElement.getAttribute('data-theme')).toBe('dark');
   });
 
   it('toggle() обновляет data-theme на <html>', () => {
     service.toggle();
     const theme = document.documentElement.getAttribute('data-theme');
-    expect(theme).toBe('dark');
+    expect(theme).toBe('light');
   });
 });

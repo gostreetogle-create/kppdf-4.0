@@ -77,10 +77,11 @@ describe('ProposalListComponent', () => {
     expect(c.tableColumns.length).toBe(5);
     expect(c.tableColumns[0].field).toBe('number');
     expect(c.tableColumns[1].field).toBe('statusLabel');
-    expect(c.statusActions.length).toBe(3);
+    expect(c.statusActions.length).toBe(4);
     expect(c.statusActions[0].icon).toBe('send');
     expect(c.statusActions[1].icon).toBe('thumbs-up');
     expect(c.statusActions[2].icon).toBe('thumbs-down');
+    expect(c.statusActions[3].icon).toBe('file-signature');
   });
 
   // ─────── Загрузка КП ───────
@@ -128,18 +129,22 @@ describe('ProposalListComponent', () => {
     expect(c.statusActions[2].visible!(draftRow)).toBe(false);  // thumbs-down
   });
 
-  it('statusActions: sent показывает Согласовать и Отклонить', async () => {
+  it('statusActions: sent показывает Согласовать, Отклонить и Создать договор', async () => {
     const c = createComponent();
     const sentRow = { status: 'sent' } as CommercialProposal;
     expect(c.statusActions[0].visible!(sentRow)).toBe(false);   // send
     expect(c.statusActions[1].visible!(sentRow)).toBe(true);    // thumbs-up
     expect(c.statusActions[2].visible!(sentRow)).toBe(true);    // thumbs-down
+    expect(c.statusActions[3].visible!(sentRow)).toBe(true);    // file-signature
   });
 
-  it('statusActions: approved не показывает кнопок', async () => {
+  it('statusActions: approved показывает только Создать договор', async () => {
     const c = createComponent();
     const row = { status: 'approved' } as CommercialProposal;
-    expect(c.statusActions.every(a => !a.visible!(row))).toBe(true);
+    expect(c.statusActions[0].visible!(row)).toBe(false);   // send
+    expect(c.statusActions[1].visible!(row)).toBe(false);   // thumbs-up
+    expect(c.statusActions[2].visible!(row)).toBe(false);   // thumbs-down
+    expect(c.statusActions[3].visible!(row)).toBe(true);    // file-signature
   });
 
   it('statusActions: rejected не показывает кнопок', async () => {

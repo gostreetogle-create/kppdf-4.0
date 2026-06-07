@@ -3,7 +3,6 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MenuItem } from 'primeng/api';
 import { firstValueFrom } from 'rxjs';
-import { KpButtonComponent } from '../../shared/ui/kp-button.component';
 import { KpBreadcrumbComponent } from '../../shared/ui/kp-breadcrumb.component';
 import { KpCardComponent } from '../../shared/ui/kp-card.component';
 import { KpTableComponent, TableColumn } from '../../shared/ui/kp-table.component';
@@ -15,7 +14,7 @@ import type { WorkType } from '../../../../shared/types/index.js';
 @Component({
   selector: 'app-work-type-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, KpButtonComponent, KpBreadcrumbComponent, KpCardComponent, KpTableComponent, KpToastComponent],
+  imports: [CommonModule, FormsModule, KpBreadcrumbComponent, KpCardComponent, KpTableComponent, KpToastComponent],
   template: `
     <kp-toast />
     <kp-card>

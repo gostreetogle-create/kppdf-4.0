@@ -46,11 +46,8 @@
       @if (sidebarVisible()) { <span class="sidebar__logo">Project Core</span> }
       <kp-button
         [text]="true"
-        size="small"
         [lucideIcon]="sidebarVisible() ? 'chevron-left' : 'chevron-right'"
         styleClass="sidebar__toggle"
-        [pTooltip]="sidebarVisible() ? 'Свернуть меню' : 'Развернуть меню'"
-        tooltipPosition="right"
         (buttonClick)="toggleSidebar()"
       />
     </div>
@@ -60,12 +57,18 @@
         @if (item.separator) {
           <div class="nav__divider"></div>
         } @else if (item.items && item.items.length > 0) {
-          <div class="nav__group">
-            <div class="nav__group-header">
+          <div class="nav__group" [style.--section-bar]="getSectionColors(getSectionId(item)).bar"
+               [style.--section-text]="getSectionColors(getSectionId(item)).text"
+               [style.--section-bg]="getSectionColors(getSectionId(item)).bg">
+            <div class="nav__group-header" (click)="toggleSection(getSectionId(item))">
               @if (item.icon) { <svg [lucideIcon]="item.icon" class="nav__icon"></svg> }
-              @if (sidebarVisible()) { <span class="nav__group-label">{{ item.label }}</span> }
+              @if (sidebarVisible()) {
+                <span class="nav__group-label">{{ item.label }}</span>
+                <svg lucideIcon="chevron-down" class="nav__group-chevron"
+                     [class.nav__group-chevron--collapsed]="isCollapsed(getSectionId(item))"></svg>
+              }
             </div>
-            @if (sidebarVisible()) {
+            @if (sidebarVisible() && !isCollapsed(getSectionId(item))) {
               <div class="nav__group-items">
                 @for (child of item.items; track child.id || child.label) {
                   <a
@@ -100,11 +103,8 @@
     <div class="sidebar__footer">
       <kp-button
         [text]="true"
-        size="small"
         [lucideIcon]="isDark() ? 'sun' : 'moon'"
         styleClass="sidebar__theme-btn"
-        [pTooltip]="isDark() ? 'Светлая тема' : 'Тёмная тема'"
-        tooltipPosition="right"
         (buttonClick)="toggleTheme()"
       />
     </div>

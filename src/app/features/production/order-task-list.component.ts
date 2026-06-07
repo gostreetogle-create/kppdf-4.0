@@ -1,7 +1,6 @@
 import { Component, inject, signal, computed, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
 import { MenuItem } from 'primeng/api';
 import { firstValueFrom } from 'rxjs';
 import { KpButtonComponent } from '../../shared/ui/kp-button.component';
@@ -22,7 +21,7 @@ const NEXT_STATUS: Partial<Record<TaskStatus, TaskStatus>> = { pending: 'assigne
 @Component({
   selector: 'app-order-task-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, KpButtonComponent, KpBreadcrumbComponent, KpCardComponent, KpTableComponent, KpSelectComponent, KpDialogComponent, KpToastComponent],
+  imports: [CommonModule, FormsModule, KpButtonComponent, KpBreadcrumbComponent, KpCardComponent, KpTableComponent, KpSelectComponent, KpDialogComponent, KpToastComponent],
   template: `
     <kp-toast />
     <kp-card>

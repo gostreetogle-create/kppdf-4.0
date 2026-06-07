@@ -34,192 +34,214 @@ import type { ProductCategory, ProductPhoto, ProductComponent, ComponentMaterial
   template: `
     <kp-toast />
 
-    <kp-card>
+    <div class="pe-page">
       <kp-breadcrumb [items]="breadcrumbs()" />
 
-      <h2 class="pe-title">{{ isNew() ? 'Новый товар' : 'Редактирование товара' }}</h2>
-
-      <div class="pe-form">
-        <!-- Основные поля -->
-        <div class="pe-section">
-          <h3 class="pe-section__title">Основное</h3>
-          <kp-input label="Наименование" placeholder="Введите название товара" [(ngModel)]="name" [error]="nameError()" />
-          <kp-input label="Артикул (SKU)" [(ngModel)]="sku" [disabled]="!isNew()" placeholder="Заполнится автоматически" />
-          <kp-select
-            label="Категория"
-            [options]="categoryOptions()"
-            [(ngModel)]="categoryId"
-            (ngModelChange)="onCategoryChange()"
-            [error]="categoryError()"
-          />
-          <kp-select
-            label="Тип товара"
-            [options]="typeOptions"
-            [(ngModel)]="productType"
-          />
-          <kp-select
-            label="Единица измерения"
-            [options]="unitOptions"
-            [(ngModel)]="unit"
-            [error]="unitError()"
-          />
-        </div>
-
-        <!-- Цены -->
-        <div class="pe-section">
-          <h3 class="pe-section__title">Цены</h3>
-          <kp-input label="Базовая цена (₽)" type="number" placeholder="0" [(ngModel)]="basePrice" />
-          <kp-input label="Наценка по умолчанию (%)" type="number" placeholder="0" [(ngModel)]="markupPercent" />
-        </div>
-
-        <!-- Характеристики -->
-        <div class="pe-section">
-          <h3 class="pe-section__title">Характеристики</h3>
-          <kp-input label="Описание" placeholder="Характеристики товара" [(ngModel)]="description" />
-          <kp-input label="Вес (кг)" type="number" placeholder="0" [(ngModel)]="weightKg" />
-          <kp-input label="Габариты (Д×Ш×В мм)" placeholder="Например: 1800×600×800" [(ngModel)]="dimensions" />
-          <kp-input label="Материал" placeholder="Основной материал" [(ngModel)]="material" />
-        </div>
-
-        <!-- Фотографии -->
-        <div class="pe-section">
-          <h3 class="pe-section__title">
-            📷 Фотографии <span class="pe-section__badge">{{ photos().length }}</span>
-          </h3>
-
+      <!-- Header with SKU badge + actions -->
+      <div class="pe-hero">
+        <div class="pe-hero__info">
+          <div class="pe-hero__sku">{{ isNew() ? 'Новый товар' : sku() }}</div>
+          <div class="pe-hero__title">
+            @if (!isNew()) {
+              <input class="pe-hero__title-input" [ngModel]="name()" (ngModelChange)="name.set($event)" placeholder="Название товара" />
+            } @else {
+              <h1 class="pe-hero__title-h1">{{ name() || 'Новый товар' }}</h1>
+            }
+          </div>
           @if (!isNew()) {
-            <div class="pe-photo-grid">
-              @for (photo of photos(); track photo.id) {
-                <div class="pe-photo-card" [class.pe-photo-card--main]="photo.isMain">
-                  <div class="pe-photo-card__image">
-                    <img [src]="photo.url" [alt]="photo.caption || 'Фото товара'" loading="lazy" />
-                    @if (photo.isMain) {
-                      <span class="pe-photo-card__main-badge" title="Главное фото">⭐</span>
-                    }
-                  </div>
-                  <div class="pe-photo-card__caption">
-                    @if (editingCaptionId() === photo.id) {
-                      <kp-input
-                        [(ngModel)]="editCaption"
-                        placeholder="Подпись к фото..."
-                        (keyup.enter)="saveCaption(photo.id)"
-                      />
-                      <div class="pe-photo-card__caption-actions">
-                        <kp-button label="✓" severity="success" (buttonClick)="saveCaption(photo.id)" />
-                        <kp-button label="✕" severity="secondary" (buttonClick)="editingCaptionId.set(null)" />
-                      </div>
-                    } @else {
-                      <span class="pe-photo-card__caption-text"
-                        [class.pe-photo-card__caption-text--empty]="!photo.caption"
-                        (dblclick)="startEditCaption(photo)">
-                        {{ photo.caption || 'Двойной клик — добавить подпись' }}
-                      </span>
-                    }
-                  </div>
-                  <div class="pe-photo-card__actions">
-                    @if (!photo.isMain) {
-                      <kp-button title="Сделать главным" lucideIcon="star" severity="info" (buttonClick)="setMainPhoto(photo.id)" />
-                    }
-                    <kp-button title="Редактировать подпись" lucideIcon="pencil" severity="secondary" (buttonClick)="startEditCaption(photo)" />
-                    @if (photos().length > 1) {
-                      <kp-button
-                        title="Переместить вверх"
-                        lucideIcon="chevron-up"
-                        severity="secondary"
-                        [disabled]="photo.sortOrder <= 1"
-                        (buttonClick)="movePhoto(photo.id, -1)"
-                      />
-                      <kp-button
-                        title="Переместить вниз"
-                        lucideIcon="chevron-down"
-                        severity="secondary"
-                        [disabled]="photo.sortOrder >= photos().length"
-                        (buttonClick)="movePhoto(photo.id, 1)"
-                      />
-                    }
-                    <kp-button title="Удалить фото" lucideIcon="trash-2" severity="danger" (buttonClick)="deletePhoto(photo.id)" />
-                  </div>
-                </div>
+            <div class="pe-hero__meta">
+              <span class="pe-hero__meta-tag" [class.pe-hero__meta-tag--mfg]="productType() === 'manufactured'">{{ productType() === 'manufactured' ? '🔧 Изготавливаемый' : '🛒 Покупной' }}</span>
+              <span class="pe-hero__meta-tag">{{ unit() }}</span>
+              @if (basePrice()) {
+                <span class="pe-hero__meta-tag pe-hero__meta-tag--price">{{ basePrice()!.toLocaleString('ru-RU') }} ₽</span>
+              }
+              @if (weightKg()) {
+                <span class="pe-hero__meta-tag">{{ weightKg() }} кг</span>
               }
             </div>
-          } @else {
-            <p class="pe-section__hint">Сохраните товар, чтобы добавить фотографии.</p>
-          }
-
-          @if (!isNew()) {
-            <kp-button label="Добавить фото" lucideIcon="camera" (buttonClick)="openAddPhotoDialog()" />
           }
         </div>
+        <div class="pe-hero__actions">
+          <kp-button label="Сохранить" lucideIcon="check" [loading]="saving()" (buttonClick)="save()" />
+          <kp-button label="Отмена" lucideIcon="x" severity="secondary" (buttonClick)="cancel()" />
+        </div>
+      </div>
 
-        <!-- Компоненты (только для изготавливаемых) -->
-        @if (productType() === 'manufactured') {
-          <div class="pe-section">
-            <h3 class="pe-section__title">
-              🔩 Компоненты <span class="pe-section__badge">{{ components().length }}</span>
-            </h3>
+      <div class="pe-layout">
+        <!-- Main column -->
+        <div class="pe-main">
 
+          <!-- ─── Фотографии ─── -->
+          <section class="pe-section">
+            <div class="pe-section__hed">
+              <h3 class="pe-section__title">📷 Фотографии</h3>
+              <span class="pe-section__count">{{ photos().length }}</span>
+              @if (!isNew()) {
+                <kp-button lucideIcon="camera" severity="secondary" [text]="true" size="small" (buttonClick)="openAddPhotoDialog()" />
+              }
+            </div>
             @if (!isNew()) {
+              <div class="pe-photos">
+                @for (photo of photos(); track photo.id) {
+                  <div class="pe-photo" [class.pe-photo--main]="photo.isMain">
+                    <div class="pe-photo__frame">
+                      <img [src]="photo.url" [alt]="photo.caption || 'Фото'" loading="lazy" />
+                      @if (photo.isMain) { <span class="pe-photo__badge">⭐ Главное</span> }
+                    </div>
+                    <div class="pe-photo__meta">
+                      @if (editingCaptionId() === photo.id) {
+                        <input class="pe-photo__cap-input" [(ngModel)]="editCaption" placeholder="Подпись..." (keyup.enter)="saveCaption(photo.id)" (blur)="saveCaption(photo.id)" />
+                      } @else {
+                        <span class="pe-photo__cap" (click)="startEditCaption(photo)">{{ photo.caption || 'Добавить подпись' }}</span>
+                      }
+                    </div>
+                    <div class="pe-photo__actions">
+                      @if (!photo.isMain) { <kp-button lucideIcon="star" severity="info" [text]="true" size="small" title="Сделать главным" (buttonClick)="setMainPhoto(photo.id)" /> }
+                      @if (photos().length > 1 && photo.sortOrder > 1) { <kp-button lucideIcon="chevron-up" severity="secondary" [text]="true" size="small" (buttonClick)="movePhoto(photo.id, -1)" /> }
+                      @if (photos().length > 1 && photo.sortOrder < photos().length) { <kp-button lucideIcon="chevron-down" severity="secondary" [text]="true" size="small" (buttonClick)="movePhoto(photo.id, 1)" /> }
+                      <kp-button lucideIcon="trash-2" severity="danger" [text]="true" size="small" (buttonClick)="deletePhoto(photo.id)" />
+                    </div>
+                  </div>
+                } @empty {
+                  <div class="pe-photos__empty">
+                    <span class="pe-photos__empty-icon">📷</span>
+                    <p>Нет фотографий. Нажмите <strong>+</strong> чтобы добавить.</p>
+                  </div>
+                }
+              </div>
+            } @else {
+              <p class="pe-hint">Сохраните товар, чтобы добавить фотографии.</p>
+            }
+          </section>
+
+          <!-- ─── Компоненты / BOM ─── -->
+          @if (productType() === 'manufactured' && !isNew()) {
+            <section class="pe-section">
+              <div class="pe-section__hed">
+                <h3 class="pe-section__title">🔩 Спецификация (BOM)</h3>
+                <span class="pe-section__count">{{ components().length }}</span>
+                <kp-button lucideIcon="plus" severity="info" [text]="true" size="small" (buttonClick)="openCompDialog()" />
+              </div>
+
               @for (comp of components(); track comp.id) {
-                <div class="pe-comp-card">
-                  <div class="pe-comp-card__header">
-                    <span class="pe-comp-card__name">{{ comp.name }}</span>
-                    <span class="pe-comp-card__qty">×{{ comp.quantityPerProduct }} шт/товар</span>
+                <div class="pe-bom">
+                  <div class="pe-bom__head">
+                    <div class="pe-bom__head-left">
+                      <span class="pe-bom__num">{{ comp.sortOrder }}</span>
+                      <div>
+                        <span class="pe-bom__name">{{ comp.name }}</span>
+                        <span class="pe-bom__qty">× {{ comp.quantityPerProduct }} на товар</span>
+                      </div>
+                    </div>
+                    <div class="pe-bom__head-actions">
+                      <kp-button lucideIcon="pencil" severity="secondary" [text]="true" size="small" (buttonClick)="editComponent(comp)" />
+                      <kp-button lucideIcon="trash-2" severity="danger" [text]="true" size="small" (buttonClick)="deleteComponent(comp.id)" />
+                    </div>
                   </div>
                   @if (comp.description) {
-                    <p class="pe-comp-card__desc">{{ comp.description }}</p>
+                    <p class="pe-bom__desc">{{ comp.description }}</p>
                   }
 
                   <!-- Материалы -->
                   @if (comp.materials.length > 0) {
-                    <div class="pe-comp-card__materials">
-                      <span class="pe-comp-card__label">Материалы:</span>
-                      @for (m of comp.materials; track m.id) {
-                        <span class="pe-comp-card__tag">{{ m.name }} — {{ m.quantity }} {{ m.unit }}</span>
-                      }
+                    <div class="pe-bom__sub pe-bom__sub--materials">
+                      <span class="pe-bom__sub-label">🧱 Материалы</span>
+                      <div class="pe-bom__table">
+                        <div class="pe-bom__tr pe-bom__tr--head">
+                          <span class="pe-bom__td pe-bom__td--w">Наименование</span>
+                          <span class="pe-bom__td pe-bom__td--n">Кол-во</span>
+                          <span class="pe-bom__td pe-bom__td--u">Ед.</span>
+                          <span class="pe-bom__td">Прим.</span>
+                        </div>
+                        @for (m of comp.materials; track m.id) {
+                          <div class="pe-bom__tr">
+                            <span class="pe-bom__td pe-bom__td--w">{{ m.name }}</span>
+                            <span class="pe-bom__td pe-bom__td--n">{{ m.quantity }}</span>
+                            <span class="pe-bom__td pe-bom__td--u">{{ m.unit }}</span>
+                            <span class="pe-bom__td pe-bom__td--notes">{{ m.notes || '—' }}</span>
+                          </div>
+                        }
+                      </div>
                     </div>
                   }
 
                   <!-- Виды работ -->
                   @if (comp.workTypes.length > 0) {
-                    <div class="pe-comp-card__work-types">
-                      <span class="pe-comp-card__label">Работы:</span>
-                      @for (w of comp.workTypes; track w.id) {
-                        <span class="pe-comp-card__tag pe-comp-card__tag--work">{{ w.name }} ({{ w.normHours }}ч)</span>
-                      }
+                    <div class="pe-bom__sub pe-bom__sub--work-types">
+                      <span class="pe-bom__sub-label">⚡ Виды работ</span>
+                      <div class="pe-bom__table">
+                        <div class="pe-bom__tr pe-bom__tr--head">
+                          <span class="pe-bom__td pe-bom__td--w">Работа</span>
+                          <span class="pe-bom__td">Участок</span>
+                          <span class="pe-bom__td pe-bom__td--n">Норма (ч)</span>
+                        </div>
+                        @for (w of comp.workTypes; track w.id) {
+                          <div class="pe-bom__tr">
+                            <span class="pe-bom__td pe-bom__td--w">{{ w.name }}</span>
+                            <span class="pe-bom__td">{{ w.department }}</span>
+                            <span class="pe-bom__td pe-bom__td--n">{{ w.normHours }}</span>
+                          </div>
+                        }
+                      </div>
                     </div>
                   }
-
-                  <div class="pe-comp-card__actions">
-                    <kp-button lucideIcon="pencil" severity="secondary" [text]="true" [rounded]="true" title="Редактировать" (buttonClick)="editComponent(comp)" />
-                    <kp-button lucideIcon="trash-2" severity="danger" [text]="true" [rounded]="true" title="Удалить" (buttonClick)="deleteComponent(comp.id)" />
-                  </div>
                 </div>
               } @empty {
-                <p class="pe-section__hint">Компоненты не заданы. Добавьте составляющие части товара.</p>
+                <p class="pe-hint">Компоненты не заданы. Нажмите <strong>+</strong> чтобы добавить составляющие части товара.</p>
               }
+            </section>
+          }
 
-              <kp-button label="Добавить компонент" lucideIcon="plus" (buttonClick)="openCompDialog()" />
-            } @else {
-              <p class="pe-section__hint">Сохраните товар, чтобы добавить компоненты.</p>
-            }
-          </div>
-        }
-
-        <!-- Статусы -->
-        <div class="pe-section">
-          <h3 class="pe-section__title">Статус</h3>
-          <kp-toggle label="Активен (показывать в витрине)" [(ngModel)]="isActive" />
-          <kp-toggle label="Есть паспорт качества" [(ngModel)]="hasPassport" />
-          <kp-toggle label="Есть чертёж (DWG)" [(ngModel)]="hasDrawing" />
         </div>
 
-        <!-- Действия -->
-        <div class="pe-actions">
-          <kp-button label="Сохранить" lucideIcon="check" [loading]="saving()" (buttonClick)="save()" />
-          <kp-button label="Отмена" lucideIcon="x" severity="secondary" (buttonClick)="cancel()" />
+        <!-- Sidebar -->
+        <div class="pe-sidebar">
+
+          <!-- Основное -->
+          <section class="pe-section pe-section--card">
+            <h3 class="pe-section__title">Основное</h3>
+            <div class="pe-fieldset">
+              <kp-input label="Наименование" placeholder="Название товара" [(ngModel)]="name" [error]="nameError()" />
+              <kp-input label="Артикул (SKU)" [(ngModel)]="sku" [disabled]="!isNew()" placeholder="Авто" />
+              <kp-select label="Категория" [options]="categoryOptions()" [(ngModel)]="categoryId" (ngModelChange)="onCategoryChange()" [error]="categoryError()" />
+              <kp-select label="Тип" [options]="typeOptions" [(ngModel)]="productType" />
+              <kp-select label="Ед. изм." [options]="unitOptions" [(ngModel)]="unit" [error]="unitError()" />
+            </div>
+          </section>
+
+          <!-- Цены -->
+          <section class="pe-section pe-section--card">
+            <h3 class="pe-section__title">💰 Цены</h3>
+            <div class="pe-fieldset">
+              <kp-input label="Базовая цена (₽)" type="number" [(ngModel)]="basePrice" />
+              <kp-input label="Наценка (%)" type="number" [(ngModel)]="markupPercent" />
+            </div>
+          </section>
+
+          <!-- Характеристики -->
+          <section class="pe-section pe-section--card">
+            <h3 class="pe-section__title">📐 Характеристики</h3>
+            <div class="pe-fieldset">
+              <kp-input label="Описание" [(ngModel)]="description" />
+              <kp-input label="Вес (кг)" type="number" [(ngModel)]="weightKg" />
+              <kp-input label="Габариты (мм)" [(ngModel)]="dimensions" placeholder="Д×Ш×В" />
+              <kp-input label="Материал" [(ngModel)]="material" />
+            </div>
+          </section>
+
+          <!-- Статусы -->
+          <section class="pe-section pe-section--card">
+            <h3 class="pe-section__title">⚙️ Статус</h3>
+            <div class="pe-fieldset">
+              <kp-toggle label="Активен" [(ngModel)]="isActive" />
+              <kp-toggle label="Паспорт качества" [(ngModel)]="hasPassport" />
+              <kp-toggle label="Есть чертёж" [(ngModel)]="hasDrawing" />
+            </div>
+          </section>
+
         </div>
       </div>
-    </kp-card>
+    </div>
 
     <!-- Диалог добавления фото -->
     <kp-dialog
@@ -306,92 +328,186 @@ import type { ProductCategory, ProductPhoto, ProductComponent, ComponentMaterial
     </kp-dialog>
   `,
   styles: [`
-    :host { display: block; max-width: 800px; margin: 0 auto; padding: var(--space-6); }
-    .pe-title { font-size: var(--font-size-xl); font-weight: var(--font-weight-bold); color: var(--color-text); margin: var(--space-4) 0; }
-    .pe-form { display: flex; flex-direction: column; gap: var(--space-6); }
-    .pe-section { display: flex; flex-direction: column; gap: var(--space-4); }
-    .pe-section__title { font-size: var(--font-size-base); font-weight: var(--font-weight-semibold); color: var(--color-text-secondary); margin: 0 0 var(--space-2); padding-bottom: var(--space-2); border-bottom: 1px solid var(--color-border); }
-    .pe-actions { display: flex; gap: var(--space-3); justify-content: flex-end; padding-top: var(--space-4); border-top: 1px solid var(--color-border); }
+    :host { display: block; padding: var(--space-6); }
+    .pe-page { max-width: 1200px; margin: 0 auto; }
 
-    /* ── Фотогалерея ── */
-    .pe-section__badge {
-      display: inline-flex; align-items: center; justify-content: center;
-      background: var(--color-primary); color: #fff;
-      font-size: var(--font-size-xs); font-weight: var(--font-weight-bold);
-      width: 22px; height: 22px; border-radius: 50%; margin-left: var(--space-2);
+    /* ── Hero header ── */
+    .pe-hero {
+      display: flex; justify-content: space-between; align-items: flex-start;
+      gap: var(--space-4); margin: var(--space-4) 0 var(--space-6);
+      padding-bottom: var(--space-5); border-bottom: 1px solid var(--color-border);
     }
-    .pe-section__hint {
-      color: var(--color-text-secondary); font-size: var(--font-size-sm);
-      font-style: italic; margin: var(--space-2) 0;
+    .pe-hero__sku {
+      font-size: var(--font-size-xs); font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.05em; color: var(--color-text-muted); margin-bottom: var(--space-1);
     }
-    .pe-photo-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-      gap: var(--space-4);
-      margin-bottom: var(--space-4);
+    .pe-hero__title { margin-bottom: var(--space-2); }
+    .pe-hero__title-input {
+      font-size: 1.5rem; font-weight: 800; color: var(--color-text);
+      border: none; background: transparent; padding: 0; width: 100%;
+      outline: none; border-bottom: 2px solid transparent;
+      transition: border-color 0.2s;
     }
-    .pe-photo-card {
-      border: 1px solid var(--color-border);
-      border-radius: var(--border-radius-lg);
-      overflow: hidden;
-      background: var(--color-surface);
-      transition: box-shadow var(--transition-fast), border-color var(--transition-fast);
-    }
-    .pe-photo-card:hover {
-      box-shadow: var(--shadow-md);
-    }
-    .pe-photo-card--main {
-      border-color: var(--color-primary);
-      box-shadow: var(--shadow-sm);
-    }
-    .pe-photo-card__image {
-      position: relative;
-      width: 100%; height: 160px;
-      background: var(--color-border);
-      overflow: hidden;
-    }
-    .pe-photo-card__image img {
-      width: 100%; height: 100%;
-      object-fit: cover;
-      transition: transform var(--transition-fast);
-    }
-    .pe-photo-card:hover .pe-photo-card__image img {
-      transform: scale(1.05);
-    }
-    .pe-photo-card__main-badge {
-      position: absolute; top: var(--space-2); right: var(--space-2);
-      font-size: var(--font-size-lg);
-      filter: drop-shadow(0 0 3px rgba(0,0,0,.3));
-    }
-    .pe-photo-card__caption {
-      padding: var(--space-2) var(--space-3);
-    }
-    .pe-photo-card__caption-text {
-      font-size: var(--font-size-sm);
+    .pe-hero__title-input:focus { border-bottom-color: var(--color-primary); }
+    .pe-hero__title-h1 { font-size: 1.5rem; font-weight: 800; color: var(--color-text); margin: 0; }
+    .pe-hero__meta { display: flex; gap: var(--space-2); flex-wrap: wrap; }
+    .pe-hero__meta-tag {
+      padding: 2px 10px; border-radius: var(--radius-full);
+      font-size: var(--font-size-xs); font-weight: var(--font-weight-medium);
+      background: var(--color-surface-alt); border: 1px solid var(--color-border);
       color: var(--color-text-secondary);
-      cursor: pointer;
-      display: block;
-      min-height: 1.4em;
-      line-height: 1.4;
     }
-    .pe-photo-card__caption-text:hover {
-      color: var(--color-primary);
+    .pe-hero__meta-tag--mfg { background: color-mix(in srgb, var(--color-primary) 12%, transparent); border-color: var(--color-primary); color: var(--color-primary); }
+    .pe-hero__meta-tag--price { font-weight: 700; color: var(--color-text); }
+    .pe-hero__actions { display: flex; gap: var(--space-2); flex-shrink: 0; }
+
+    /* ── Layout ── */
+    .pe-layout { display: grid; grid-template-columns: 1fr 360px; gap: var(--space-6); align-items: start; }
+    .pe-main { display: flex; flex-direction: column; gap: var(--space-6); }
+    .pe-sidebar { display: flex; flex-direction: column; gap: var(--space-4); position: sticky; top: var(--space-4); }
+
+    /* ── Sections ── */
+    .pe-section { display: flex; flex-direction: column; }
+    .pe-section--card {
+      background: var(--color-surface); border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg); padding: var(--space-4);
     }
-    .pe-photo-card__caption-text--empty {
-      color: var(--color-text-muted);
-      font-style: italic;
-      font-size: var(--font-size-xs);
+    .pe-section__hed {
+      display: flex; align-items: center; gap: var(--space-2);
+      margin-bottom: var(--space-4); padding-bottom: var(--space-3);
+      border-bottom: 1px solid var(--color-border);
     }
-    .pe-photo-card__caption-actions {
-      display: flex; gap: var(--space-1); margin-top: var(--space-1);
+    .pe-section__title {
+      font-size: var(--font-size-base); font-weight: var(--font-weight-bold);
+      color: var(--color-text); margin: 0;
     }
-    .pe-photo-card__actions {
-      display: flex; gap: var(--space-1);
-      padding: var(--space-2); border-top: 1px solid var(--color-border);
-      flex-wrap: wrap;
+    .pe-section__count {
+      background: var(--color-primary); color: #fff;
+      font-size: var(--font-size-xs); font-weight: 700;
+      width: 22px; height: 22px; border-radius: 50%;
+      display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .pe-fieldset { display: flex; flex-direction: column; gap: var(--space-4); }
+    .pe-hint {
+      color: var(--color-text-secondary); font-size: var(--font-size-sm);
+      font-style: italic; margin: var(--space-3) 0;
     }
 
-    /* ── Диалог добавления фото ── */
+    /* ── Photos ── */
+    .pe-photos { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: var(--space-4); }
+    .pe-photo {
+      border: 1px solid var(--color-border); border-radius: var(--radius-lg);
+      overflow: hidden; background: var(--color-surface);
+      transition: box-shadow 0.2s, border-color 0.2s;
+    }
+    .pe-photo:hover { box-shadow: var(--shadow-md); border-color: var(--color-primary-light); }
+    .pe-photo--main { border-color: var(--color-primary); box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-primary) 30%, transparent); }
+    .pe-photo__frame {
+      position: relative; width: 100%; height: 200px;
+      background: var(--color-bg); overflow: hidden;
+    }
+    .pe-photo__frame img {
+      width: 100%; height: 100%; object-fit: cover;
+      transition: transform 0.3s;
+    }
+    .pe-photo:hover .pe-photo__frame img { transform: scale(1.06); }
+    .pe-photo__badge {
+      position: absolute; top: var(--space-2); left: var(--space-2);
+      font-size: var(--font-size-xs); font-weight: 700;
+      background: rgba(0,0,0,0.55); color: #fff;
+      padding: 2px 8px; border-radius: var(--radius-full);
+      backdrop-filter: blur(4px);
+    }
+    .pe-photo__meta { padding: var(--space-2) var(--space-3); }
+    .pe-photo__cap {
+      font-size: var(--font-size-sm); color: var(--color-text-secondary);
+      cursor: pointer; display: block; line-height: 1.4;
+    }
+    .pe-photo__cap:hover { color: var(--color-primary); }
+    .pe-photo__cap-input {
+      width: 100%; border: none; border-bottom: 1px solid var(--color-primary);
+      font-size: var(--font-size-sm); background: transparent;
+      color: var(--color-text); outline: none; padding: 2px 0;
+    }
+    .pe-photo__actions {
+      display: flex; gap: 2px; padding: var(--space-1) var(--space-2);
+      border-top: 1px solid var(--color-border-light); flex-wrap: wrap;
+    }
+    .pe-photos__empty {
+      grid-column: 1 / -1; text-align: center;
+      padding: var(--space-8); color: var(--color-text-secondary);
+    }
+    .pe-photos__empty-icon { font-size: 2.5rem; display: block; margin-bottom: var(--space-2); }
+    .pe-photos__empty p { margin: 0; font-size: var(--font-size-sm); }
+
+    /* ── BOM ── */
+    .pe-bom {
+      border: 1px solid var(--color-border); border-radius: var(--radius-lg);
+      padding: var(--space-4); margin-bottom: var(--space-3);
+      background: var(--color-surface); transition: box-shadow 0.2s;
+    }
+    .pe-bom:hover { box-shadow: var(--shadow-sm); }
+    .pe-bom__head {
+      display: flex; justify-content: space-between; align-items: flex-start;
+      margin-bottom: var(--space-2);
+    }
+    .pe-bom__head-left { display: flex; align-items: center; gap: var(--space-3); }
+    .pe-bom__num {
+      width: 28px; height: 28px; border-radius: 50%;
+      background: var(--color-primary); color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      font-size: var(--font-size-xs); font-weight: 700; flex-shrink: 0;
+    }
+    .pe-bom__name { font-weight: var(--font-weight-semibold); color: var(--color-text); font-size: var(--font-size-sm); }
+    .pe-bom__qty { font-size: var(--font-size-xs); color: var(--color-text-secondary); margin-left: var(--space-2); }
+    .pe-bom__head-actions { display: flex; gap: 2px; flex-shrink: 0; }
+    .pe-bom__desc { font-size: var(--font-size-xs); color: var(--color-text-secondary); margin: 0 0 var(--space-3); }
+
+    .pe-bom__sub { margin-bottom: var(--space-3); }
+    .pe-bom__sub:last-child { margin-bottom: 0; }
+    .pe-bom__sub-label {
+      display: block; font-size: var(--font-size-xs); font-weight: 600;
+      color: var(--color-text-muted); text-transform: uppercase;
+      letter-spacing: 0.05em; margin-bottom: var(--space-2);
+    }
+    .pe-bom__table {
+      display: flex; flex-direction: column;
+      border: 1px solid var(--color-border-light); border-radius: var(--radius-md);
+      overflow: hidden;
+    }
+    .pe-bom__tr {
+      display: grid; gap: 0;
+      padding: var(--space-2) var(--space-3);
+      border-bottom: 1px solid var(--color-border-light);
+    }
+    .pe-bom__tr:last-child { border-bottom: none; }
+    .pe-bom__tr--head {
+      background: var(--color-bg-secondary);
+      font-size: var(--font-size-xs); font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.04em; color: var(--color-text-muted);
+    }
+    .pe-bom__tr--head .pe-bom__td { color: var(--color-text-muted); }
+    .pe-bom__td {
+      font-size: var(--font-size-xs); color: var(--color-text-secondary);
+      display: flex; align-items: center;
+    }
+    .pe-bom__td--w { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .pe-bom__td--n { text-align: right; justify-content: flex-end; }
+    .pe-bom__td--u { text-align: center; justify-content: center; }
+    .pe-bom__td--notes { color: var(--color-text-muted); }
+    .pe-bom__tr--head .pe-bom__td--n,
+    .pe-bom__tr--head .pe-bom__td--u { justify-content: center; }
+
+    .pe-bom__sub--materials .pe-bom__tr { grid-template-columns: 1fr 60px 50px 1fr; }
+    .pe-bom__sub--work-types .pe-bom__tr { grid-template-columns: 1fr 120px 70px; }
+
+    /* ── Responsive ── */
+    @media (max-width: 900px) {
+      .pe-layout { grid-template-columns: 1fr; }
+      .pe-sidebar { position: static; }
+    }
+
+    /* ── Dialog: add photo ── */
     .pe-photo-add {
       display: flex; flex-direction: column; gap: var(--space-3);
     }
@@ -400,69 +516,19 @@ import type { ProductCategory, ProductPhoto, ProductComponent, ComponentMaterial
       margin: 0; line-height: 1.5;
     }
     .pe-photo-add__preview {
-      border: 1px solid var(--color-border); border-radius: var(--border-radius-md);
+      border: 1px solid var(--color-border); border-radius: var(--radius-md);
       width: 100%; max-height: 250px; overflow: hidden;
       background: var(--color-border);
     }
     .pe-photo-add__preview img {
-      width: 100%; height: 100%; max-height: 250px;
-      object-fit: contain;
+      width: 100%; max-height: 250px; object-fit: contain;
     }
     .pe-photo-add__actions {
       display: flex; gap: var(--space-3); justify-content: flex-end;
       margin-top: var(--space-4);
     }
 
-    /* ── Компоненты ── */
-    .pe-comp-card {
-      border: 1px solid var(--color-border);
-      border-radius: var(--border-radius-md);
-      padding: var(--space-3);
-      background: var(--color-surface);
-    }
-    .pe-comp-card__header {
-      display: flex; justify-content: space-between; align-items: center;
-      margin-bottom: var(--space-1);
-    }
-    .pe-comp-card__name {
-      font-weight: var(--font-weight-semibold);
-      color: var(--color-text);
-    }
-    .pe-comp-card__qty {
-      font-size: var(--font-size-sm); color: var(--color-primary);
-      font-weight: var(--font-weight-medium);
-    }
-    .pe-comp-card__desc {
-      font-size: var(--font-size-sm); color: var(--color-text-secondary);
-      margin: 0 0 var(--space-2);
-    }
-    .pe-comp-card__label {
-      font-size: var(--font-size-xs); font-weight: var(--font-weight-semibold);
-      color: var(--color-text-secondary); margin-right: var(--space-1);
-    }
-    .pe-comp-card__materials, .pe-comp-card__work-types {
-      display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-1);
-      margin-bottom: var(--space-1);
-    }
-    .pe-comp-card__tag {
-      display: inline-block;
-      padding: 0 6px; font-size: var(--font-size-xs);
-      background: var(--color-surface-alt);
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-sm);
-      color: var(--color-text-secondary);
-    }
-    .pe-comp-card__tag--work {
-      background: var(--color-primary-subtle);
-      border-color: var(--color-primary);
-      color: var(--color-primary);
-    }
-    .pe-comp-card__actions {
-      display: flex; gap: var(--space-1); justify-content: flex-end;
-      margin-top: var(--space-2);
-    }
-
-    /* ── Диалог компонента ── */
+    /* ── Dialog: component ── */
     .pe-comp-dialog {
       display: flex; flex-direction: column; gap: var(--space-4);
     }
@@ -470,7 +536,7 @@ import type { ProductCategory, ProductPhoto, ProductComponent, ComponentMaterial
       display: grid; grid-template-columns: 120px 120px; gap: var(--space-3);
     }
     .pe-comp-dialog__fieldset {
-      border: 1px solid var(--color-border); border-radius: var(--border-radius-md);
+      border: 1px solid var(--color-border); border-radius: var(--radius-md);
       padding: var(--space-3);
     }
     .pe-comp-dialog__fieldset legend {
@@ -483,21 +549,15 @@ import type { ProductCategory, ProductPhoto, ProductComponent, ComponentMaterial
     }
     .pe-comp-dialog__chip {
       font-size: var(--font-size-xs);
-      padding: 2px 8px;
-      background: var(--color-surface-alt);
-      border-radius: var(--radius-sm);
-      color: var(--color-text-secondary);
-      flex: 1;
+      padding: 2px 8px; background: var(--color-surface-alt);
+      border-radius: var(--radius-sm); color: var(--color-text-secondary); flex: 1;
     }
     .pe-comp-dialog__chip--work {
-      background: var(--color-primary-subtle);
-      color: var(--color-primary);
+      background: var(--color-primary-subtle); color: var(--color-primary);
     }
     .pe-comp-dialog__add-row {
       display: flex; gap: var(--space-2); align-items: flex-end;
     }
-    .pe-comp-dialog__input-sm { width: 130px; }
-    .pe-comp-dialog__input-xs { width: 80px; }
     .pe-comp-dialog__footer {
       display: flex; gap: var(--space-3); justify-content: flex-end;
       margin-top: var(--space-4);

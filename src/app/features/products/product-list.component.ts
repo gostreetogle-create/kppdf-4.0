@@ -9,10 +9,8 @@ import { KpButtonComponent } from '../../shared/ui/kp-button.component';
 import { KpBreadcrumbComponent } from '../../shared/ui/kp-breadcrumb.component';
 import { KpCardComponent } from '../../shared/ui/kp-card.component';
 import { KpTableComponent, TableColumn } from '../../shared/ui/kp-table.component';
-import { KpDialogComponent } from '../../shared/ui/kp-dialog.component';
 import { KpSelectComponent } from '../../shared/ui/kp-select.component';
 import { KpInputComponent } from '../../shared/ui/kp-input.component';
-import { KpBadgeComponent } from '../../shared/ui/kp-badge.component';
 import { KpToastComponent } from '../../shared/ui/kp-toast.component';
 import { KpConfirmDialogComponent } from '../../shared/ui/kp-confirm-dialog.component';
 import { NotificationService } from '../../core/notification.service';
@@ -36,8 +34,8 @@ interface ProductRow extends Product {
   imports: [
     CommonModule, FormsModule, RouterLink,
     KpButtonComponent, KpBreadcrumbComponent, KpCardComponent,
-    KpTableComponent, KpDialogComponent, KpSelectComponent,
-    KpInputComponent, KpBadgeComponent, KpToastComponent,
+    KpTableComponent, KpSelectComponent,
+    KpInputComponent, KpToastComponent,
     KpConfirmDialogComponent,
   ],
   providers: [ConfirmationService],

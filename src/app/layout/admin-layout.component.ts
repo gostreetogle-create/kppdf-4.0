@@ -53,6 +53,29 @@ export class AdminLayoutComponent {
     { label: '👁️ Наблюдатель', value: 'viewer' },
   ];
 
+  /** Цвета разделов меню */
+  sectionColors: Record<string, { bar: string; text: string; bg: string }> = {
+    sales: { bar: '#818cf8', text: '#a5b4fc', bg: 'rgba(129,140,248,0.08)' },
+    production: { bar: '#fbbf24', text: '#fcd34d', bg: 'rgba(251,191,36,0.08)' },
+    warehouse: { bar: '#4ade80', text: '#86efac', bg: 'rgba(74,222,128,0.08)' },
+    references: { bar: '#c084fc', text: '#d8b4fe', bg: 'rgba(192,132,252,0.08)' },
+    finance: { bar: '#22d3ee', text: '#67e8f9', bg: 'rgba(34,211,238,0.08)' },
+    admin: { bar: '#94a3b8', text: '#cbd5e1', bg: 'rgba(148,163,184,0.08)' },
+  };
+
+  collapsedSections = signal<Set<string>>(new Set(['sales', 'production', 'warehouse', 'references', 'finance', 'admin']));
+
+  getSectionId(item: MenuItem & { sectionId?: string }): string { return item.sectionId || ''; }
+  getSectionColors(sectionId: string) { return this.sectionColors[sectionId] || this.sectionColors['admin']; }
+  isCollapsed(sectionId: string) { return this.collapsedSections().has(sectionId); }
+  toggleSection(sectionId: string) {
+    this.collapsedSections.update(s => {
+      const next = new Set(s);
+      if (next.has(sectionId)) next.delete(sectionId); else next.add(sectionId);
+      return next;
+    });
+  }
+
   /** Привязка роли к доступным разделам */
   private readonly ROLE_SECTIONS: Record<string, string[]> = {
     admin: ['sales', 'production', 'warehouse', 'finance', 'references', 'admin'],
@@ -129,7 +152,7 @@ export class AdminLayoutComponent {
     {
       id: 'nav-finance', sectionId: 'finance',
       label: '💰 Бухгалтерия',
-      icon: 'banknote',
+      icon: 'landmark',
       items: [
         { id: 'nav-fin-dash', label: '📊 Сводка', routerLink: '/finance' },
         { id: 'nav-fin-oc', label: '📋 Закрытие заказов', routerLink: '/finance/order-closing' },

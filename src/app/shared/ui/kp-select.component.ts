@@ -1,7 +1,6 @@
 import { Component, input, forwardRef, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule, NG_VALUE_ACCESSOR, ControlValueAccessor } from '@angular/forms';
 import { SelectModule } from 'primeng/select';
-import { FloatLabelModule } from 'primeng/floatlabel';
 import { CommonModule } from '@angular/common';
 
 export interface SelectOption {
@@ -12,50 +11,30 @@ export interface SelectOption {
 @Component({
   selector: 'kp-select',
   standalone: true,
-  imports: [CommonModule, FormsModule, SelectModule, FloatLabelModule],
+  imports: [CommonModule, FormsModule, SelectModule],
   template: `
     <div class="kp-select-field" [class.kp-select-field--error]="!!error()">
       @if (label()) {
-        <p-floatlabel variant="on">
-          <p-select
-            [inputId]="inputId()"
-            [options]="options()"
-            [(ngModel)]="value"
-            (ngModelChange)="onValueChange($event)"
-            [optionLabel]="optionLabel()"
-            [optionValue]="optionValue()"
-            [disabled]="disabled()"
-            [showClear]="showClear()"
-            [filter]="filter()"
-            [filterBy]="filterBy()"
-            [class.kp-select--error]="!!error()"
-            [attr.aria-label]="label() || placeholder() || 'Выпадающий список'"
-            [attr.aria-describedby]="error() ? inputId() + '-error' : null"
-            styleClass="kp-select__trigger"
-            panelStyleClass="kp-select__panel"
-          />
-          <label [for]="inputId()">{{ label() }}</label>
-        </p-floatlabel>
-      } @else {
-        <p-select
-          [inputId]="inputId()"
-          [options]="options()"
-          [(ngModel)]="value"
-          (ngModelChange)="onValueChange($event)"
-          [optionLabel]="optionLabel()"
-          [optionValue]="optionValue()"
-          [placeholder]="placeholder()"
-          [disabled]="disabled()"
-          [showClear]="showClear()"
-          [filter]="filter()"
-          [filterBy]="filterBy()"
-          [class.kp-select--error]="!!error()"
-          [attr.aria-label]="label() || placeholder() || 'Выпадающий список'"
-          [attr.aria-describedby]="error() ? inputId() + '-error' : null"
-          styleClass="kp-select__trigger"
-          panelStyleClass="kp-select__panel"
-        />
+        <label class="kp-select__label" [for]="inputId()">{{ label() }}</label>
       }
+      <p-select
+        [inputId]="inputId()"
+        [options]="options()"
+        [(ngModel)]="value"
+        (ngModelChange)="onValueChange($event)"
+        [optionLabel]="optionLabel()"
+        [optionValue]="optionValue()"
+        [placeholder]="placeholder()"
+        [disabled]="disabled()"
+        [showClear]="showClear()"
+        [filter]="filter()"
+        [filterBy]="filterBy()"
+        [class.kp-select--error]="!!error()"
+        [attr.aria-label]="label() || placeholder() || 'Выпадающий список'"
+        [attr.aria-describedby]="error() ? inputId() + '-error' : null"
+        styleClass="kp-select__trigger"
+        panelStyleClass="kp-select__panel"
+      />
       @if (error()) {
         <small class="kp-select__error" [id]="inputId() + '-error'">{{ error() }}</small>
       }
@@ -71,48 +50,16 @@ export interface SelectOption {
     .kp-select-field {
       display: flex;
       flex-direction: column;
-      gap: var(--space-1);
+      gap: var(--space-2);
       width: 100%;
     }
 
-    /* === Float label — PrimeNG нативная механика === */
-    /* display:block (не flex!) — PrimeNG использует absolute для label */
-    :host ::ng-deep p-floatlabel {
-      display: block;
-      width: 100%;
-      position: relative;
-    }
-
-    /* Label — внутри поля как placeholder, всплывает наверх при фокусе/значении */
-    :host ::ng-deep p-floatlabel label {
-      position: absolute;
-      left: 12px;
-      top: 50%;
-      transform: translateY(-50%);
+    /* Label над полем */
+    .kp-select__label {
       font-size: var(--form-label-font-size);
       font-weight: var(--form-label-font-weight);
       color: var(--form-label-color);
-      background: transparent;
-      pointer-events: none;
-      transition: all 0.2s ease;
-      white-space: nowrap;
-    }
-
-    /* При фокусе или заполненном значении — лейбл всплывает наверх */
-    :host ::ng-deep p-floatlabel:has(.p-focus) label,
-    :host ::ng-deep p-floatlabel:has(.p-inputwrapper-focus) label,
-    :host ::ng-deep p-floatlabel:has(.p-filled) label {
-      top: 0;
-      transform: translateY(-50%);
-      font-size: 11px;
-      color: var(--form-label-color-floating);
-      background: var(--color-surface);
-      padding: 0 4px;
-    }
-
-    /* При ошибке — лейбл красный */
-    :host ::ng-deep p-floatlabel:has(.kp-select--error) label {
-      color: var(--form-label-color-error);
+      line-height: 1.2;
     }
 
     /* === Триггер (поле выбора) === */
@@ -156,6 +103,15 @@ export interface SelectOption {
       opacity: 0.55;
       background: var(--color-surface-alt);
       cursor: not-allowed;
+    }
+
+    /* Текст выбранного значения — с ellipsis */
+    :host ::ng-deep .kp-select__trigger .p-select-label {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: block;
+      max-width: 100%;
     }
 
     /* Placeholder цвет */
@@ -222,6 +178,9 @@ export interface SelectOption {
       color: var(--color-text);
       cursor: pointer;
       transition: background var(--transition-fast), color var(--transition-fast);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     :host ::ng-deep .kp-select__panel .p-select-option:not(.p-select-option-selected):hover {
@@ -233,6 +192,14 @@ export interface SelectOption {
       background: var(--color-primary-light);
       color: var(--color-primary);
       font-weight: var(--font-weight-semibold);
+    }
+
+    /* Заголовок опции (когда optionLabel не 'label') */
+    :host ::ng-deep .kp-select__panel .p-select-option-label {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: block;
     }
 
     /* Скролл внутри дропдауна */

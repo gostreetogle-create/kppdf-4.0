@@ -1,7 +1,7 @@
 import { Component, inject, signal, computed, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router, ActivatedRoute, RouterLink } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { MenuItem } from 'primeng/api';
 import { firstValueFrom } from 'rxjs';
 
@@ -44,7 +44,7 @@ const ENTITY_TYPES: SelectOption[] = [
   selector: 'app-warehouse-detail',
   standalone: true,
   imports: [
-    CommonModule, FormsModule, RouterLink,
+    CommonModule, FormsModule,
     KpCardComponent, KpButtonComponent, KpBreadcrumbComponent, KpToastComponent,
     KpTableComponent, KpDialogComponent, KpInputComponent, KpSelectComponent,
   ],

@@ -441,8 +441,18 @@ export class ProposalEditorComponent implements OnInit {
           this.router.navigate(['/sales/proposals']);
         }
       }
-      // Для нового КП — НЕ загружаем автоматически из корзины,
-      // ждём нажатия кнопки «Загрузить из корзины»
+      // Для нового КП — авто-выбор первого шаблона quotation и загрузка из корзины
+      if (this.isNew()) {
+        // Выбрать первый шаблон по умолчанию
+        const tmpls = this.templates();
+        if (tmpls.length > 0) {
+          this.editTemplateId.set(tmpls[0]!.id);
+        }
+        // Авто-загрузить из корзины
+        if (this.cartService.items().length > 0) {
+          this.loadFromCart(true); // тихий режим при авто-загрузке
+        }
+      }
     } finally {
       this.loading.set(false);
     }
@@ -459,10 +469,10 @@ export class ProposalEditorComponent implements OnInit {
   }
 
   /** Загрузить позиции из корзины (snapshot) */
-  loadFromCart() {
+  loadFromCart(silent = false) {
     const cartItems = this.cartService.items();
     if (cartItems.length === 0) {
-      this.notification.warn('Корзина пуста');
+      if (!silent) this.notification.warn('Корзина пуста');
       return;
     }
 
@@ -481,10 +491,12 @@ export class ProposalEditorComponent implements OnInit {
     }));
 
     this.items.update(prev => [...prev, ...newItems]);
-    const msg = markup > 0
-      ? `Загружено ${newItems.length} позиций (наценка клиента: ${markup}%)`
-      : `Загружено ${newItems.length} позиций из корзины`;
-    this.notification.success(msg);
+    if (!silent) {
+      const msg = markup > 0
+        ? `Загружено ${newItems.length} позиций (наценка клиента: ${markup}%)`
+        : `Загружено ${newItems.length} позиций из корзины`;
+      this.notification.success(msg);
+    }
   }
 
   /** Обновить поле позиции и пересчитать total */

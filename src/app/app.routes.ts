@@ -147,7 +147,7 @@ export const routes: Routes = [
       },
       {
         path: 'admin/users',
-        loadComponent: () => import('./features/admin/role-list.component').then(m => m.RoleListComponent)
+        loadComponent: () => import('./features/admin/user-management.component').then(m => m.UserManagementComponent)
       },
       {
         path: 'admin/rpp',

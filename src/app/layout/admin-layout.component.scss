@@ -49,11 +49,23 @@
   letter-spacing: -0.02em;
 }
 
+/* Кнопка сворачивания — крупнее */
 .sidebar__toggle {
   flex-shrink: 0;
-  color: rgba(255, 255, 255, 0.6) !important;
+  color: rgba(255, 255, 255, 0.7) !important;
+  width: 36px !important;
+  height: 36px !important;
+  transition: all var(--transition-fast);
+
   &:hover {
     color: #ffffff !important;
+    background: rgba(255, 255, 255, 0.1) !important;
+    border-radius: var(--radius-md);
+  }
+
+  .kp-btn__lucide {
+    width: 1.35rem !important;
+    height: 1.35rem !important;
   }
 }
 
@@ -116,36 +128,73 @@
   margin: var(--space-2) var(--space-1);
 }
 
+/* === Секции с цветами === */
 .nav__group {
   margin-bottom: var(--space-1);
+  border-left: 2px solid var(--section-bar, rgba(255,255,255,0.1));
+  padding-left: var(--space-2);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  transition: border-color 0.3s;
 }
 
 .nav__group-header {
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  padding: var(--space-3) var(--space-3) var(--space-1);
-  color: rgba(255, 255, 255, 0.3);
+  padding: var(--space-2) var(--space-2);
+  border-radius: var(--radius-md);
+  color: var(--section-text, rgba(255, 255, 255, 0.4));
   font-size: 0.6875rem;
-  font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-bold);
   text-transform: uppercase;
   letter-spacing: 0.08em;
   white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+  transition: all var(--transition-fast);
+
+  &:hover {
+    background: var(--section-bg, rgba(255, 255, 255, 0.04));
+    color: #fff;
+  }
 }
 
 .nav__group-label {
   overflow: hidden;
+  flex: 1;
 }
 
-.nav__group-items {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
+/* Иконка-шеврон для сворачивания */
+.nav__group-chevron {
+  width: 0.85rem;
+  height: 0.85rem;
+  flex-shrink: 0;
+  opacity: 0.6;
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
+
+.nav__group-chevron--collapsed {
+  transform: rotate(-90deg);
+}
+
+/* Анимация сворачивания через CSS grid */
+.nav__group-items {
+  display: grid;
+  grid-template-rows: 1fr;
+  transition: grid-template-rows 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+
+  > * {
+    min-height: 0;
+  }
+}
+
+// Когда секция скрыта — хак через ngIf + CSS, не нужен отдельный класс,
+// но оставляем плавность для повторного появления
 
 .nav__icon {
-  width: 1.1rem;
-  height: 1.1rem;
+  width: 1.3rem;
+  height: 1.3rem;
   flex-shrink: 0;
 }
 
@@ -153,8 +202,9 @@
   overflow: hidden;
 }
 
+/* Футер — кнопка темы крупнее */
 .sidebar__footer {
-  padding: var(--space-3);
+  padding: var(--space-2) var(--space-3);
   border-top: 1px solid rgba(255, 255, 255, 0.06);
   display: flex;
   justify-content: center;
@@ -163,10 +213,19 @@
 .sidebar__theme-btn {
   width: 100%;
   justify-content: center;
-  color: rgba(255, 255, 255, 0.5) !important;
+  color: rgba(255, 255, 255, 0.6) !important;
+  height: 38px !important;
+  transition: all var(--transition-fast);
+
   &:hover {
     color: #ffffff !important;
     background: rgba(255, 255, 255, 0.08) !important;
+    border-radius: var(--radius-md);
+  }
+
+  .kp-btn__lucide {
+    width: 1.4rem !important;
+    height: 1.4rem !important;
   }
 }
 

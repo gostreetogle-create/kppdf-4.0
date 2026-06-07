@@ -20,8 +20,12 @@ export interface User {
   username: string;
   displayName: string;
   email?: string;
-  role: 'admin' | 'manager' | 'viewer';
+  phone?: string;
+  role: 'admin' | 'manager' | 'production' | 'storekeeper' | 'accountant' | 'viewer';
   permissions: string[];
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface LoginRequest {

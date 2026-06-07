@@ -42,6 +42,7 @@ export interface TableExtraAction {
       [resizableColumns]="resizable()"
       [columnResizeMode]="'expand'"
       (onColumnResize)="onColumnResize($event)"
+      (onRowClick)="onRowClick($event)"
       [rowsPerPageOptions]="[10, 20, 50]"
       [showCurrentPageReport]="true"
       currentPageReportTemplate="Показано {first}-{last} из {totalRecords}"
@@ -331,6 +332,7 @@ export class KpTableComponent implements OnInit, AfterViewInit {
   readonly rowAddToCart = output<unknown>();
   /** Срабатывает при клике на кастомную кнопку. payload = { icon, row } */
   readonly rowExtraAction = output<{ icon: string; row: unknown }>();
+  readonly rowClick = output<unknown>();
 
   /** Событие при изменении ширины колонки */
   readonly columnResized = output<{ field: string; header: string; width: string }>();
@@ -367,6 +369,11 @@ export class KpTableComponent implements OnInit, AfterViewInit {
   /** Возвращает сохранённую ширину для колонки, если есть */
   colWidthOverride(field: string): string | null {
     return this.savedWidths()[field] || null;
+  }
+
+  onRowClick(event: unknown): void {
+    const evt = event as { data?: unknown } | null;
+    this.rowClick.emit(evt?.data);
   }
 
   onColumnResize(event: unknown): void {

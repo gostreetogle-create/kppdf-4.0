@@ -7,9 +7,14 @@ import { KpCardComponent } from '../../shared/ui/kp-card.component';
 import { KpBreadcrumbComponent } from '../../shared/ui/kp-breadcrumb.component';
 import { KpSelectComponent } from '../../shared/ui/kp-select.component';
 import { KpButtonComponent } from '../../shared/ui/kp-button.component';
+import { KpDialogComponent } from '../../shared/ui/kp-dialog.component';
+import { KpInputComponent } from '../../shared/ui/kp-input.component';
+import { KpDatepickerComponent } from '../../shared/ui/kp-datepicker.component';
 import { OrderTaskService } from '../../core/order-task.service';
 import { WorkerService } from '../../core/worker.service';
 import { ProductionOrderService } from '../../core/production-order.service';
+import { ProductService } from '../../core/product.service';
+import { OrganizationService } from '../../core/organization.service';
 import type { OrderTask, ProductionOrder, TaskStatus } from '../../../../shared/types/index.js';
 
 const STATUS_COLORS: Record<TaskStatus, string> = { pending: '#94a3b8', assigned: '#f59e0b', in_progress: '#3b82f6', done: '#22c55e', cancelled: '#ef4444' };
@@ -20,10 +25,14 @@ type ZoomLevel = 'day' | 'week' | 'month';
 
 interface GanttBar { task: OrderTask; left: number; width: number; color: string; gradient: string; }
 
+interface GanttGroup { workTypeId: string; workTypeName: string; bars: GanttBar[]; }
+
+interface LayoutRow { type: 'group' | 'bar'; groupName?: string; groupId?: string; bar?: GanttBar; barCount?: number; }
+
 @Component({
   selector: 'app-gantt-chart',
   standalone: true,
-  imports: [CommonModule, FormsModule, KpCardComponent, KpBreadcrumbComponent, KpSelectComponent, KpButtonComponent],
+  imports: [CommonModule, FormsModule, KpCardComponent, KpBreadcrumbComponent, KpSelectComponent, KpButtonComponent, KpDialogComponent, KpInputComponent, KpDatepickerComponent],
   templateUrl: './gantt-chart.component.html',
   styleUrls: ['./gantt-chart.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -32,6 +41,8 @@ export class GanttChartComponent {
   private taskSvc = inject(OrderTaskService);
   private orderSvc = inject(ProductionOrderService);
   private workerSvc = inject(WorkerService);
+  private productSvc = inject(ProductService);
+  private orgSvc = inject(OrganizationService);
 
   readonly STATUS_LABELS = STATUS_LABELS;
   readonly STATUS_COLORS = STATUS_COLORS;
@@ -50,34 +61,23 @@ export class GanttChartComponent {
   draggingTaskId = signal('');
   resizingTaskId = signal('');
   private dragStartX = 0;
-  private dragStartLeft = 0;
-  private dragStartWidth = 0;
   private dragOrigStart = '';
   private dragOrigEnd = '';
+  private resizeOrigEnd = '';
+
+  /** Год для вычисления дат (берётся из первой задачи) */
+  private refYear = new Date().getFullYear();
 
   statusVisibility = signal<Record<string, boolean>>({ pending: true, assigned: true, in_progress: true, done: true, cancelled: true });
 
-  colWidth = computed(() => this.zoom() === 'day' ? 40 : this.zoom() === 'week' ? 28 : 18);
+  colWidth = computed(() => this.zoom() === 'day' ? 40 : this.zoom() === 'week' ? 60 : 55);
 
-  orderOptions = computed(() => this.orders().map(o => ({ label: `${o.number} — ${o.productName}`, value: o.id })));
+  orderOptions = computed(() => [
+    { label: '📋 Все заказы', value: '' },
+    ...this.orders().map(o => ({ label: `${o.number} — ${o.productName}`, value: o.id }))
+  ]);
   breadcrumbs = computed((): MenuItem[] => [{ label: '🏭 Производство' }, { label: 'Диаграмма Ганта' }]);
   statuses = computed(() => Object.entries(STATUS_COLORS).map(([key, color]) => ({ key, color, label: STATUS_LABELS[key] || key })));
-
-  workerSummary = computed(() => {
-    const workers = this.workerSvc.getRawItems().filter(w => w.isActive);
-    const busyUntil = new Map<string, string>();
-    for (const t of this.tasks()) {
-      if (t.workerId && (t.status === 'assigned' || t.status === 'in_progress')) {
-        const cur = busyUntil.get(t.workerId);
-        const end = t.actualEndDate || t.plannedEndDate || '';
-        if (!cur || end > cur) busyUntil.set(t.workerId, end);
-      }
-    }
-    return workers.map(w => ({
-      id: w.id, name: w.lastName, busy: busyUntil.has(w.id),
-      busyUntil: busyUntil.get(w.id) || '', rate: w.ratePerHour,
-    }));
-  });
 
   statusFilters = computed(() => {
     const vis = this.statusVisibility();
@@ -93,38 +93,53 @@ export class GanttChartComponent {
   timelineColumns = computed(() => {
     const t = this.tasks();
     if (!t.length) return [];
-    const dates: string[] = [];
-    for (const task of t) { if (task.plannedStartDate) dates.push(task.plannedStartDate); if (task.plannedEndDate) dates.push(task.plannedEndDate); if (task.actualEndDate) dates.push(task.actualEndDate); }
-    if (!dates.length) return [];
-    dates.sort();
-    const start = new Date(dates[0]!); start.setDate(start.getDate() - 1);
-    const end = new Date(dates[dates.length - 1]!); end.setDate(end.getDate() + 1);
-    const cols: { label: string; isWeekend: boolean; isToday: boolean }[] = [];
-    const todayStr = new Date().toISOString().substring(0, 10);
     const zoom = this.zoom();
+    const todayStr = new Date().toISOString().substring(0, 10);
+    const cols: { label: string; isWeekend: boolean; isToday: boolean }[] = [];
+
     if (zoom === 'day') {
+      const dates: string[] = [];
+      for (const task of t) { if (task.plannedStartDate) dates.push(task.plannedStartDate); if (task.plannedEndDate) dates.push(task.plannedEndDate); if (task.actualEndDate) dates.push(task.actualEndDate); }
+      if (!dates.length) return [];
+      dates.sort();
+      const start = new Date(dates[0]!); start.setDate(start.getDate() - 1);
+      const end = new Date(dates[dates.length - 1]!); end.setDate(end.getDate() + 1);
       for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
         const iso = d.toISOString().substring(0, 10);
         const dow = d.getDay();
         cols.push({ label: d.toISOString().substring(5, 10), isWeekend: dow === 0 || dow === 6, isToday: iso === todayStr });
       }
     } else if (zoom === 'week') {
-      const cur = new Date(start);
+      const year = this.refYear;
+      // Начинаем с понедельника текущей недели
+      const cur = new Date();
+      const day = cur.getDay(); // 0=вс, 1=пн...
+      const diff = cur.getDate() - day + (day === 0 ? -6 : 1); // понедельник
+      cur.setDate(diff);
+      cur.setHours(0, 0, 0, 0);
+      // Показываем 26 недель вперёд (полгода)
+      const end = new Date(cur); end.setDate(end.getDate() + 26 * 7);
       while (cur <= end) {
         const weekEnd = new Date(cur); weekEnd.setDate(weekEnd.getDate() + 6);
-        const label = `${cur.toISOString().substring(5, 10)}-${weekEnd.toISOString().substring(5, 10)}`;
-        cols.push({ label, isWeekend: false, isToday: todayStr >= cur.toISOString().substring(0, 10) && todayStr <= weekEnd.toISOString().substring(0, 10) });
+        const sm = String(cur.getMonth() + 1).padStart(2, '0');
+        const sd = String(cur.getDate()).padStart(2, '0');
+        const em = String(weekEnd.getMonth() + 1).padStart(2, '0');
+        const ed = String(weekEnd.getDate()).padStart(2, '0');
+        const label = `${sm}.${sd}\n${em}.${ed}`;
+        const weekStartIso = `${year}-${sm}-${sd}`;
+        const weekEndIso = `${year}-${em}-${ed}`;
+        cols.push({ label, isWeekend: false, isToday: todayStr >= weekStartIso && todayStr <= weekEndIso });
         cur.setDate(cur.getDate() + 7);
       }
     } else {
-      const cur = new Date(start.getFullYear(), start.getMonth(), 1);
-      while (cur <= end) {
-        const monthEnd = new Date(cur.getFullYear(), cur.getMonth() + 1, 0);
-        const label = cur.toLocaleString('ru', { month: 'short' });
-        const monthStartIso = cur.toISOString().substring(0, 10);
+      const year = this.refYear;
+      for (let m = 0; m < 12; m++) {
+        const d = new Date(year, m, 1);
+        const label = d.toLocaleString('ru', { month: 'short' });
+        const monthStartIso = d.toISOString().substring(0, 10);
+        const monthEnd = new Date(year, m + 1, 0);
         const monthEndIso = monthEnd.toISOString().substring(0, 10);
         cols.push({ label, isWeekend: false, isToday: todayStr >= monthStartIso && todayStr <= monthEndIso });
-        cur.setMonth(cur.getMonth() + 1);
       }
     }
     return cols;
@@ -146,9 +161,11 @@ export class GanttChartComponent {
     if (!date || this.zoom() !== 'week') return 0;
     const d = new Date(date);
     const cols = this.timelineColumns();
+    const y = this.refYear;
     for (let i = 0; i < cols.length; i++) {
-      const [sm, sd] = cols[i]!.label.split('-');
-      const start = new Date(`2026-${sm}-${sd}`);
+      const parts = cols[i]!.label.split('\n');
+      const [sm, sd] = parts[0]!.split('.');
+      const start = new Date(y, parseInt(sm) - 1, parseInt(sd));
       const end = new Date(start); end.setDate(end.getDate() + 6);
       if (d >= start && d <= end) return i;
     }
@@ -189,28 +206,54 @@ export class GanttChartComponent {
   actualWidth(task: OrderTask): number { return Math.max(this.durationInCols(task.actualStartDate, task.actualEndDate) * this.colWidth(), 2); }
   workerName(wid: string): string { const w = this.workerSvc.getRawItems().find(x => x.id === wid); return w ? w.lastName : wid; }
 
-  svgW = computed(() => this.timelineColumns().length * this.colWidth() + 240);
-  svgH = computed(() => Math.max(this.visibleBars().length * 48 + 36, 100));
+  workerFullName(wid: string | undefined): string {
+    if (!wid) return '—';
+    const w = this.workerSvc.getRawItems().find(x => x.id === wid);
+    if (!w) return '—';
+    const i = (n: string | undefined) => n ? n.charAt(0) + '.' : '';
+    return `${w.lastName} ${i(w.firstName)}${i(w.patronymic)}`;
+  }
 
-  depArrows = computed(() => {
-    const arrows: { from: string; to: string; x1: number; y1: number; x2: number; y2: number; path: string }[] = [];
+  ganttGroups = computed((): GanttGroup[] => {
     const bars = this.visibleBars();
-    const labelW = 240; const headerH = 36; const rowH = 48;
+    const map = new Map<string, GanttBar[]>();
     for (const bar of bars) {
-      for (const depId of bar.task.dependsOnTaskIds) {
-        const depBar = bars.find(b => b.task.id === depId);
-        if (!depBar) continue;
-        const fromIdx = bars.indexOf(depBar); const toIdx = bars.indexOf(bar);
-        const x1 = labelW + depBar.left + depBar.width;
-        const y1 = headerH + fromIdx * rowH + rowH / 2;
-        const x2 = labelW + bar.left;
-        const y2 = headerH + toIdx * rowH + rowH / 2;
-        const midX = (x1 + x2) / 2;
-        arrows.push({ from: depId, to: bar.task.id, x1, y1, x2, y2, path: `M${x1},${y1} L${midX},${y1} L${midX},${y2} L${x2},${y2}` });
+      const key = bar.task.workTypeName;
+      if (!map.has(key)) map.set(key, []);
+      map.get(key)!.push(bar);
+    }
+    return Array.from(map.entries()).map(([name, groupBars]) => ({
+      workTypeId: groupBars[0]!.task.workTypeId,
+      workTypeName: name,
+      bars: groupBars,
+    }));
+  });
+
+  layoutRows = computed((): LayoutRow[] => {
+    const rows: LayoutRow[] = [];
+    for (const group of this.ganttGroups()) {
+      rows.push({ type: 'group', groupName: group.workTypeName, groupId: group.workTypeId, barCount: group.bars.length });
+      for (const bar of group.bars) {
+        rows.push({ type: 'bar', bar });
       }
     }
-    return arrows;
+    return rows;
   });
+
+  groupColor(workTypeId: string): string {
+    const colors = ['#6366f1', '#f59e0b', '#22c55e', '#ef4444', '#06b6d4', '#a855f7', '#ec4899', '#14b8a6'];
+    let hash = 0;
+    for (let i = 0; i < workTypeId.length; i++) hash = workTypeId.charCodeAt(i) + ((hash << 5) - hash);
+    return colors[Math.abs(hash) % colors.length];
+  }
+
+  groupIcon(workTypeId: string): string {
+    const icons: Record<string, string> = {
+      'wt-1': '🔩', 'wt-2': '🔩', 'wt-3': '⚡', 'wt-4': '🔧',
+      'wt-5': '🎨', 'wt-6': '🎨', 'wt-7': '📐', 'wt-8': '🔗', 'wt-9': '🔧',
+    };
+    return icons[workTypeId] || '⚙️';
+  }
 
   onBarEnter(event: MouseEvent, taskId: string) {
     if (this.draggingTaskId() || this.resizingTaskId()) return;
@@ -236,7 +279,6 @@ export class GanttChartComponent {
     event.preventDefault();
     this.draggingTaskId.set(task.id);
     this.dragStartX = event.clientX;
-    this.dragStartLeft = this.colIndex(task.plannedStartDate) * this.colWidth();
     this.dragOrigStart = task.plannedStartDate || '';
     this.dragOrigEnd = task.plannedEndDate || '';
   }
@@ -246,7 +288,7 @@ export class GanttChartComponent {
     event.stopPropagation();
     this.resizingTaskId.set(task.id);
     this.dragStartX = event.clientX;
-    this.dragStartWidth = this.durationInCols(task.plannedStartDate, task.plannedEndDate) * this.colWidth();
+    this.resizeOrigEnd = task.plannedEndDate || '';
   }
 
   onMouseMove(event: MouseEvent) {
@@ -270,6 +312,7 @@ export class GanttChartComponent {
       if (newSi < 0 || newEi >= cols.length) return;
       const newStart = this.colDate(newSi); if (!newStart) return;
       const newEnd = this.colDate(newEi); if (!newEnd) return;
+      // При drag/resize часы НЕ пересчитываем — меняем только даты
       const updated = { ...task, plannedStartDate: newStart, plannedEndDate: newEnd };
       this.tasks.update(arr => arr.map(t => t.id === id ? updated : t));
     }
@@ -279,12 +322,13 @@ export class GanttChartComponent {
       if (colShift === 0) return;
       const id = this.resizingTaskId();
       const task = this.tasks().find(t => t.id === id);
-      if (!task || !task.plannedStartDate) return;
-      const origEi = this.colIndex(task.plannedEndDate);
+      if (!task || !task.plannedStartDate || !this.resizeOrigEnd) return;
+      const origEi = this.colIndex(this.resizeOrigEnd);
       const newEi = origEi + colShift;
       const cols = this.timelineColumns();
       if (newEi >= cols.length || newEi < this.colIndex(task.plannedStartDate)) return;
       const newEnd = this.colDate(newEi); if (!newEnd) return;
+      // При resize часы НЕ пересчитываем — меняем только даты
       const updated = { ...task, plannedEndDate: newEnd };
       this.tasks.update(arr => arr.map(t => t.id === id ? updated : t));
     }
@@ -300,6 +344,7 @@ export class GanttChartComponent {
       if (task) { firstValueFrom(this.taskSvc.updateDates(task.id, undefined, task.plannedEndDate)); }
     }
     this.draggingTaskId.set(''); this.resizingTaskId.set('');
+    this.resizeOrigEnd = '';
   }
 
   private static RU_MONTHS: Record<string, number> = {
@@ -312,14 +357,86 @@ export class GanttChartComponent {
     if (index < 0 || index >= cols.length) return null;
     const label = cols[index]!.label;
     const z = this.zoom();
-    if (z === 'day') return `2026-${label}`;
+    const y = this.refYear;
+    if (z === 'day') return `${y}-${label}`;
     if (z === 'week') {
-      const [sm, sd] = label.split('-');
-      return `2026-${sm}-${sd}`;
+      const parts = label.split('\n');
+      const [sm, sd] = parts[0]!.split('.');
+      return `${y}-${sm}-${sd}`;
     }
     const m = GanttChartComponent.RU_MONTHS[label];
     const monthStr = String(m !== undefined ? m + 1 : 1).padStart(2, '0');
-    return `2026-${monthStr}-01`;
+    return `${y}-${monthStr}-01`;
+  }
+
+  // ─── Форма создания заказа ───
+  dialogVisible = signal(false);
+  formProductId = signal<string | null>(null);
+  formOrgId = signal<string | null>(null);
+  formQuantity = signal<number>(1);
+  formStartDate = signal<Date | null>(new Date());
+  formEndDate = signal<Date | null>(new Date(Date.now() + 7 * 86400000));
+  formNotes = signal('');
+  formSubmitting = signal(false);
+
+  productOptions = computed(() => this.productSvc.getRawItems()
+    .filter(p => p.productType === 'manufactured' && p.isActive)
+    .map(p => ({ label: `${p.sku} — ${p.name}`, value: p.id })));
+
+  orgOptions = computed(() => this.orgSvc.getRawItems()
+    .filter(o => o.isActive)
+    .map(o => ({ label: o.shortName || o.name, value: o.id })));
+
+  openCreateDialog() { this.dialogVisible.set(true); }
+
+  closeCreateDialog() { this.dialogVisible.set(false); this.resetForm(); }
+
+  private resetForm() {
+    this.formProductId.set(null);
+    this.formOrgId.set(null);
+    this.formQuantity.set(1);
+    const today = new Date();
+    this.formStartDate.set(today);
+    const end = new Date(today); end.setDate(end.getDate() + 7);
+    this.formEndDate.set(end);
+    this.formNotes.set('');
+  }
+
+  async createOrder() {
+    const productId = this.formProductId();
+    const orgId = this.formOrgId();
+    const qty = this.formQuantity();
+    if (!productId || !orgId || qty < 1) return;
+    this.formSubmitting.set(true);
+    try {
+      const product = this.productSvc.getRawItems().find(p => p.id === productId);
+      const org = this.orgSvc.getRawItems().find(o => o.id === orgId);
+      if (!product || !org) return;
+      const sd = this.formStartDate() || new Date();
+      const ed = this.formEndDate() || new Date(new Date().getTime() + 7 * 86400000);
+      const data = {
+        contractId: '',
+        productId: product.id,
+        productName: product.name,
+        productSku: product.sku,
+        quantity: qty,
+        status: 'accepted' as const,
+        plannedStartDate: sd.toISOString().substring(0, 10),
+        plannedEndDate: ed.toISOString().substring(0, 10),
+        notes: this.formNotes(),
+      };
+      const res = await firstValueFrom(this.orderSvc.createOrder(data));
+      if (res.success) {
+        this.closeCreateDialog();
+        // Обновить список заказов и выбрать новый
+        const ordersRes = await firstValueFrom(this.orderSvc.getAll());
+        this.orders.set(ordersRes.data);
+        this.selectedOrderId.set(res.data.id);
+        this.loadTasks();
+      }
+    } finally {
+      this.formSubmitting.set(false);
+    }
   }
 
   constructor() { this.load(); }
@@ -327,11 +444,14 @@ export class GanttChartComponent {
   async load() {
     const [tasks, orders] = await Promise.all([firstValueFrom(this.taskSvc.getTasks()), firstValueFrom(this.orderSvc.getAll())]);
     this.allTasks.set(tasks.data); this.orders.set(orders.data);
-    if (orders.data.length > 0) { this.selectedOrderId.set(orders.data[0]!.id); this.loadTasks(); }
+    this.selectedOrderId.set('');
+    this.loadTasks();
   }
 
   loadTasks() {
     const oid = this.selectedOrderId();
-    this.tasks.set(oid ? this.allTasks().filter(t => t.productionOrderId === oid).sort((a, b) => a.sortOrder - b.sortOrder) : []);
+    this.tasks.set(oid
+      ? this.allTasks().filter(t => t.productionOrderId === oid).sort((a, b) => a.sortOrder - b.sortOrder)
+      : this.allTasks().sort((a, b) => a.sortOrder - b.sortOrder));
   }
 }

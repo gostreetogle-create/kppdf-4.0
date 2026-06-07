@@ -17,6 +17,7 @@ import { DocumentTemplateService } from '../../core/document-template.service';
 import { ClientService } from '../../core/client.service';
 import { OrganizationService } from '../../core/organization.service';
 import { ConfirmationService } from 'primeng/api';
+import { ContractService } from '../../core/contract.service';
 import type { CommercialProposal, ProposalStatus, DocBlock } from '../../../../shared/types/index.js';
 
 interface ProposalRow extends CommercialProposal {
@@ -89,6 +90,7 @@ export class ProposalListComponent {
   private router = inject(Router);
   private proposalService = inject(CommercialProposalService);
   private templateService = inject(DocumentTemplateService);
+  private contractService = inject(ContractService);
   private clientService = inject(ClientService);
   private orgService = inject(OrganizationService);
   private notification = inject(NotificationService);
@@ -118,6 +120,12 @@ export class ProposalListComponent {
       severity: 'danger',
       tooltip: 'Отклонить',
       visible: (row: unknown) => (row as CommercialProposal).status === 'sent',
+    },
+    {
+      icon: 'file-signature',
+      severity: 'info',
+      tooltip: 'Создать договор',
+      visible: (row: unknown) => (row as CommercialProposal).status === 'approved' || (row as CommercialProposal).status === 'sent',
     },
   ];
 
@@ -221,15 +229,22 @@ export class ProposalListComponent {
   private fillPlaceholders(blocks: DocBlock[], cp: CommercialProposal, clientName: string, orgName: string): DocBlock[] {
     const date = new Date(cp.createdAt).toLocaleDateString('ru-RU');
     const total = cp.totalAmount.toLocaleString('ru-RU') + ' ₽';
-    const items = cp.items.map((it, i) =>
+    const itemsText = cp.items.map((it, i) =>
       `${i + 1}. ${it.productName} (${it.productSku}) — ${it.quantity} ${it.productUnit} × ${it.unitPrice.toLocaleString('ru-RU')} ₽ = ${it.total.toLocaleString('ru-RU')} ₽`
     ).join('\n');
+
+    // Формируем таблицу товаров как набор колонок для блока
+    const tableHeader = `№\tНаименование\tАртикул\tКол-во\tЦена\tСумма`;
+    const tableRows = cp.items.map((it, i) =>
+      `${i + 1}\t${it.productName}\t${it.productSku}\t${it.quantity}\t${it.unitPrice.toLocaleString('ru-RU')} ₽\t${it.total.toLocaleString('ru-RU')} ₽`
+    ).join('\n');
+    const tableContent = `${tableHeader}\n${tableRows}\n\nИтого: ${total}`;
 
     const map: Record<string, string> = {
       '{{number}}': cp.number,
       '{{date}}': date,
       '{{total}}': total,
-      '{{items}}': items,
+      '{{items}}': itemsText,
       '{{notes}}': cp.notes || '',
       '{{client.name}}': clientName || 'Клиент',
       '{{org.shortName}}': orgName || 'Организация',
@@ -244,11 +259,22 @@ export class ProposalListComponent {
       return result;
     };
 
-    return blocks.map(b => ({
-      ...b,
-      content: replace(b.content),
-      columns: b.columns?.map(c => ({ ...c, content: replace(c.content) || c.content })),
-    }));
+    return blocks.map(b => {
+      // Табличный блок — заменяем на текстовый блок с данными товаров
+      if (b.type === 'table') {
+        return {
+          ...b,
+          type: 'text' as const,
+          title: b.title || 'Товары',
+          content: tableContent,
+        };
+      }
+      return {
+        ...b,
+        content: replace(b.content),
+        columns: b.columns?.map(c => ({ ...c, content: replace(c.content) || c.content })),
+      };
+    });
   }
 
   onEditRow(row: unknown) {
@@ -258,6 +284,32 @@ export class ProposalListComponent {
 
   async onStatusChange(event: { icon: string; row: unknown }) {
     const p = event.row as CommercialProposal;
+
+    // Создать договор из КП
+    if (event.icon === 'file-signature') {
+      KpConfirmDialogComponent.confirm(this.confirmationService, {
+        header: 'Создание договора',
+        message: `Создать договор на основе КП «${p.number}»? Позиции будут скопированы без цен.`,
+        acceptLabel: 'Создать договор',
+        rejectLabel: 'Отмена',
+        accept: async () => {
+          const res = await firstValueFrom(this.contractService.createFromProposal({
+            organizationId: p.organizationId,
+            clientId: p.clientId,
+            status: 'draft',
+            notes: `На основе КП ${p.number}`,
+          }, p));
+          if (res.success) {
+            this.notification.success(`Договор «${res.data.number}» создан на основе КП «${p.number}»`);
+            this.load();
+          } else {
+            this.notification.error(res.message || 'Ошибка создания договора');
+          }
+        },
+      });
+      return;
+    }
+
     const statusMap: Record<string, { status: ProposalStatus; label: string }> = {
       send: { status: 'sent', label: 'Отправлено' },
       'thumbs-up': { status: 'approved', label: 'Согласовано' },
