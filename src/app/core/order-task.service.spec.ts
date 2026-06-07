@@ -1,8 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { OrderTaskService } from './order-task.service';
-import { WorkerService } from './worker.service';
-import { ProductService } from './product.service';
-import { ProductComponentService } from './product-component.service';
 import { firstValueFrom } from 'rxjs';
 
 describe('OrderTaskService', () => {

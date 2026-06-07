@@ -55,7 +55,7 @@ npx ng serve
 | **БД** | MongoDB 8 + Mongoose 8 |
 | **Аутентификация** | JWT access + refresh · HttpOnly cookies |
 | **AI-инфраструктура** | ChromaDB (векторная БД, 3 557 документов) · AGENTS.md · ARCHITECTURE.md |
-| **Тесты** | Vitest + jsdom · 206 тестов |
+| **Тесты** | Vitest + jsdom · 433 теста |
 | **CI/CD** | GitHub Actions (lint → test → build) |
 | **Контейнеризация** | Docker Compose (3 сервиса) |
 
@@ -169,7 +169,7 @@ core → shared → features → layout
 npm start              # ng serve (порт 4200)
 npm run build          # production сборка
 npx ng lint            # ESLint
-npx vitest run         # 206 тестов
+npx vitest run         # 433 теста
 
 # Docker
 docker compose up -d            # Запустить все сервисы

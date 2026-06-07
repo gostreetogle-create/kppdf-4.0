@@ -100,30 +100,30 @@ export class GanttChartComponent {
     const start = new Date(dates[0]!); start.setDate(start.getDate() - 1);
     const end = new Date(dates[dates.length - 1]!); end.setDate(end.getDate() + 1);
     const cols: { label: string; isWeekend: boolean; isToday: boolean }[] = [];
-    const today = new Date().toISOString().substring(0, 10);
+    const todayStr = new Date().toISOString().substring(0, 10);
     const zoom = this.zoom();
     if (zoom === 'day') {
       for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
         const iso = d.toISOString().substring(0, 10);
         const dow = d.getDay();
-        cols.push({ label: d.toISOString().substring(5, 10), isWeekend: dow === 0 || dow === 6, isToday: iso === today });
+        cols.push({ label: d.toISOString().substring(5, 10), isWeekend: dow === 0 || dow === 6, isToday: iso === todayStr });
       }
     } else if (zoom === 'week') {
       const cur = new Date(start);
       while (cur <= end) {
         const weekEnd = new Date(cur); weekEnd.setDate(weekEnd.getDate() + 6);
         const label = `${cur.toISOString().substring(5, 10)}-${weekEnd.toISOString().substring(5, 10)}`;
-        cols.push({ label, isWeekend: false, isToday: today >= cur.toISOString().substring(0, 10) && today <= weekEnd.toISOString().substring(0, 10) });
+        cols.push({ label, isWeekend: false, isToday: todayStr >= cur.toISOString().substring(0, 10) && todayStr <= weekEnd.toISOString().substring(0, 10) });
         cur.setDate(cur.getDate() + 7);
       }
     } else {
-      let cur = new Date(start.getFullYear(), start.getMonth(), 1);
+      const cur = new Date(start.getFullYear(), start.getMonth(), 1);
       while (cur <= end) {
         const monthEnd = new Date(cur.getFullYear(), cur.getMonth() + 1, 0);
         const label = cur.toLocaleString('ru', { month: 'short' });
         const monthStartIso = cur.toISOString().substring(0, 10);
         const monthEndIso = monthEnd.toISOString().substring(0, 10);
-        cols.push({ label, isWeekend: false, isToday: today >= monthStartIso && today <= monthEndIso });
+        cols.push({ label, isWeekend: false, isToday: todayStr >= monthStartIso && todayStr <= monthEndIso });
         cur.setMonth(cur.getMonth() + 1);
       }
     }
@@ -132,7 +132,6 @@ export class GanttChartComponent {
 
   todayColumnIndex = computed(() => {
     if (this.zoom() !== 'day') return -1;
-    const today = new Date().toISOString().substring(0, 10);
     return this.timelineColumns().findIndex(c => c.isToday);
   });
 

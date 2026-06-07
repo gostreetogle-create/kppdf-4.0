@@ -10,7 +10,6 @@ import { NotificationService } from '../../core/notification.service';
 import type { Contract } from '../../../../shared/types/index.js';
 
 describe('ContractListComponent', () => {
-  let notification: NotificationService;
   let contractService: ContractService;
   let router: Router;
 
@@ -28,7 +27,6 @@ describe('ContractListComponent', () => {
       ],
     });
     await TestBed.compileComponents();
-    notification = TestBed.inject(NotificationService);
     contractService = TestBed.inject(ContractService);
     router = TestBed.inject(Router);
   });

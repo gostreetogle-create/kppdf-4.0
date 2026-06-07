@@ -5,7 +5,7 @@ import { firstValueFrom } from 'rxjs';
 import { ProductPhotoService } from './product-photo.service';
 import { ProductService } from './product.service';
 import { ProductCategoryService } from './product-category.service';
-import type { Product, ProductPhoto } from '../../../shared/types/index.js';
+import type { Product } from '../../../shared/types/index.js';
 
 function makeProduct(overrides: Partial<Product> = {}): Product {
   return {
@@ -73,17 +73,17 @@ describe('ProductPhotoService', () => {
 
   it('устанавливает фото как главное', async () => {
     const a = await firstValueFrom(svc.addPhoto('pp-test-1', 'https://example.com/a.jpg'));
-    const b = await firstValueFrom(svc.addPhoto('pp-test-1', 'https://example.com/b.jpg'));
+    const secondPhoto = await firstValueFrom(svc.addPhoto('pp-test-1', 'https://example.com/b.jpg'));
     expect(a.data.isMain).toBe(true);
-    expect(b.data.isMain).toBe(false);
+    expect(secondPhoto.data.isMain).toBe(false);
 
-    const res = await firstValueFrom(svc.setMain(b.data.id));
+    const res = await firstValueFrom(svc.setMain(secondPhoto.data.id));
     expect(res.success).toBe(true);
     expect(res.data.isMain).toBe(true);
 
     const photos = await firstValueFrom(svc.getPhotos('pp-test-1'));
     expect(photos.data.find(p => p.id === a.data.id)!.isMain).toBe(false);
-    expect(photos.data.find(p => p.id === b.data.id)!.isMain).toBe(true);
+    expect(photos.data.find(p => p.id === secondPhoto.data.id)!.isMain).toBe(true);
   });
 
   it('обновляет подпись фото', async () => {
@@ -95,7 +95,7 @@ describe('ProductPhotoService', () => {
 
   it('удаляет фото и назначает новое главное', async () => {
     const a = await firstValueFrom(svc.addPhoto('pp-test-1', 'https://example.com/a.jpg'));
-    const b = await firstValueFrom(svc.addPhoto('pp-test-1', 'https://example.com/b.jpg'));
+    await firstValueFrom(svc.addPhoto('pp-test-1', 'https://example.com/b.jpg'));
     expect(a.data.isMain).toBe(true);
 
     // Удаляем главное

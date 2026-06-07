@@ -1,7 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { StorageItemService } from './storage-item.service';
 import { firstValueFrom } from 'rxjs';
-import type { StorageItem } from '../../../shared/types/index.js';
 
 describe('StorageItemService', () => {
   let service: StorageItemService;

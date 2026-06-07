@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Observable, of, delay } from 'rxjs';
 import { BaseCrudService, generateId, nowISO } from './crud-factory.js';
-import type { ApiResponse, ProductComponent, ComponentMaterial, ComponentWorkType } from '../../../shared/types/index.js';
+import type { ApiResponse, ProductComponent } from '../../../shared/types/index.js';
 
 const SEED_COMPONENTS: ProductComponent[] = [
   // ─── Стойка баскетбольная БСФП-120 (prod-1) ───

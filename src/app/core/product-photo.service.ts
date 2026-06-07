@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable, of, delay } from 'rxjs';
-import { BaseCrudService, generateId, nowISO } from './crud-factory.js';
+import { generateId, nowISO } from './crud-factory.js';
 import { ProductService } from './product.service.js';
 import type { ApiResponse, ProductPhoto } from '../../../shared/types/index.js';
 

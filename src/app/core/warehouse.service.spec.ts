@@ -1,7 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { WarehouseService } from './warehouse.service';
 import { firstValueFrom } from 'rxjs';
-import type { Warehouse } from '../../../shared/types/index.js';
 
 describe('WarehouseService', () => {
   let service: WarehouseService;
@@ -10,20 +9,6 @@ describe('WarehouseService', () => {
     service = new WarehouseService();
     service['items'] = [];
   });
-
-  function makeWh(overrides?: Partial<Warehouse>): Warehouse {
-    return {
-      id: 'wh-1',
-      name: 'Основной склад',
-      address: 'ул. Заводская, 15',
-      zoneNames: ['Трубный', 'Листовой'],
-      roleIds: ['role-1'],
-      isActive: true,
-      createdAt: '2026-06-07T00:00:00.000Z',
-      updatedAt: '2026-06-07T00:00:00.000Z',
-      ...overrides,
-    };
-  }
 
   describe('createWarehouse', () => {
     it('создаёт склад с авто-id и датами', async () => {

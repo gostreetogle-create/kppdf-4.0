@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { TestBed } from '@angular/core/testing';
-import { provideRouter, Router, ActivatedRoute } from '@angular/router';
+import { provideRouter, Router } from '@angular/router';
 import { provideNoopAnimations } from '@angular/platform-browser/animations';
 import { MessageService, ConfirmationService } from 'primeng/api';
 import { firstValueFrom } from 'rxjs';
@@ -44,7 +44,6 @@ describe('ProposalEditorComponent', () => {
   let proposalService: CommercialProposalService;
   let cartService: CartService;
   let router: Router;
-  let activatedRoute: ActivatedRoute;
 
   beforeEach(async () => {
     TestBed.configureTestingModule({
@@ -69,7 +68,6 @@ describe('ProposalEditorComponent', () => {
     proposalService = TestBed.inject(CommercialProposalService);
     cartService = TestBed.inject(CartService);
     router = TestBed.inject(Router);
-    activatedRoute = TestBed.inject(ActivatedRoute);
   });
 
   afterEach(() => {

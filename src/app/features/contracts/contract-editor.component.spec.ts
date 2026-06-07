@@ -6,11 +6,10 @@ import { MessageService, ConfirmationService } from 'primeng/api';
 import { firstValueFrom } from 'rxjs';
 import { ContractEditorComponent } from './contract-editor.component';
 import { ContractService } from '../../core/contract.service';
-import { CommercialProposalService } from '../../core/commercial-proposal.service';
 import { OrganizationService } from '../../core/organization.service';
 import { ClientService } from '../../core/client.service';
 import { NotificationService } from '../../core/notification.service';
-import type { CommercialProposal, ContractItem } from '../../../../shared/types/index.js';
+import type { ContractItem } from '../../../../shared/types/index.js';
 
 function makeItem(overrides?: Partial<ContractItem>): ContractItem {
   return { id: 'ci-1', sourceProductId: 'p1', productSku: 'SP0001', productName: 'Стойка', productUnit: 'шт', quantity: 2, ...overrides };
@@ -19,7 +18,6 @@ function makeItem(overrides?: Partial<ContractItem>): ContractItem {
 describe('ContractEditorComponent', () => {
   let notification: NotificationService;
   let contractService: ContractService;
-  let proposalService: CommercialProposalService;
   let router: Router;
 
   beforeEach(async () => {
@@ -32,14 +30,12 @@ describe('ContractEditorComponent', () => {
         ]),
         provideNoopAnimations(),
         MessageService, ConfirmationService,
-        NotificationService, ContractService, CommercialProposalService,
-        OrganizationService, ClientService,
+        NotificationService, ContractService, OrganizationService, ClientService,
       ],
     });
     await TestBed.compileComponents();
     notification = TestBed.inject(NotificationService);
     contractService = TestBed.inject(ContractService);
-    proposalService = TestBed.inject(CommercialProposalService);
     router = TestBed.inject(Router);
   });
 

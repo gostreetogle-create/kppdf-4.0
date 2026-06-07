@@ -12,7 +12,6 @@ import { KpToastComponent } from '../../shared/ui/kp-toast.component';
 import { KpInputComponent } from '../../shared/ui/kp-input.component';
 import { NotificationService } from '../../core/notification.service';
 import { WarehouseService } from '../../core/warehouse.service';
-import type { Warehouse } from '../../../../shared/types/index.js';
 
 @Component({
   selector: 'app-warehouse-editor',

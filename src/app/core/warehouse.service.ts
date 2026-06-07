@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Observable, of, delay } from 'rxjs';
+import { Observable } from 'rxjs';
 import { BaseCrudService } from './crud-factory.js';
 import type { ApiResponse, Warehouse } from '../../../shared/types/index.js';
 

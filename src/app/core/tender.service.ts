@@ -1,7 +1,6 @@
 import { Injectable } from '@angular/core';
-import { Observable, of, delay } from 'rxjs';
-import { BaseCrudService, generateId, nowISO } from './crud-factory.js';
-import type { ApiResponse, Tender, TenderDocument } from '../../../shared/types/index.js';
+import { BaseCrudService } from './crud-factory.js';
+import type { Tender } from '../../../shared/types/index.js';
 
 const SEED_TENDERS: Tender[] = [
   { id: 'tnd-1', number: 'Т-0001', title: 'Поставка МАФ для парка «Солнечный»', type: '44fz', status: 'published', customerOrgId: 'org-1', customerName: 'Администрация г. Краснодар', noticeNumber: '0318300012524000123', platformUrl: 'https://zakupki.gov.ru/epz/order/notice/ea44/view/common-info.html?regNumber=0318300012524000123', startPrice: 2500000, publishDate: '2026-05-10', submissionDeadline: '2026-06-15', documents: [], createdAt: '2026-05-10T08:00:00.000Z', updatedAt: '2026-05-10T08:00:00.000Z' },
