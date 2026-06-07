@@ -1,6 +1,13 @@
 #!/usr/bin/env python3
-"""seed_chromadb.py — Index project docs, knowledge base, and key sources into ChromaDB (Docker).
-   Uses HTTP client to connect to ChromaDB running at localhost:8000."""
+"""
+⛔ ЗАМЕНЁН — используй TypeScript-версию:
+   npx tsx scripts/seed-chromadb.ts
+
+Причины:
+- Python 3 нестабилен в окружении пользователя
+- TypeScript-версия использует уже установленный chromadb npm-пакет
+- Типовая версия индексирует .ts/.html/.scss файлы ядра (413 док. в 10 коллекциях)
+"""
 
 import chromadb
 from chromadb.config import Settings
