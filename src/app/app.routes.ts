@@ -161,6 +161,19 @@ export const routes: Routes = [
         path: 'admin/cad-files',
         loadComponent: () => import('./features/admin/inventor-file-list.component').then(m => m.InventorFileListComponent)
       },
+      // ===== Бухгалтерия (Фаза 4) =====
+      {
+        path: 'finance/order-closing',
+        loadComponent: () => import('./features/finance/order-closing-list.component').then(m => m.OrderClosingListComponent)
+      },
+      {
+        path: 'finance/reconciliation',
+        loadComponent: () => import('./features/finance/reconciliation-act-list.component').then(m => m.ReconciliationActListComponent)
+      },
+      {
+        path: 'finance/reports',
+        loadComponent: () => import('./features/finance/financial-report-list.component').then(m => m.FinancialReportListComponent)
+      },
       // ===== Производство (Фаза 2) =====
       {
         path: 'production/work-types',

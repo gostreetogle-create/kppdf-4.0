@@ -219,6 +219,15 @@ export class OrderTaskService {
 
   // ═══ Генерация из BOM ═══
 
+  /** Обновить плановые даты задачи (drag-and-drop в Ганте) */
+  updateDates(id: string, plannedStartDate?: string, plannedEndDate?: string): Observable<ApiResponse<OrderTask>> {
+    const t = this.items.find(x => x.id === id);
+    if (!t) return of({ success: false, data: undefined as unknown as OrderTask, message: 'Задача не найдена' }).pipe(delay(this.delayMs));
+    const updated = { ...t, plannedStartDate: plannedStartDate ?? t.plannedStartDate, plannedEndDate: plannedEndDate ?? t.plannedEndDate, updatedAt: nowISO() };
+    this.items = this.items.map(x => x.id === id ? updated : x);
+    return of({ success: true, data: { ...updated, dependsOnTaskIds: [...updated.dependsOnTaskIds] } }).pipe(delay(this.delayMs));
+  }
+
   generateFromComponents(orderId: string, components: ProductComponent[]): Observable<ApiResponse<OrderTask[]>> {
     let sortOrder = this.items.filter(t => t.productionOrderId === orderId).length + 1;
     const now = nowISO();

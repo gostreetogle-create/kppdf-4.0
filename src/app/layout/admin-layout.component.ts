@@ -126,6 +126,16 @@ export class AdminLayoutComponent {
         { id: 'nav-buyers', label: '— Покупатели', icon: 'shopping-cart', routerLink: '/references/organizations?role=buyer' }
       ]
     },
+    {
+      id: 'nav-finance', sectionId: 'finance',
+      label: '💰 Бухгалтерия',
+      icon: 'banknote',
+      items: [
+        { id: 'nav-fin-oc', label: '📋 Закрытие заказов', routerLink: '/finance/order-closing' },
+        { id: 'nav-fin-ra', label: '📑 Акты сверки', routerLink: '/finance/reconciliation' },
+        { id: 'nav-fin-fr', label: '📊 Финансовые отчёты', routerLink: '/finance/reports' },
+      ]
+    },
     { id: 'nav-sep-2', separator: true },
     {
       id: 'nav-admin', sectionId: 'admin',

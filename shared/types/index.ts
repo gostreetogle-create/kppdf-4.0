@@ -445,6 +445,12 @@ export type {
   InventorFile, CadFileType,
 } from './administration.js';
 
+export type {
+  OrderClosing, ClosingType,
+  ReconciliationAct,
+  FinancialReport, ReportType,
+} from './finance.js';
+
 // ========================================
 // Feature Flags (флаги возможностей)
 // ========================================
