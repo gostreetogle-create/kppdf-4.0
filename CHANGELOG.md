@@ -6,6 +6,17 @@
 
 ---
 
+## [1.14.1] — 2026-06-08 — ChromaDB: TypeScript-скрипт seed + индексация .ts/.html/.scss
+
+### Added
+- **scripts/seed-chromadb.ts** — TypeScript-версия seed-скрипта для ChromaDB (запуск через `npx tsx`)
+- **10 коллекций:** project_docs, knowledge_base, source_core, source_ui_kit, source_features, source_layout, source_styles, source_backend, source_types, source_config
+- **Индексация кода:** .ts/.html/.scss из всех слоёв (core, shared/ui, features, layout, styles, backend, shared/types)
+- **413 документов** проиндексировано (было ~105)
+- **Docker ChromaDB:** перезапущен и восстановлен (был unhealthy)
+
+---
+
 ## [1.14.0] — 2026-06-08 — Редизайн товара, управление пользователями, тёмная тема, фиксы
 
 ### Added
