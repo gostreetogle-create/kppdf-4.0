@@ -6,6 +6,39 @@
 
 ---
 
+## [1.13.0] — 2026-06-07 — Фазы 2,4,5: Производство v2, Бухгалтерия, Администрирование + Генеральная уборка
+
+### Added — Фаза 2: Производство v2
+- **Gantt v2:** профессиональная диаграмма — зум день/неделя/месяц, drag-and-drop + resize полос, тултипы при наведении, панель работников (свободен/занят), фильтры статусов, SVG-стрелки зависимостей, линия «сегодня»
+- **Авто-назначение:** autoAssignWorker (ближайший свободный), assignWorker (ручное), getAvailableWorkers
+- **Зависимости:** dependsOnTaskIds, блокировка старта при незавершённых зависимостях
+- **Авто-задачи:** checkMissingData + generateMissingDataTasks (no_drawing/no_materials/no_work_types)
+- **Отгрузка:** диалог ready→shipped, выбор шаблона (ТОРГ-12/ТТН/Акт), примечание
+- **Типы:** MissingDataType, MissingDataIssue, dependsOnTaskIds, shipmentNote
+
+### Added — Фаза 4: Бухгалтерия
+- **FinanceDashboard:** сводный дашборд — 4 KPI-карточки, 6 блоков статус-брейкдаунов (заказы/КП/договоры/закрытия/сверки/отчёты)
+- **OrderClosing:** 3 seed (акт АКТ-001, счёт-фактура СФ-0042, накладная ТН-0023)
+- **ReconciliationAct:** 3 seed (сверки с ПРОММЕТИЗ, ХимРеактив, Администрация)
+- **FinancialReport:** 2 seed (P&L Q2, дебиторская задолженность)
+
+### Added — Фаза 5: Администрирование / Тендеры
+- **Tender:** 3 seed (44-ФЗ, 223-ФЗ, коммерческий), 7 статусов, вложенные TenderDocument
+- **StatusWorkflow:** 3 модели (wf-proposal, wf-contract, wf-production)
+- **RoleDef:** 8 ролей, sectionIds, ролевая фильтрация меню
+- **Ролевое меню:** sectionId на группах, демо-переключатель ролей в топбаре
+- **RPP, Certificate, InventorFile:** seed-данные и CRUD-списки
+
+### Changed — Генеральная уборка
+- **Gantt-чарт:** инлайн-шаблон → templateUrl, инлайн-стили → SCSS (632→280 строк логики)
+- **BUSINESS_LOGIC_RU.md:** v5.0 → v5.1 (метрики 433 теста, Фазы 4 и 5 ✅, Гант v2, FinanceDashboard)
+- **Чек-лист:** 120→130 ✅, добавлена Фаза 6 «Генеральная уборка»
+
+### Tests
+- **415→433** (+18: order-task.service 12 + finance/administration services 6)
+
+---
+
 ## [1.12.0] — 2026-06-07 — Фаза 1.3-1.4: Варианты КП + Договоры (Contract)
 
 ### Added — 1.3: 3 варианта КП

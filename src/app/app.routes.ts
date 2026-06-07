@@ -163,6 +163,10 @@ export const routes: Routes = [
       },
       // ===== Бухгалтерия (Фаза 4) =====
       {
+        path: 'finance',
+        loadComponent: () => import('./features/finance/finance-dashboard.component').then(m => m.FinanceDashboardComponent)
+      },
+      {
         path: 'finance/order-closing',
         loadComponent: () => import('./features/finance/order-closing-list.component').then(m => m.OrderClosingListComponent)
       },

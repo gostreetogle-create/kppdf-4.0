@@ -131,6 +131,7 @@ export class AdminLayoutComponent {
       label: '💰 Бухгалтерия',
       icon: 'banknote',
       items: [
+        { id: 'nav-fin-dash', label: '📊 Сводка', routerLink: '/finance' },
         { id: 'nav-fin-oc', label: '📋 Закрытие заказов', routerLink: '/finance/order-closing' },
         { id: 'nav-fin-ra', label: '📑 Акты сверки', routerLink: '/finance/reconciliation' },
         { id: 'nav-fin-fr', label: '📊 Финансовые отчёты', routerLink: '/finance/reports' },
