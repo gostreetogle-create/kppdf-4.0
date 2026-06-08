@@ -20,10 +20,15 @@ angular/
 # Backend
 backend/dist/
 backend/node_modules/
+backend/.env.production
+
+# Deploy
+/deploy/config.env
 
 # Environment
 .env
 !.env.example
+.env.production
 
 # IDE
 .idea/

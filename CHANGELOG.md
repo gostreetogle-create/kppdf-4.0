@@ -6,6 +6,22 @@
 
 ---
 
+## [1.14.2] — 2026-06-08 — Полный аудит проекта + Чек-лист + Деплой kppdf-4.0
+
+### Added
+- **AUDIT_REPORT_2026-06-08.md** — полный аудит: фронтенд (95 файлов, 34 сервиса), бэкенд (16 файлов, 2 CRUD-модуля), связь, БД, бизнес-логика, UI Kit
+- **Деплой kppdf-4.0:** проект развёрнут на 192.168.1.46 (порт 4000), Nginx переключён, старый kppdf-3.0 остановлен, Cloudflare tunnel активен на sport-set.ru
+- **Docker Compose production:** docker-compose.prod.yml (MongoDB 4.4 из-за отсутствия AVX, ChromaDB, Backend на tsx, порт 4000)
+- **Deploy-инфраструктура:** deploy/config.env, deploy/deploy.sh, deploy/nginx-kppdf40.conf, backend/.env.production, DEPLOY.md
+
+### Changed
+- **MongoDB:** 8 → 4.4 на production-сервере (CPU не поддерживает AVX-инструкции)
+- **.gitignore:** добавлены deploy/config.env, backend/.env.production
+- **docker-compose.yml:** исправлен healthcheck для MongoDB 4.4 (mongo → mongosh)
+
+### Fixed
+- **Сборка:** dist/browser/ вместо dist/kppdf-4.0/browser/ (Angular 21)
+
 ## [1.14.1] — 2026-06-08 — ChromaDB: TypeScript-скрипт seed + индексация .ts/.html/.scss
 
 ### Added

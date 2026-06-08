@@ -1,0 +1,79 @@
+# KPPDF 4.0 — Production stack (Ubuntu / Synology)
+# Запуск: docker compose -f docker-compose.prod.yml up -d
+# Остановка: docker compose -f docker-compose.prod.yml down
+# Логи:    docker compose -f docker-compose.prod.yml logs -f
+#
+# Все порты смещены, чтобы не конфликтовать с kppdf-3.0 (3000, 27017, 3001)
+#
+# Данные на хосте (KPPDF_DATA_DIR в .env):
+#   mongodb/  — база данных (bind-mount, переживает обновления)
+#   media/    — загруженные файлы (bind-mount)
+#
+# Код приложения — отдельно в REMOTE_DIR (/opt/kppdf-4.0), перезаписывается при деплое.
+
+services:
+  # База данных MongoDB
+  mongodb:
+    image: mongo:4.4
+    container_name: kppdf40-mongodb
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${MONGODB_PORT:-27018}:27017"
+    volumes:
+      - ${KPPDF_DATA_DIR}/mongodb:/data/db
+    environment:
+      MONGO_INITDB_DATABASE: kppdf40
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongo --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ChromaDB — векторная БД для семантического поиска
+  chromadb:
+    image: chromadb/chroma:latest
+    container_name: kppdf40-chromadb
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${CHROMADB_PORT:-8000}:8000"
+    volumes:
+      - ${KPPDF_DATA_DIR}/chromadb:/chroma/chroma
+    environment:
+      IS_PERSISTENT: "TRUE"
+      ANONYMIZED_TELEMETRY: "FALSE"
+    healthcheck:
+      test: wget -q -O - http://localhost:8000/api/v2/heartbeat || exit 1
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # Backend (Express + tsx)
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: kppdf40-backend
+    restart: unless-stopped
+    ports:
+      - "${BACKEND_PORT:-4000}:3000"
+    volumes:
+      - ${KPPDF_DATA_DIR}/media:/app/uploads
+    env_file:
+      - ./backend/.env.production
+    environment:
+      NODE_ENV: production
+      MONGODB_URI: mongodb://kppdf40-mongodb:27017/kppdf40
+      JWT_SECRET: "${JWT_SECRET:?JWT_SECRET is required!}"
+      JWT_REFRESH_SECRET: "${JWT_REFRESH_SECRET:?JWT_REFRESH_SECRET is required!}"
+      CORS_ORIGIN: "${CORS_ORIGIN:-https://sport-set.ru}"
+      PORT: "3000"
+    depends_on:
+      mongodb:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/api/health', r => process.exit(r.statusCode===200?0:1)).on('error', () => process.exit(1))"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
