@@ -1,4 +1,4 @@
-import { Component, input, output, ChangeDetectionStrategy } from '@angular/core';
+import { Component, input, model, ChangeDetectionStrategy } from '@angular/core';
 import { DrawerModule } from 'primeng/drawer';
 import { CommonModule } from '@angular/common';
 
@@ -8,11 +8,10 @@ import { CommonModule } from '@angular/common';
   imports: [CommonModule, DrawerModule],
   template: `
     <p-drawer
-      [visible]="visible()"
+      [(visible)]="visible"
       [position]="position()"
       [style]="{ width: width() }"
       [closable]="closable()"
-      (visibleChange)="visibleChange.emit($event)"
     >
       <ng-content />
     </p-drawer>
@@ -20,9 +19,8 @@ import { CommonModule } from '@angular/common';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class KpDrawerComponent {
-  visible = input(false);
+  visible = model(false);
   position = input<'left' | 'right' | 'top' | 'bottom'>('left');
   width = input('300px');
   closable = input(true);
-  readonly visibleChange = output<boolean>();
 }

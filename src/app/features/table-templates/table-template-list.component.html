@@ -5,8 +5,7 @@
 @defer (on idle) {
 <kp-dialog
   header="Предпросмотр: {{ previewTemplate()?.name || '' }}"
-  [visible]="previewVisible()"
-  (visibleChange)="previewVisible.set($event)"
+  [(visible)]="previewVisible"
   width="800px"
 >
   @if (previewLoading()) {

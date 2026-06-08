@@ -187,6 +187,10 @@ export interface DocumentTemplate {
   docType: DocType;
   pageSize?: 'A4' | 'A5' | 'letter';
   backgroundImage?: string;
+  /** ID организации, которая выставляет документ */
+  organizationId?: string;
+  /** Флажок «по умолчанию» — автоматически подставлять при создании */
+  isDefault?: boolean;
   blocks: DocBlock[];
   createdAt: string;
   updatedAt: string;
@@ -408,8 +412,10 @@ export interface CartItem {
   unit: string;
   /** Количество */
   quantity: number;
-  /** Цена за единицу на момент добавления */
+  /** Цена за единицу на момент добавления (без наценки) */
   price: number;
+  /** Процент наценки (копия из Product.defaultMarkupPercent на момент добавления) */
+  markupPercent?: number;
 }
 
 // ========================================

@@ -12,7 +12,6 @@ import { KpDialogComponent } from '../../shared/ui/kp-dialog.component';
 import { KpSelectComponent } from '../../shared/ui/kp-select.component';
 import { KpInputComponent } from '../../shared/ui/kp-input.component';
 import { KpToastComponent } from '../../shared/ui/kp-toast.component';
-import { KpBadgeComponent } from '../../shared/ui/kp-badge.component';
 import { KpConfirmDialogComponent } from '../../shared/ui/kp-confirm-dialog.component';
 import { UserService } from '../../core/user.service';
 import { RoleService } from '../../core/role.service';
@@ -27,7 +26,7 @@ import type { User, RoleDef } from '../../../../shared/types/index.js';
     CommonModule, FormsModule,
     KpButtonComponent, KpBreadcrumbComponent, KpCardComponent,
     KpTableComponent, KpDialogComponent, KpSelectComponent,
-    KpInputComponent, KpToastComponent, KpBadgeComponent, KpConfirmDialogComponent,
+    KpInputComponent, KpToastComponent,
   ],
   providers: [ConfirmationService],
   template: `
@@ -39,6 +38,7 @@ import type { User, RoleDef } from '../../../../shared/types/index.js';
         <kp-button [label]="'🔐 Роли'" [severity]="activeTab() === 'roles' ? 'info' : 'secondary'" size="small" (buttonClick)="activeTab.set('roles')" />
       </div>
 
+      @let isEditing = editingUserId();
       @if (activeTab() === 'users') {
         <div class="um-header">
           <h2 class="page__title">Пользователи</h2>
@@ -75,7 +75,7 @@ import type { User, RoleDef } from '../../../../shared/types/index.js';
 
     <!-- Диалог создания/редактирования пользователя -->
     <kp-dialog
-      [header]="editingUserId() ? '✏️ Редактировать пользователя' : '👤 Новый пользователь'"
+      [header]="isEditing ? '✏️ Редактировать пользователя' : '👤 Новый пользователь'"
       [(visible)]="userDialogVisible"
       width="480px"
       (dialogHide)="closeUserDialog()"
@@ -85,7 +85,7 @@ import type { User, RoleDef } from '../../../../shared/types/index.js';
         <kp-input label="Отображаемое имя" [(ngModel)]="formDisplayName" placeholder="Иван Иванов" />
         <kp-input label="Email" [(ngModel)]="formEmail" placeholder="ivanov@company.ru" />
         <kp-input label="Телефон" [(ngModel)]="formPhone" placeholder="+7 (999) 123-45-67" />
-        @if (!editingUserId()) {
+        @if (!isEditing) {
           <kp-input label="Пароль" [(ngModel)]="formPassword" placeholder="Минимум 6 символов" />
         }
         <kp-select label="Роль" [options]="svc.roleOptions" [(ngModel)]="formRole" placeholder="Выберите роль" />
@@ -93,8 +93,8 @@ import type { User, RoleDef } from '../../../../shared/types/index.js';
       <div class="um-actions">
         <kp-button label="Отмена" severity="secondary" size="small" (buttonClick)="closeUserDialog()" />
         <kp-button
-          [label]="editingUserId() ? 'Сохранить' : 'Создать и пригласить'"
-          [lucideIcon]="editingUserId() ? 'check' : 'send'"
+          [label]="isEditing ? 'Сохранить' : 'Создать и пригласить'"
+          [lucideIcon]="isEditing ? 'check' : 'send'"
           severity="info" size="small"
           [disabled]="!formUsername() || !formDisplayName() || !formRole()"
           (buttonClick)="saveUser()"

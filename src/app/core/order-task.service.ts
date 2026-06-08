@@ -1,10 +1,12 @@
-import { Injectable } from '@angular/core';
-import { Observable, of, delay } from 'rxjs';
+import { Injectable, inject } from '@angular/core';
+import { Observable, of, from, delay } from 'rxjs';
+import { map } from 'rxjs/operators';
+import { firstValueFrom } from 'rxjs';
 import { generateId, nowISO } from './crud-factory.js';
 import { WorkerService } from './worker.service.js';
 import { ProductService } from './product.service.js';
 import { ProductComponentService } from './product-component.service.js';
-import type { ApiResponse, OrderTask, TaskStatus, ProductComponent, MissingDataIssue, ProductionOrder } from '../../../shared/types/index.js';
+import type { ApiResponse, OrderTask, TaskStatus, ProductComponent, MissingDataIssue, ProductionOrder, Worker, Product } from '../../../shared/types/index.js';
 
 const SEED_TASKS: OrderTask[] = [
   // ПЗ-0001 — Стойка баскетбольная БСФП-120
@@ -29,21 +31,28 @@ export class OrderTaskService {
   delayMs = 100;
   items: OrderTask[] = SEED_TASKS.map(t => ({ ...t, dependsOnTaskIds: [...t.dependsOnTaskIds] }));
 
-  private _workerSvc?: WorkerService;
-  private _productSvc?: ProductService;
-  private _compSvc?: ProductComponentService;
+  private workerSvc = inject(WorkerService);
+  private productSvc = inject(ProductService);
+  private compSvc = inject(ProductComponentService);
 
-  private get workerSvc(): WorkerService {
-    if (!this._workerSvc) this._workerSvc = new WorkerService();
-    return this._workerSvc;
+  /** Кеши справочных данных (загружаются при первом обращении) */
+  private cachedWorkers: Worker[] | null = null;
+  private cachedProducts: Product[] | null = null;
+
+  private async ensureWorkers(): Promise<Worker[]> {
+    if (!this.cachedWorkers) {
+      const res = await firstValueFrom(this.workerSvc.getAll());
+      this.cachedWorkers = res.success ? res.data : [];
+    }
+    return this.cachedWorkers;
   }
-  private get productSvc(): ProductService {
-    if (!this._productSvc) this._productSvc = new ProductService();
-    return this._productSvc;
-  }
-  private get compSvc(): ProductComponentService {
-    if (!this._compSvc) this._compSvc = new ProductComponentService();
-    return this._compSvc;
+
+  private async ensureProducts(): Promise<Product[]> {
+    if (!this.cachedProducts) {
+      const res = await firstValueFrom(this.productSvc.getAll());
+      this.cachedProducts = res.success ? res.data : [];
+    }
+    return this.cachedProducts;
   }
 
   getTasks(orderId?: string): Observable<ApiResponse<OrderTask[]>> {
@@ -81,27 +90,32 @@ export class OrderTaskService {
 
   /** Найти свободных работников для данной работы */
   getAvailableWorkers(workTypeId: string): Observable<ApiResponse<{ id: string; fullName: string; grade: number; busyUntil?: string }[]>> {
-    const workers = this.workerSvc.getRawItems().filter(w => w.isActive && w.workTypeIds.includes(workTypeId));
-    const busyWorkers = new Map<string, string>(); // workerId → max end date
+    return from(this.ensureWorkers()).pipe(
+      map(workers => {
+        const available = workers.filter(w => w.isActive && w.workTypeIds.includes(workTypeId));
+        const busyWorkers = new Map<string, string>();
 
-    for (const t of this.items) {
-      if (t.workerId && (t.status === 'assigned' || t.status === 'in_progress')) {
-        const currentMax = busyWorkers.get(t.workerId);
-        const taskEnd = t.actualEndDate || t.plannedEndDate || '';
-        if (!currentMax || taskEnd > currentMax) {
-          busyWorkers.set(t.workerId, taskEnd);
+        for (const t of this.items) {
+          if (t.workerId && (t.status === 'assigned' || t.status === 'in_progress')) {
+            const currentMax = busyWorkers.get(t.workerId);
+            const taskEnd = t.actualEndDate || t.plannedEndDate || '';
+            if (!currentMax || taskEnd > currentMax) {
+              busyWorkers.set(t.workerId, taskEnd);
+            }
+          }
         }
-      }
-    }
 
-    const available = workers.map(w => ({
-      id: w.id,
-      fullName: `${w.lastName} ${w.firstName}${w.patronymic ? ' ' + w.patronymic : ''}`,
-      grade: w.grade,
-      busyUntil: busyWorkers.get(w.id),
-    })).sort((a, b) => (a.busyUntil ? 1 : 0) - (b.busyUntil ? 1 : 0)); // свободные первыми
+        const data = available.map(w => ({
+          id: w.id,
+          fullName: `${w.lastName} ${w.firstName}${w.patronymic ? ' ' + w.patronymic : ''}`,
+          grade: w.grade,
+          busyUntil: busyWorkers.get(w.id),
+        })).sort((a, b) => (a.busyUntil ? 1 : 0) - (b.busyUntil ? 1 : 0));
 
-    return of({ success: true, data: available }).pipe(delay(this.delayMs));
+        return { success: true, data } as ApiResponse<{ id: string; fullName: string; grade: number; busyUntil?: string }[]>;
+      }),
+      delay(this.delayMs),
+    );
   }
 
   /** Авто-назначить ближайшего свободного */
@@ -110,26 +124,35 @@ export class OrderTaskService {
     if (!task) return of({ success: false, data: undefined as unknown as OrderTask, message: 'Задача не найдена' }).pipe(delay(this.delayMs));
     if (task.workerId) return of({ success: false, data: undefined as unknown as OrderTask, message: 'Исполнитель уже назначен' }).pipe(delay(this.delayMs));
 
-    const workers = this.workerSvc.getRawItems().filter(w => w.isActive && w.workTypeIds.includes(task.workTypeId));
-    if (!workers.length) return of({ success: false, data: undefined as unknown as OrderTask, message: 'Нет работников для этого вида работ' }).pipe(delay(this.delayMs));
+    return from(this.ensureWorkers()).pipe(
+      map(workers => {
+        const available = workers.filter(w => w.isActive && w.workTypeIds.includes(task.workTypeId));
+        if (!available.length) {
+          return { success: false, data: undefined as unknown as OrderTask, message: 'Нет работников для этого вида работ' };
+        }
 
-    // Найти наименее загруженного (по последней дате занятости)
-    const busyUntil = new Map<string, string>();
-    for (const t of this.items) {
-      if (t.workerId && (t.status === 'assigned' || t.status === 'in_progress')) {
-        const cur = busyUntil.get(t.workerId);
-        const end = t.actualEndDate || t.plannedEndDate || '';
-        if (!cur || end > cur) busyUntil.set(t.workerId, end);
-      }
-    }
+        const busyUntil = new Map<string, string>();
+        for (const t of this.items) {
+          if (t.workerId && (t.status === 'assigned' || t.status === 'in_progress')) {
+            const cur = busyUntil.get(t.workerId);
+            const end = t.actualEndDate || t.plannedEndDate || '';
+            if (!cur || end > cur) busyUntil.set(t.workerId, end);
+          }
+        }
 
-    const best = workers
-      .map(w => ({ worker: w, busy: busyUntil.get(w.id) || '0000-00-00' }))
-      .sort((a, b) => a.busy.localeCompare(b.busy))[0]!;
+        const best = available
+          .map(w => ({ worker: w, busy: busyUntil.get(w.id) || '0000-00-00' }))
+          .sort((a, b) => a.busy.localeCompare(b.busy))[0]!;
 
-    const updated = { ...task, workerId: best.worker.id, status: 'assigned' as TaskStatus, updatedAt: nowISO() };
-    this.items = this.items.map(x => x.id === taskId ? updated : x);
-    return of({ success: true, data: { ...updated, dependsOnTaskIds: [...updated.dependsOnTaskIds] } }).pipe(delay(this.delayMs));
+        const updated = { ...task, workerId: best.worker.id, status: 'assigned' as TaskStatus, updatedAt: nowISO() };
+        this.items = this.items.map(x => x.id === taskId ? updated : x);
+        return {
+          success: true,
+          data: { ...updated, dependsOnTaskIds: [...updated.dependsOnTaskIds] },
+        };
+      }),
+      delay(this.delayMs),
+    );
   }
 
   /** Вручную назначить исполнителя */
@@ -146,35 +169,40 @@ export class OrderTaskService {
 
   /** Проверить готовность заказа к производству — найти недостающие данные */
   checkMissingData(orderId: string, order: ProductionOrder): Observable<ApiResponse<MissingDataIssue[]>> {
-    const issues: MissingDataIssue[] = [];
+    return from(this.ensureProducts()).pipe(
+      map(products => {
+        const issues: MissingDataIssue[] = [];
+        const product = products.find(p => p.id === order.productId);
 
-    const product = this.productSvc.getRawItems().find(p => p.id === order.productId);
-    if (!product) {
-      issues.push({ type: 'incomplete_spec', componentId: '', componentName: order.productName, detail: 'Товар не найден в справочнике' });
-      return of({ success: true, data: issues }).pipe(delay(this.delayMs));
-    }
+        if (!product) {
+          issues.push({ type: 'incomplete_spec', componentId: '', componentName: order.productName, detail: 'Товар не найден в справочнике' });
+          return { success: true, data: issues } as ApiResponse<MissingDataIssue[]>;
+        }
 
-    // Проверяем компоненты товара
-    const components = this.compSvc.getRawItems().filter(c => c.productId === order.productId);
+        // Проверяем компоненты товара (ProductComponentService пока in-memory)
+        const components = this.compSvc.getRawItems().filter(c => c.productId === order.productId);
 
-    if (!components.length) {
-      issues.push({ type: 'incomplete_spec', componentId: '', componentName: order.productName, detail: 'Нет компонентов в BOM (спецификации). Нужен инженер-конструктор.' });
-      return of({ success: true, data: issues }).pipe(delay(this.delayMs));
-    }
+        if (!components.length) {
+          issues.push({ type: 'incomplete_spec', componentId: '', componentName: order.productName, detail: 'Нет компонентов в BOM (спецификации). Нужен инженер-конструктор.' });
+          return { success: true, data: issues } as ApiResponse<MissingDataIssue[]>;
+        }
 
-    for (const comp of components) {
-      if (!comp.drawingUrl && product.hasDrawing) {
-        issues.push({ type: 'no_drawing', componentId: comp.id, componentName: comp.name, detail: `Нет чертежа для компонента «${comp.name}». Требуется проектировщик.` });
-      }
-      if (!comp.materials || comp.materials.length === 0) {
-        issues.push({ type: 'no_materials', componentId: comp.id, componentName: comp.name, detail: `Не указаны материалы для компонента «${comp.name}». Требуется снабженец / инженер.` });
-      }
-      if (!comp.workTypes || comp.workTypes.length === 0) {
-        issues.push({ type: 'no_work_types', componentId: comp.id, componentName: comp.name, detail: `Не указаны виды работ для компонента «${comp.name}». Требуется инженер-конструктор.` });
-      }
-    }
+        for (const comp of components) {
+          if (!comp.drawingUrl && product.hasDrawing) {
+            issues.push({ type: 'no_drawing', componentId: comp.id, componentName: comp.name, detail: `Нет чертежа для компонента «${comp.name}». Требуется проектировщик.` });
+          }
+          if (!comp.materials || comp.materials.length === 0) {
+            issues.push({ type: 'no_materials', componentId: comp.id, componentName: comp.name, detail: `Не указаны материалы для компонента «${comp.name}». Требуется снабженец / инженер.` });
+          }
+          if (!comp.workTypes || comp.workTypes.length === 0) {
+            issues.push({ type: 'no_work_types', componentId: comp.id, componentName: comp.name, detail: `Не указаны виды работ для компонента «${comp.name}». Требуется инженер-конструктор.` });
+          }
+        }
 
-    return of({ success: true, data: issues }).pipe(delay(this.delayMs));
+        return { success: true, data: issues } as ApiResponse<MissingDataIssue[]>;
+      }),
+      delay(this.delayMs),
+    );
   }
 
   /** Сгенерировать авто-задачи на основе проблем комплектации */
@@ -184,7 +212,6 @@ export class OrderTaskService {
     const newTasks: OrderTask[] = [];
 
     for (const issue of issues) {
-      // Уже есть задача на эту проблему?
       const exists = this.items.some(t => t.productionOrderId === orderId && t.notes === `auto:${issue.type}:${issue.componentId}`);
       if (exists) continue;
 
@@ -231,8 +258,7 @@ export class OrderTaskService {
   generateFromComponents(orderId: string, components: ProductComponent[]): Observable<ApiResponse<OrderTask[]>> {
     let sortOrder = this.items.filter(t => t.productionOrderId === orderId).length + 1;
     const now = nowISO();
-    // Группируем задачи по компонентам для зависимостей
-    const prevTasksByComponent = new Map<string, string>(); // componentId → last taskId
+    const prevTasksByComponent = new Map<string, string>();
 
     for (const comp of components) {
       for (const wt of comp.workTypes) {

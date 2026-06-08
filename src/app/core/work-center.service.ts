@@ -1,17 +1,30 @@
-import { Injectable } from '@angular/core';
-import { BaseCrudService } from './crud-factory.js';
-import type { WorkCenter } from '../../../shared/types/index.js';
-
-const SEED_WORK_CENTERS: WorkCenter[] = [
-  { id: 'wc-1', name: 'Станок лазерной резки', type: 'Станок', description: 'Trumpf TruLaser 3030', isActive: true, createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-01-01T00:00:00.000Z' },
-  { id: 'wc-2', name: 'Труборезный станок', type: 'Станок', description: 'Труборез полуавтоматический', isActive: true, createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-01-01T00:00:00.000Z' },
-  { id: 'wc-3', name: 'Сварочный полуавтомат', type: 'Станок', description: 'Lincoln Electric Power MIG 350MP', isActive: true, createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-01-01T00:00:00.000Z' },
-  { id: 'wc-4', name: 'Деревообрабатывающий станок', type: 'Станок', description: 'Универсальный деревообрабатывающий', isActive: true, createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-01-01T00:00:00.000Z' },
-  { id: 'wc-5', name: 'Камера порошковой покраски', type: 'Камера', description: 'Покрасочная камера с печью полимеризации', isActive: true, createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-01-01T00:00:00.000Z' },
-  { id: 'wc-6', name: 'Пескоструйная камера', type: 'Камера', description: 'Пескоструйная обработка труб и листов', isActive: true, createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-01-01T00:00:00.000Z' },
-];
+import { Injectable, inject } from '@angular/core';
+import { Observable } from 'rxjs';
+import type { ApiResponse, WorkCenter } from '../../../shared/types/index.js';
+import { ApiService } from './api.service.js';
 
 @Injectable({ providedIn: 'root' })
-export class WorkCenterService extends BaseCrudService<WorkCenter> {
-  constructor() { super(); this.items = SEED_WORK_CENTERS.map(w => ({ ...w })); }
+export class WorkCenterService {
+  private api = inject(ApiService);
+  private basePath = '/work-centers';
+
+  getAll(): Observable<ApiResponse<WorkCenter[]>> {
+    return this.api.get<WorkCenter[]>(this.basePath);
+  }
+
+  getById(id: string): Observable<ApiResponse<WorkCenter | undefined>> {
+    return this.api.getById<WorkCenter>(this.basePath, id);
+  }
+
+  create(data: Omit<WorkCenter, 'id' | 'createdAt' | 'updatedAt'>): Observable<ApiResponse<WorkCenter>> {
+    return this.api.post<WorkCenter>(this.basePath, data as any);
+  }
+
+  update(id: string, data: Partial<Omit<WorkCenter, 'id' | 'createdAt'>>): Observable<ApiResponse<WorkCenter>> {
+    return this.api.put<WorkCenter>(this.basePath, id, data);
+  }
+
+  delete(id: string): Observable<ApiResponse<void>> {
+    return this.api.delete<void>(this.basePath, id);
+  }
 }

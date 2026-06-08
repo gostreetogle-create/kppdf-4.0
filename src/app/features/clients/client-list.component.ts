@@ -14,6 +14,7 @@ import { KpSelectComponent } from '../../shared/ui/kp-select.component';
 import { KpToggleComponent } from '../../shared/ui/kp-toggle.component';
 import { KpToastComponent } from '../../shared/ui/kp-toast.component';
 import { KpConfirmDialogComponent } from '../../shared/ui/kp-confirm-dialog.component';
+
 import { NotificationService } from '../../core/notification.service';
 import { ClientService } from '../../core/client.service';
 import { OrganizationService } from '../../core/organization.service';
@@ -34,7 +35,6 @@ interface ClientRow extends Client {
     KpButtonComponent, KpBreadcrumbComponent, KpCardComponent,
     KpTableComponent, KpDialogComponent, KpInputComponent,
     KpSelectComponent, KpToggleComponent, KpToastComponent,
-    KpConfirmDialogComponent,
   ],
   providers: [ConfirmationService],
   template: `
@@ -67,8 +67,7 @@ interface ClientRow extends Client {
     <!-- Диалог добавления/редактирования -->
     <kp-dialog
       [header]="editId() ? 'Редактировать клиента' : 'Добавить клиента'"
-      [visible]="dialogVisible()"
-      (visibleChange)="dialogVisible.set($event)"
+      [(visible)]="dialogVisible"
       width="600px"
     >
       <div class="cl-list__form">

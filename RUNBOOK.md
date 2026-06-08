@@ -358,8 +358,27 @@ sudo docker stop kppdf40-backend
 # Проверить целостность MongoDB
 sudo docker exec kppdf40-mongodb mongod --repair --dbpath /data/db
 
-# Если не помогает — восстановить из бэкапа (TODO: настроить бэкапы)
-# Пока бэкапов нет — будьте осторожны!
+# Если не помогает — восстановить из бэкапа
+sudo bash /opt/kppdf-4.0/deploy/restore-mongodb.sh --list      # список бэкапов
+sudo bash /opt/kppdf-4.0/deploy/restore-mongodb.sh             # latest
+sudo bash /opt/kppdf-4.0/deploy/restore-mongodb.sh /путь/файла # конкретный
+```
+
+### 🆘 Случайно удалили данные
+
+```bash
+# 1. НЕ перезапускать контейнеры (данные могут перезаписаться)
+# 2. Остановить backend
+sudo docker stop kppdf40-backend
+
+# 3. Создать бэкап текущего состояния (на всякий случай)
+sudo bash /opt/kppdf-4.0/deploy/backup-mongodb.sh
+
+# 4. Восстановить из вчерашнего бэкапа
+sudo bash /opt/kppdf-4.0/deploy/restore-mongodb.sh
+
+# 5. Если нужно — из конкретного бэкапа
+sudo bash /opt/kppdf-4.0/deploy/restore-mongodb.sh /var/lib/kppdf40/backups/kppdf40-2026-06-07_03-00-00.archive
 ```
 
 ### 🆘 Закончилось место на диске
@@ -397,7 +416,99 @@ sudo journalctl --vacuum-time=7d
 
 ## 10. Шпаргалка команд
 
-### Быстрые команды (копировать и вставить)
+## 11. Бэкапы и восстановление
+
+### Как работает бэкап
+
+Бэкап создаётся скриптом `deploy/backup-mongodb.sh`:
+
+- Использует `docker exec kppdf40-mongodb mongodump --archive` → выгружает БД одной командой без временных файлов
+- Сохраняет в `/var/lib/kppdf40/backups/kppdf40-{дата}-{время}.archive`
+- Автоматически удаляет бэкапы старше 14 дней
+- Обновляет симлинк `kppdf40-latest.archive` на свежий бэкап
+
+> MongoDB 4.4 включает `mongodump`/`mongorestore` в образе — никаких дополнительных пакетов не нужно.
+
+### Ежедневный бэкап (cron)
+
+Установка:
+
+```bash
+sudo cp /opt/kppdf-4.0/deploy/cron-backup /etc/cron.d/kppdf40-backup
+```
+
+После этого бэкап будет запускаться **каждый день в 03:00**.
+Логи: `/var/log/kppdf40-backup.log`
+
+Проверить, что cron работает:
+
+```bash
+# Посмотреть логи
+sudo tail -20 /var/log/kppdf40-backup.log
+
+# Посмотреть последние бэкапы
+sudo bash /opt/kppdf-4.0/deploy/backup-mongodb.sh --dry-run
+```
+
+### Ручной бэкап
+
+```bash
+# Создать бэкап сейчас
+sudo bash /opt/kppdf-4.0/deploy/backup-mongodb.sh
+
+# Создать и хранить 30 дней
+sudo bash /opt/kppdf-4.0/deploy/backup-mongodb.sh --keep 30
+
+# Посмотреть что будет (без записи)
+sudo bash /opt/kppdf-4.0/deploy/backup-mongodb.sh --dry-run
+```
+
+### Просмотр бэкапов
+
+```bash
+# Список всех бэкапов
+sudo bash /opt/kppdf-4.0/deploy/restore-mongodb.sh --list
+
+# Вывод:
+#   2026-06-08 03:00  1,2M  kppdf40-2026-06-08_03-00-00.archive  ← latest
+#   2026-06-07 03:00  1,1M  kppdf40-2026-06-07_03-00-00.archive
+```
+
+### Восстановление
+
+```bash
+# Восстановить последний бэкап
+sudo bash /opt/kppdf-4.0/deploy/restore-mongodb.sh
+
+# Из конкретного файла
+sudo bash /opt/kppdf-4.0/deploy/restore-mongodb.sh /var/lib/kppdf40/backups/kppdf40-2026-06-07_03-00-00.archive
+
+# Просмотр без восстановления
+sudo bash /opt/kppdf-4.0/deploy/restore-mongodb.sh --dry-run
+```
+
+> ⚠️ **Важно:** restore перезаписывает всю БД. Скрипт запрашивает подтверждение `YES`.
+> Перед restore автоматически останавливается backend.
+
+### Структура папки бэкапов
+
+```
+/var/lib/kppdf40/backups/
+├── kppdf40-2026-06-08_03-00-00.archive    # дамп (binary archive format)
+├── kppdf40-2026-06-07_03-00-00.archive
+├── kppdf40-2026-06-06_03-00-00.archive
+├── ...                                     # хранятся 14 дней, потом удаляются
+└── kppdf40-latest.archive → kppdf40-2026-06-08_03-00-00.archive  # симлинк
+```
+
+### Что бэкапится
+
+- **БД kppdf40** (users, organizations, products и т.д.) — полный дамп
+- **Не бэкапится:** загруженные медиафайлы (`/var/lib/kppdf40/media/`) — они не критичны пока
+
+---
+
+## 12. Быстрые команды (копировать и вставить)
 
 ```bash
 # ─── SSH ───

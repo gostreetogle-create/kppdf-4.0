@@ -17,7 +17,37 @@ import { setupSwagger } from './docs/swagger.js';
 import authRoutes from './modules/auth.routes.js';
 import organizationRoutes from './modules/organization.routes.js';
 import counterpartyRoleRoutes from './modules/counterparty-role.routes.js';
+import productRoutes from './modules/product.routes.js';
+import productCategoryRoutes from './modules/product-category.routes.js';
+import clientRoutes from './modules/client.routes.js';
+import docTypeRoutes from './modules/doc-type.routes.js';
+import documentTemplateRoutes from './modules/document-template.routes.js';
+import workCenterRoutes from './modules/work-center.routes.js';
+import workerRoutes from './modules/worker.routes.js';
+import productionOrderRoutes from './modules/production-order.routes.js';
+import tableTemplateRoutes from './modules/table-template.routes.js';
+import certificateRoutes from './modules/certificate.routes.js';
+import contractRoutes from './modules/contract.routes.js';
+import commercialProposalRoutes from './modules/commercial-proposal.routes.js';
+import financialReportRoutes from './modules/financial-report.routes.js';
+import inventorFileRoutes from './modules/inventor-file.routes.js';
+import invoiceRoutes from './modules/invoice.routes.js';
+import orderClosingRoutes from './modules/order-closing.routes.js';
+import productComponentRoutes from './modules/product-component.routes.js';
+import purchaseRequestRoutes from './modules/purchase-request.routes.js';
+import reconciliationActRoutes from './modules/reconciliation-act.routes.js';
+import roleRoutes from './modules/role.routes.js';
+import rppRoutes from './modules/rpp.routes.js';
+import statusWorkflowRoutes from './modules/status-workflow.routes.js';
+import storageItemRoutes from './modules/storage-item.routes.js';
+import supplierOrderRoutes from './modules/supplier-order.routes.js';
+import tenderRoutes from './modules/tender.routes.js';
+import userRoutes from './modules/user.routes.js';
+import warehouseRoutes from './modules/warehouse.routes.js';
+import workTypeRoutes from './modules/work-type.routes.js';
+import inventoryRoutes from './modules/inventory.routes.js';
 
+import uploadRoutes from './modules/upload.routes.js';
 import { User } from './modules/user.model.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -49,6 +79,40 @@ app.use('/api/v1/auth/login', authLimiter);
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/organizations', organizationRoutes);
 app.use('/api/v1/counterparty-roles', counterpartyRoleRoutes);
+app.use('/api/v1/products', productRoutes);
+app.use('/api/v1/product-categories', productCategoryRoutes);
+app.use('/api/v1/clients', clientRoutes);
+app.use('/api/v1/doc-types', docTypeRoutes);
+app.use('/api/v1/document-templates', documentTemplateRoutes);
+app.use('/api/v1/work-centers', workCenterRoutes);
+app.use('/api/v1/workers', workerRoutes);
+app.use('/api/v1/production-orders', productionOrderRoutes);
+app.use('/api/v1/table-templates', tableTemplateRoutes);
+
+// New CRUD routes
+app.use('/api/v1/certificates', certificateRoutes);
+app.use('/api/v1/contracts', contractRoutes);
+app.use('/api/v1/commercial-proposals', commercialProposalRoutes);
+app.use('/api/v1/financial-reports', financialReportRoutes);
+app.use('/api/v1/inventor-files', inventorFileRoutes);
+app.use('/api/v1/invoices', invoiceRoutes);
+app.use('/api/v1/order-closings', orderClosingRoutes);
+app.use('/api/v1/product-components', productComponentRoutes);
+app.use('/api/v1/purchase-requests', purchaseRequestRoutes);
+app.use('/api/v1/reconciliation-acts', reconciliationActRoutes);
+app.use('/api/v1/roles', roleRoutes);
+app.use('/api/v1/rpp', rppRoutes);
+app.use('/api/v1/status-workflows', statusWorkflowRoutes);
+app.use('/api/v1/storage-items', storageItemRoutes);
+app.use('/api/v1/supplier-orders', supplierOrderRoutes);
+app.use('/api/v1/tenders', tenderRoutes);
+app.use('/api/v1/users', userRoutes);
+app.use('/api/v1/warehouses', warehouseRoutes);
+app.use('/api/v1/work-types', workTypeRoutes);
+app.use('/api/v1/inventory', inventoryRoutes);
+
+// File upload
+app.use('/api/v1/upload', uploadRoutes);
 
 // Swagger docs
 setupSwagger(app);

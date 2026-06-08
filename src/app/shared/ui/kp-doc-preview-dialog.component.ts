@@ -4,7 +4,10 @@ import { KpDocCanvasComponent } from './kp-doc-canvas.component.js';
 import { KpButtonComponent } from './kp-button.component.js';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
-import type { DocBlock } from '../../../../shared/types/index.js';
+import { firstValueFrom } from 'rxjs';
+import type { DocBlock, TableTemplate } from '../../../../shared/types/index.js';
+import { TableTemplateService } from '../../core/table-template.service.js';
+import { ApiService } from '../../core/api.service.js';
 
 const DOC_TYPE_LABELS: Record<string, string> = {
   quotation: 'Коммерческое предложение',
@@ -16,7 +19,9 @@ const DOC_TYPE_LABELS: Record<string, string> = {
 @Component({
   selector: 'kp-doc-preview-dialog',
   standalone: true,
-  imports: [KpDialogComponent, KpDocCanvasComponent, KpButtonComponent],
+  imports: [
+    KpDialogComponent, KpDocCanvasComponent, KpButtonComponent,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './kp-doc-preview-dialog.component.html',
   styleUrl: './kp-doc-preview-dialog.component.scss'
@@ -29,10 +34,17 @@ export class KpDocPreviewDialogComponent {
   docType = signal('');
   backgroundImage = signal('');
   blocks = signal<DocBlock[]>([]);
-
   docTypeLabel = signal('');
 
+  /** Кеш данных для табличных блоков: blockId → { template, rows } */
+  tableCache = signal<Map<string, { template: TableTemplate; rows: Record<string, unknown>[] }>>(new Map());
+
   private cdr = inject(ChangeDetectorRef);
+  private templateService = inject(TableTemplateService);
+  private api = inject(ApiService);
+
+  /** Коэффициент масштабирования A4-страницы, чтобы полностью помещалась в диалоге */
+  pageScale = signal(1);
 
   open(templateName: string, docType: string, blocks: DocBlock[], backgroundImage = '') {
     this.templateName.set(templateName);
@@ -46,6 +58,76 @@ export class KpDocPreviewDialogComponent {
     })));
     this.printing.set(false);
     this.visible.set(true);
+
+    // Предзагружаем данные для всех табличных блоков (для print-шаблона)
+    this.resolveTableData(blocks);
+
+    // Ждём рендеринга диалога, затем вычисляем масштаб
+    requestAnimationFrame(() => this.computeScale());
+  }
+
+  /** Загрузить шаблоны и данные для всех table-блоков (кеш для print-шаблона) */
+  private async resolveTableData(blocks: DocBlock[]) {
+    const tableBlocks = blocks.filter(b => b.type === 'table' && b.tableTemplateId);
+    if (tableBlocks.length === 0) return;
+
+    const cache = new Map<string, { template: TableTemplate; rows: Record<string, unknown>[] }>();
+
+    for (const block of tableBlocks) {
+      try {
+        const tid = block.tableTemplateId!;
+        const tmplRes = await firstValueFrom(this.templateService.getTemplate(tid));
+        if (!tmplRes.success || !tmplRes.data) continue;
+
+        const template = tmplRes.data;
+        const tableName = template.columns[0]?.tableName;
+        let rows: Record<string, unknown>[] = [];
+
+        if (tableName) {
+          try {
+            const dataRes = await firstValueFrom(this.api.get<unknown[]>('/' + tableName));
+            if (dataRes.success && Array.isArray(dataRes.data)) {
+              rows = dataRes.data as Record<string, unknown>[];
+            }
+          } catch {
+            rows = [];
+          }
+        }
+
+        cache.set(block.id, { template, rows });
+      } catch {
+        // блок без данных
+      }
+    }
+
+    if (cache.size > 0) {
+      this.tableCache.set(cache);
+    }
+  }
+
+  /** Получить данные из кеша для блока (используется в print-шаблоне) */
+  getTableData(blockId: string): { template: TableTemplate; rows: Record<string, unknown>[] } | undefined {
+    return this.tableCache().get(blockId);
+  }
+
+  /** Значение поля с форматированием для печати */
+  getFieldValue(row: Record<string, unknown>, fieldName: string): string {
+    const val = row[fieldName];
+    if (val === null || val === undefined) return '—';
+    if (typeof val === 'boolean') return val ? '✓' : '—';
+    if (typeof val === 'number') {
+      if (fieldName.toLowerCase().includes('price') || fieldName.toLowerCase().includes('total') || fieldName.toLowerCase().includes('sum')) {
+        return val.toLocaleString('ru-RU') + ' ₽';
+      }
+      if (fieldName.toLowerCase().includes('percent') || fieldName.toLowerCase().includes('markup')) {
+        return val + '%';
+      }
+      if (fieldName.toLowerCase().includes('weight') || fieldName.toLowerCase().includes('kg')) {
+        return val.toLocaleString('ru-RU') + ' кг';
+      }
+      return val.toLocaleString('ru-RU');
+    }
+    return String(val);
   }
 
   columnsGrid(block: DocBlock): string {
@@ -69,17 +151,21 @@ export class KpDocPreviewDialogComponent {
     this.pdfLoading.set(true);
     this.cdr.detectChanges();
 
-    // Small delay to let the canvas fully render
     await new Promise(resolve => setTimeout(resolve, 100));
 
     const pageElement = document.querySelector('kp-doc-preview-dialog .canvas__page') as HTMLElement | null;
-    if (!pageElement) {
+    if (!pageElement && !this.visible()) {
+      this.pdfLoading.set(false);
+      return;
+    }
+    const pageEl = pageElement || document.querySelector('.canvas__page') as HTMLElement | null;
+    if (!pageEl) {
       this.pdfLoading.set(false);
       return;
     }
 
     try {
-      const canvas = await html2canvas(pageElement, {
+      const canvas = await html2canvas(pageEl, {
         scale: 2,
         useCORS: true,
         backgroundColor: '#ffffff',
@@ -97,12 +183,10 @@ export class KpDocPreviewDialogComponent {
       let position = 0;
       let pageNum = 0;
 
-      // First page
       pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
       heightLeft -= pdfHeight;
       pageNum++;
 
-      // Additional pages if content overflows
       while (heightLeft > 0) {
         position = -(pdfHeight * pageNum);
         pdf.addPage();
@@ -118,5 +202,28 @@ export class KpDocPreviewDialogComponent {
     } finally {
       this.pdfLoading.set(false);
     }
+  }
+
+  /** Вычислить масштаб, чтобы A4-страница (794×1123 px) полностью помещалась в контейнере */
+  private computeScale() {
+    const wrap = document.querySelector('kp-doc-preview-dialog .preview__canvas-wrap') as HTMLElement | null;
+    if (!wrap) return;
+
+    const wrapWidth = wrap.clientWidth;
+    const wrapHeight = wrap.clientHeight;
+
+    if (wrapWidth === 0 || wrapHeight === 0) {
+      requestAnimationFrame(() => this.computeScale());
+      return;
+    }
+
+    const pageW = 794;
+    const pageH = 1123;
+
+    const scaleX = (wrapWidth - 8) / pageW;
+    const scaleY = (wrapHeight - 8) / pageH;
+    const scale = Math.min(scaleX, scaleY, 1);
+
+    this.pageScale.set(parseFloat(scale.toFixed(4)));
   }
 }

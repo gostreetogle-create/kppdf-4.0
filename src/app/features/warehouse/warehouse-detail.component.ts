@@ -54,11 +54,14 @@ const ENTITY_TYPES: SelectOption[] = [
     <div class="wh-detail">
       <kp-breadcrumb [items]="breadcrumbs()" />
 
+      @let wh = warehouse();
+      @let tab = activeTab();
+
       <div class="wh-detail__header">
         <div>
-          <h1 class="wh-detail__title">🏭 {{ warehouse()?.name || 'Склад' }}</h1>
-          @if (warehouse()?.address) {
-            <p class="wh-detail__addr">{{ warehouse()?.address }}</p>
+          <h1 class="wh-detail__title">🏭 {{ wh?.name || 'Склад' }}</h1>
+          @if (wh?.address) {
+            <p class="wh-detail__addr">{{ wh?.address }}</p>
           }
         </div>
         <kp-button
@@ -73,18 +76,18 @@ const ENTITY_TYPES: SelectOption[] = [
       <div class="wh-detail__tabs">
         <button
           class="wh-detail__tab"
-          [class.wh-detail__tab--active]="activeTab() === 'inventory'"
+          [class.wh-detail__tab--active]="tab === 'inventory'"
           (click)="activeTab.set('inventory')"
         >📊 Остатки ({{ inventoryRows().length }})</button>
         <button
           class="wh-detail__tab"
-          [class.wh-detail__tab--active]="activeTab() === 'movements'"
+          [class.wh-detail__tab--active]="tab === 'movements'"
           (click)="activeTab.set('movements')"
         >📋 Движения ({{ movementRows().length }})</button>
       </div>
 
       <!-- Inventory Table -->
-      @if (activeTab() === 'inventory') {
+      @if (tab === 'inventory') {
         <kp-card>
           <kp-table
             [storageKey]="'wh-inv-' + warehouseId()"
@@ -100,7 +103,7 @@ const ENTITY_TYPES: SelectOption[] = [
       }
 
       <!-- Movements Table -->
-      @if (activeTab() === 'movements') {
+      @if (tab === 'movements') {
         <kp-card>
           <kp-table
             [storageKey]="'wh-mov-' + warehouseId()"
@@ -158,7 +161,7 @@ const ENTITY_TYPES: SelectOption[] = [
               [(ngModel)]="targetWarehouseId"
             />
           }
-          @if (warehouse()?.zoneNames?.length) {
+          @if (wh?.zoneNames?.length) {
             <kp-select
               label="Зона"
               [options]="zoneOptions()"

@@ -1,0 +1,13 @@
+# KPPDF 4.0 — ежедневный бэкап MongoDB
+# Установка: sudo cp deploy/cron-backup /etc/cron.d/kppdf40-backup
+#
+# Запускается каждый день в 03:00 по серверному времени (МСК).
+# Хранит 14 последних бэкапов (см. --keep в backup-mongodb.sh).
+# Логи: /var/log/kppdf40-backup.log (запись с меткой времени)
+
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+MAILTO=tiit@localhost
+
+0 3 * * * root /opt/kppdf-4.0/deploy/backup-mongodb.sh >> /var/log/kppdf40-backup.log 2>&1

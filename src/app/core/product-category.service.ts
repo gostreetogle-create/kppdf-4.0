@@ -1,31 +1,30 @@
-import { Injectable } from '@angular/core';
-import { BaseCrudService } from './crud-factory.js';
-import type { ProductCategory } from '../../../shared/types/index.js';
-
-const SEED_CATEGORIES: ProductCategory[] = [
-  { id: 'cat-sp', name: 'Спортивное оборудование', prefix: 'SP', description: 'Спортивное оборудование и тренажёры', sortOrder: 1, isActive: true, createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-01-01T00:00:00.000Z' },
-  { id: 'cat-mf', name: 'Малые архитектурные формы', prefix: 'MF', description: 'МАФ: урны, скамейки, перголы, велопарковки', sortOrder: 2, isActive: true, createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-01-01T00:00:00.000Z' },
-  { id: 'cat-og', name: 'Ограждения', prefix: 'OG', description: 'Заборы, перила, ограждения', sortOrder: 3, isActive: true, createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-01-01T00:00:00.000Z' },
-  { id: 'cat-os', name: 'Освещение', prefix: 'OS', description: 'Осветительное оборудование', sortOrder: 4, isActive: true, createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-01-01T00:00:00.000Z' },
-  { id: 'cat-mb', name: 'Мебель', prefix: 'MB', description: 'Уличная и офисная мебель', sortOrder: 5, isActive: true, createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-01-01T00:00:00.000Z' },
-  { id: 'cat-nv', name: 'Спортивный инвентарь', prefix: 'NV', description: 'Мячи, сетки, аксессуары', sortOrder: 6, isActive: true, createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-01-01T00:00:00.000Z' },
-  { id: 'cat-pr', name: 'Прочее', prefix: 'PR', description: 'Прочие товары и услуги', sortOrder: 7, isActive: true, createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-01-01T00:00:00.000Z' },
-];
+import { Injectable, inject } from '@angular/core';
+import { Observable } from 'rxjs';
+import type { ApiResponse, ProductCategory } from '../../../shared/types/index.js';
+import { ApiService } from './api.service.js';
 
 @Injectable({ providedIn: 'root' })
-export class ProductCategoryService extends BaseCrudService<ProductCategory> {
-  constructor() {
-    super();
-    this.items = SEED_CATEGORIES.map(c => ({ ...c }));
+export class ProductCategoryService {
+  private api = inject(ApiService);
+  private basePath = '/product-categories';
+
+  getAll(): Observable<ApiResponse<ProductCategory[]>> {
+    return this.api.get<ProductCategory[]>(this.basePath);
   }
 
-  /** Получить все активные категории (для выпадающих списков) */
-  getActiveCategories(): ProductCategory[] {
-    return this.items.filter(c => c.isActive);
+  getById(id: string): Observable<ApiResponse<ProductCategory | undefined>> {
+    return this.api.getById<ProductCategory>(this.basePath, id);
   }
 
-  /** Получить префикс категории по ID */
-  getCategoryPrefix(categoryId: string): string | undefined {
-    return this.items.find(c => c.id === categoryId)?.prefix;
+  create(data: Omit<ProductCategory, 'id' | 'createdAt' | 'updatedAt'>): Observable<ApiResponse<ProductCategory>> {
+    return this.api.post<ProductCategory>(this.basePath, data as any);
+  }
+
+  update(id: string, data: Partial<Omit<ProductCategory, 'id' | 'createdAt'>>): Observable<ApiResponse<ProductCategory>> {
+    return this.api.put<ProductCategory>(this.basePath, id, data);
+  }
+
+  delete(id: string): Observable<ApiResponse<void>> {
+    return this.api.delete<void>(this.basePath, id);
   }
 }

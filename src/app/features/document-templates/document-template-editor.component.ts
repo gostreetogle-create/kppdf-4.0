@@ -1,8 +1,9 @@
-import { Component, inject, signal, computed, viewChild, OnInit, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, signal, computed, viewChild, linkedSignal, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { MenuItem } from 'primeng/api';
+import { TooltipModule } from 'primeng/tooltip';
 import { firstValueFrom } from 'rxjs';
 import { DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
 
@@ -17,11 +18,15 @@ import { KpToggleComponent } from '../../shared/ui/kp-toggle.component';
 import { KpDocCanvasComponent } from '../../shared/ui/kp-doc-canvas.component';
 import { KpDocTextEditorDialogComponent } from '../../shared/ui/kp-doc-text-editor-dialog.component';
 import { KpDocPreviewDialogComponent } from '../../shared/ui/kp-doc-preview-dialog.component';
+import { KpFileUploadComponent } from '../../shared/ui/kp-file-upload.component';
+import type { FileUploadEvent } from 'primeng/fileupload';
 import { NotificationService } from '../../core/notification.service';
 import { DocumentTemplateService } from '../../core/document-template.service';
+import { UndoRedoStack } from '../../core/undo-redo-stack';
 import { TableTemplateService } from '../../core/table-template.service';
 import { DocTypeService } from '../../core/doc-type.service';
-import type { DocBlock, DocBlockType, DocumentTemplate, TableTemplate } from '../../../../shared/types/index.js';
+import { OrganizationService } from '../../core/organization.service';
+import type { DocBlock, DocBlockType, DocumentTemplate, TableTemplate, Organization } from '../../../../shared/types/index.js';
 
 function genId(): string {
   return Math.random().toString(36).slice(2, 10);
@@ -34,18 +39,28 @@ function genId(): string {
     CommonModule, FormsModule, DragDropModule,
     KpInputComponent, KpSelectComponent, KpButtonComponent, KpToggleComponent,
     KpBreadcrumbComponent, KpCardComponent, KpToastComponent, KpDialogComponent,
-    KpDocCanvasComponent, KpDocTextEditorDialogComponent, KpDocPreviewDialogComponent,
+    KpDocCanvasComponent, KpDocTextEditorDialogComponent, KpDocPreviewDialogComponent, KpFileUploadComponent,
+    TooltipModule,
   ],
   templateUrl: './document-template-editor.component.html',
   styleUrls: ['./document-template-editor.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DocumentTemplateEditorComponent implements OnInit {
+  /** Стек Undo/Redo для blocks */
+  private undoStack = new UndoRedoStack<DocBlock[]>(50);
+
+  /** Состояние кнопок Undo/Redo (вычисляется от стека) */
+  canUndo = signal(false);
+  canRedo = signal(false);
+  undoSteps = signal(0);
+  redoSteps = signal(0);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private templateService = inject(DocumentTemplateService);
   private tableTemplateService = inject(TableTemplateService);
   private docTypeService = inject(DocTypeService);
+  private organizationService = inject(OrganizationService);
   private notification = inject(NotificationService);
 
   isNew = signal(true);
@@ -54,23 +69,47 @@ export class DocumentTemplateEditorComponent implements OnInit {
   nameError = signal('');
   description = signal('');
   docType = signal<string>('quotation');
+  organizationId = signal<string>('');
+  isDefault = signal(false);
+  backgroundImage = signal<string>('');
   blocks = signal<DocBlock[]>([]);
   selectedBlockId = signal('');
   loading = signal(false);
   saving = signal(false);
 
+  organizations = signal<Organization[]>([]);
+
+  organizationOptions = computed<SelectOption[]>(() =>
+    this.organizations().filter(o => o.isActive).map(o => ({
+      value: o.id,
+      label: o.shortName || o.name,
+    }))
+  );
+
   /** Table block editing dialog */
   tableEditVisible = signal(false);
   editingTableBlock = signal<DocBlock | null>(null);
-  editingTableTemplateId = signal('');
-  editingTableTitle = signal('');
+  editingTableTemplateId = linkedSignal({
+    source: () => this.editingTableBlock(),
+    computation: (block) => block?.tableTemplateId ?? '',
+  });
+  editingTableTitle = linkedSignal({
+    source: () => this.editingTableBlock(),
+    computation: (block) => block?.title ?? '',
+  });
   tableTemplateList = signal<TableTemplate[]>([]);
 
   /** Separator block editing dialog */
   sepEditVisible = signal(false);
   editingSepBlock = signal<DocBlock | null>(null);
-  editingSepHeight = signal(20);
-  editingSepShowLine = signal(false);
+  editingSepHeight = linkedSignal({
+    source: () => this.editingSepBlock(),
+    computation: (block) => block?.height ?? 20,
+  });
+  editingSepShowLine = linkedSignal({
+    source: () => this.editingSepBlock(),
+    computation: (block) => block?.showLine ?? false,
+  });
 
   tableTemplateOptions = computed<SelectOption[]>(() =>
     this.tableTemplateList().map(t => ({ value: t.id, label: t.name }))
@@ -97,6 +136,12 @@ export class DocumentTemplateEditorComponent implements OnInit {
         this.docTypes.set(docTypesRes.data.filter(dt => dt.isActive).map(dt => ({ slug: dt.slug, name: dt.name })));
       }
 
+      // Загружаем организации
+      const orgsRes = await firstValueFrom(this.organizationService.getOrganizations());
+      if (orgsRes.success) {
+        this.organizations.set(orgsRes.data);
+      }
+
       const id = this.route.snapshot.paramMap.get('id');
       if (id) {
         this.isNew.set(false);
@@ -107,6 +152,9 @@ export class DocumentTemplateEditorComponent implements OnInit {
           this.templateName.set(t.name);
           this.description.set(t.description ?? '');
           this.docType.set(t.docType);
+          this.organizationId.set(t.organizationId ?? '');
+          this.isDefault.set(t.isDefault ?? false);
+          this.backgroundImage.set(t.backgroundImage ?? '');
           this.blocks.set(t.blocks.map(b => ({ ...b, columns: b.columns?.map(c => ({ ...c })) })));
           this.breadcrumbs[2] = { label: t.name };
         } else {
@@ -116,6 +164,54 @@ export class DocumentTemplateEditorComponent implements OnInit {
       }
     } finally {
       this.loading.set(false);
+    }
+    // Инициализируем стек undo начальным состоянием blocks
+    this.pushState();
+  }
+
+  /** Сохранить ТЕКУЩЕЕ состояние blocks() в стек undo (вызывать ПОСЛЕ мутации) */
+  private pushState(): void {
+    this.undoStack.push(this.blocks());
+    this.updateUndoState();
+  }
+
+  /** Обновить сигналы состояния undo/redo */
+  private updateUndoState(): void {
+    this.canUndo.set(this.undoStack.canUndo);
+    this.canRedo.set(this.undoStack.canRedo);
+    this.undoSteps.set(this.undoStack.undoSteps);
+    this.redoSteps.set(this.undoStack.redoSteps);
+  }
+
+  /** Undo — откатить blocks() на предыдущий снапшот */
+  undo(): void {
+    const state = this.undoStack.undo();
+    if (state) {
+      this.blocks.set(state);
+      this.updateUndoState();
+    }
+  }
+
+  /** Redo — вернуть отменённый снапшот */
+  redo(): void {
+    const state = this.undoStack.redo();
+    if (state) {
+      this.blocks.set(state);
+      this.updateUndoState();
+    }
+  }
+
+  /** Обработчик клавиатуры для Ctrl+Z / Ctrl+Shift+Z */
+  onKeyDown(event: KeyboardEvent): void {
+    if (event.ctrlKey && event.key === 'z' && !event.shiftKey) {
+      event.preventDefault();
+      this.undo();
+    } else if (event.ctrlKey && event.key === 'z' && event.shiftKey) {
+      event.preventDefault();
+      this.redo();
+    } else if (event.ctrlKey && event.key === 'y') {
+      event.preventDefault();
+      this.redo();
     }
   }
 
@@ -129,11 +225,13 @@ export class DocumentTemplateEditorComponent implements OnInit {
     };
     this.blocks.update(b => [...b, block]);
     this.selectedBlockId.set(block.id);
+    this.pushState();
   }
 
   removeBlock(blockId: string) {
     this.blocks.update(b => b.filter(bl => bl.id !== blockId));
     if (this.selectedBlockId() === blockId) this.selectedBlockId.set('');
+    this.pushState();
   }
 
   /** Drag-and-drop переупорядочивание блоков */
@@ -143,6 +241,7 @@ export class DocumentTemplateEditorComponent implements OnInit {
       moveItemInArray(arr, event.previousIndex, event.currentIndex);
       return arr;
     });
+    this.pushState();
   }
 
   /** Переместить блок вверх */
@@ -154,6 +253,7 @@ export class DocumentTemplateEditorComponent implements OnInit {
       [arr[idx - 1], arr[idx]] = [arr[idx], arr[idx - 1]];
       return arr;
     });
+    this.pushState();
   }
 
   /** Переместить блок вниз */
@@ -165,6 +265,7 @@ export class DocumentTemplateEditorComponent implements OnInit {
       [arr[idx], arr[idx + 1]] = [arr[idx + 1], arr[idx]];
       return arr;
     });
+    this.pushState();
   }
 
   /** Двойной клик по блоку — открыть соответствующий редактор */
@@ -203,8 +304,7 @@ export class DocumentTemplateEditorComponent implements OnInit {
   /** Открыть редактор табличного блока */
   async openTableBlockEditor(block: DocBlock) {
     this.editingTableBlock.set(block);
-    this.editingTableTemplateId.set(block.tableTemplateId || '');
-    this.editingTableTitle.set(block.title || '');
+    // editingTableTemplateId и editingTableTitle сбрасываются автоматически через linkedSignal
 
     if (this.tableTemplateList().length === 0) {
       try {
@@ -218,6 +318,25 @@ export class DocumentTemplateEditorComponent implements OnInit {
       }
     }
     this.tableEditVisible.set(true);
+  }
+
+  /** При выборе шаблона таблицы — авто-подставить заголовок */
+  onTableTemplateSelected(templateId: string) {
+    this.editingTableTemplateId.set(templateId);
+    // Авто-подстановка названия шаблона как заголовка, если заголовок ещё не задан
+    if (!this.editingTableTitle().trim()) {
+      const tmpl = this.tableTemplateList().find(t => t.id === templateId);
+      if (tmpl) {
+        this.editingTableTitle.set(tmpl.name);
+      }
+    }
+  }
+
+  /** Перейти к созданию нового шаблона таблицы */
+  createNewTableTemplate() {
+    this.tableEditVisible.set(false);
+    this.editingTableBlock.set(null);
+    this.router.navigate(['/admin/table-templates/new']);
   }
 
   /** Сохранить изменения табличного блока */
@@ -238,6 +357,7 @@ export class DocumentTemplateEditorComponent implements OnInit {
     this.tableEditVisible.set(false);
     this.editingTableBlock.set(null);
     this.notification.success('Блок таблицы обновлён');
+    this.pushState();
   }
 
   /** Закрытие диалога редактирования табличного блока */
@@ -251,8 +371,7 @@ export class DocumentTemplateEditorComponent implements OnInit {
   /** Открыть редактор разделителя */
   openSepEditor(block: DocBlock) {
     this.editingSepBlock.set(block);
-    this.editingSepHeight.set(block.height ?? 20);
-    this.editingSepShowLine.set(block.showLine ?? false);
+    // editingSepHeight и editingSepShowLine сбрасываются автоматически через linkedSignal
     this.sepEditVisible.set(true);
   }
 
@@ -274,6 +393,7 @@ export class DocumentTemplateEditorComponent implements OnInit {
     this.sepEditVisible.set(false);
     this.editingSepBlock.set(null);
     this.notification.success('Разделитель обновлён');
+    this.pushState();
   }
 
   /** Закрытие диалога редактирования разделителя */
@@ -286,6 +406,28 @@ export class DocumentTemplateEditorComponent implements OnInit {
 
   onTextBlockSave(updated: DocBlock) {
     this.blocks.update(b => b.map(bl => bl.id === updated.id ? updated : bl));
+    this.pushState();
+  }
+
+  /** Обработчик загрузки фонового изображения */
+  onBackgroundUpload(event: FileUploadEvent) {
+    try {
+      const evt = event as any;
+      const response = JSON.parse(evt.xhr.response);
+      if (response.success && response.data?.url) {
+        this.backgroundImage.set(response.data.url);
+        this.notification.success('Фоновое изображение загружено');
+      } else {
+        this.notification.error(response.message || 'Ошибка загрузки файла');
+      }
+    } catch {
+      this.notification.error('Ошибка обработки ответа сервера');
+    }
+  }
+
+  /** Удалить фоновое изображение */
+  removeBackground() {
+    this.backgroundImage.set('');
   }
 
   textEditor = viewChild(KpDocTextEditorDialogComponent);
@@ -315,6 +457,9 @@ export class DocumentTemplateEditorComponent implements OnInit {
         description: this.description().trim() || undefined,
         docType: this.docType() as DocumentTemplate['docType'],
         pageSize: 'A4' as const,
+        organizationId: this.organizationId() || undefined,
+        isDefault: this.isDefault(),
+        backgroundImage: this.backgroundImage() || undefined,
         blocks: this.blocks(),
       };
       if (this.isNew()) {
@@ -324,6 +469,9 @@ export class DocumentTemplateEditorComponent implements OnInit {
         await firstValueFrom(this.templateService.updateTemplate(this.templateId()!, data));
         this.notification.success('Шаблон сохранён');
       }
+      // После сохранения очищаем историю undo — новая «чистая» сессия
+      this.undoStack.clear();
+      this.pushState();
       this.router.navigate(['/admin/document-templates']);
     } catch {
       this.notification.error('Ошибка сохранения');
@@ -337,6 +485,7 @@ export class DocumentTemplateEditorComponent implements OnInit {
       this.templateName() || 'Без названия',
       this.docType(),
       this.blocks(),
+      this.backgroundImage(),
     );
   }
 

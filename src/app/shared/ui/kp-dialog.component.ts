@@ -1,4 +1,4 @@
-import { Component, input, output, ChangeDetectionStrategy } from '@angular/core';
+import { Component, input, model, output, ChangeDetectionStrategy } from '@angular/core';
 import { DialogModule } from 'primeng/dialog';
 import { CommonModule } from '@angular/common';
 
@@ -9,7 +9,7 @@ import { CommonModule } from '@angular/common';
   template: `
     <p-dialog
       [header]="header()"
-      [visible]="visible()"
+      [(visible)]="visible"
       [modal]="modal()"
       [closable]="closable()"
       [draggable]="draggable()"
@@ -17,7 +17,6 @@ import { CommonModule } from '@angular/common';
       [style]="{ width: width() }"
       [contentStyle]="{ 'max-height': maxHeight(), 'overflow-y': 'auto' }"
       [breakpoints]="{ '600px': '90vw' }"
-      (visibleChange)="visibleChange.emit($event)"
       (onHide)="dialogHide.emit()"
     >
       <ng-content />
@@ -27,7 +26,7 @@ import { CommonModule } from '@angular/common';
 })
 export class KpDialogComponent {
   header = input('');
-  visible = input(false);
+  visible = model(false);
   modal = input(true);
   closable = input(true);
   draggable = input(false);
@@ -36,5 +35,4 @@ export class KpDialogComponent {
   maxHeight = input('70vh');
 
   readonly dialogHide = output<void>();
-  readonly visibleChange = output<boolean>();
 }

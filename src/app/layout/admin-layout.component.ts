@@ -105,8 +105,9 @@ export class AdminLayoutComponent {
       icon: 'shopping-cart',
       items: [
         { id: 'nav-products', label: '🏪 Товары и услуги', icon: 'box', routerLink: '/sales/products' },
-        { id: 'nav-cart', label: '🛒 Корзина', icon: 'shopping-cart', routerLink: '/sales/cart' },
+        { id: 'nav-cart', label: '📋 Оформление КП', icon: 'file-text', routerLink: '/sales/cart' },
         { id: 'nav-proposals', label: '📄 Коммерческие предложения', icon: 'file', routerLink: '/sales/proposals' },
+        { id: 'nav-markup-analysis', label: '📊 Анализ наценок', icon: 'percent', routerLink: '/sales/markup-analysis' },
         { id: 'nav-contracts', label: '📑 Договоры', routerLink: '/sales/contracts' },
       ]
     },

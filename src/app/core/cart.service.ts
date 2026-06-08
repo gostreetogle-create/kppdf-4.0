@@ -42,6 +42,8 @@ export class CartService {
         unit: product.unit,
         quantity,
         price: product.basePrice ?? 0,
+        /** Фиксируем наценку по умолчанию из товара */
+        markupPercent: product.defaultMarkupPercent ?? 0,
       };
       this.items.update(list => [...list, newItem]);
     }
@@ -61,6 +63,13 @@ export class CartService {
   /** Удалить позицию из корзины */
   removeItem(itemId: string): void {
     this.items.update(list => list.filter(i => i.id !== itemId));
+  }
+
+  /** Изменить наценку позиции */
+  updateMarkup(itemId: string, markupPercent: number): void {
+    this.items.update(list =>
+      list.map(i => i.id === itemId ? { ...i, markupPercent } : i)
+    );
   }
 
   /** Очистить корзину полностью */

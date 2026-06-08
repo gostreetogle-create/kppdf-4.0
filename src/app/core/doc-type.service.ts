@@ -1,37 +1,31 @@
-import { Injectable } from '@angular/core';
-import { Observable, of, delay } from 'rxjs';
-import { BaseCrudService, generateId, nowISO } from './crud-factory.js';
+import { Injectable, inject } from '@angular/core';
+import { Observable } from 'rxjs';
 import type { ApiResponse, DocTypeDef } from '../../../shared/types/index.js';
-import { SEED_DOC_TYPES } from '../../../shared/types/index.js';
+import { ApiService } from './api.service.js';
 
 @Injectable({ providedIn: 'root' })
-export class DocTypeService extends BaseCrudService<DocTypeDef> {
-  constructor() {
-    super();
-    this.items = SEED_DOC_TYPES.map(t => ({ ...t }));
-  }
+export class DocTypeService {
+  private api = inject(ApiService);
+  private basePath = '/doc-types';
 
   getDocTypes(): Observable<ApiResponse<DocTypeDef[]>> {
-    return this.getAll();
+    return this.api.get<DocTypeDef[]>(this.basePath);
   }
 
   getDocType(id: string): Observable<ApiResponse<DocTypeDef | undefined>> {
-    return this.getById(id);
+    return this.api.getById<DocTypeDef>(this.basePath, id);
   }
 
+  /** Создать тип документа (slug генерирует бэкенд) */
   createDocType(data: Omit<DocTypeDef, 'id' | 'createdAt' | 'updatedAt'>): Observable<ApiResponse<DocTypeDef>> {
-    const now = nowISO();
-    const slug = data.slug || data.name.toLowerCase().replace(/[^a-zа-яё0-9]+/g, '_').replace(/^_|_$/g, '');
-    const docType: DocTypeDef = { ...data, id: generateId(), slug, createdAt: now, updatedAt: now };
-    this.items.push(docType);
-    return of({ success: true, data: { ...docType } }).pipe(delay(this.delayMs));
+    return this.api.post<DocTypeDef>(this.basePath, data as any);
   }
 
   updateDocType(id: string, data: Partial<Omit<DocTypeDef, 'id' | 'createdAt'>>): Observable<ApiResponse<DocTypeDef>> {
-    return this.update(id, data);
+    return this.api.put<DocTypeDef>(this.basePath, id, data);
   }
 
   deleteDocType(id: string): Observable<ApiResponse<void>> {
-    return this.delete(id);
+    return this.api.delete<void>(this.basePath, id);
   }
 }

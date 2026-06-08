@@ -64,13 +64,26 @@
       />
     </div>
     <div class="dt-editor__field">
-      <kp-select
-        label="Шаблон таблицы"
-        placeholder="Выберите шаблон"
-        [options]="tableTemplateOptions()"
-        [ngModel]="editingTableTemplateId()"
-        (ngModelChange)="editingTableTemplateId.set($event)"
-      />
+      @if (tableTemplateOptions().length > 0) {
+        <kp-select
+          label="Шаблон таблицы"
+          placeholder="Выберите шаблон"
+          [options]="tableTemplateOptions()"
+          [ngModel]="editingTableTemplateId()"
+          (ngModelChange)="onTableTemplateSelected($event)"
+        />
+      } @else {
+        <div class="dt-editor__no-templates">
+          <span class="dt-editor__no-templates-text">Нет доступных шаблонов таблиц</span>
+          <kp-button
+            label="Создать шаблон таблицы"
+            lucideIcon="plus"
+            size="small"
+            severity="info"
+            (buttonClick)="createNewTableTemplate()"
+          />
+        </div>
+      }
     </div>
     <div class="dt-editor__table-edit-footer">
       @if (editingTableTemplateId()) {
@@ -109,7 +122,7 @@
     <div class="dt-editor__loading">Загрузка...</div>
   } @else {
     <!-- Layout: левая панель + правый холст A4 -->
-    <div class="dt-editor__layout">
+    <div class="dt-editor__layout" tabindex="-1" (keydown)="onKeyDown($event)">
       <!-- Левая панель -->
       <div class="dt-editor__sidebar">
         <div class="dt-editor__field">
@@ -138,9 +151,67 @@
           />
         </div>
 
+        <div class="dt-editor__field">
+          <kp-select
+            label="Организация"
+            placeholder="Кто выставляет документ"
+            [options]="organizationOptions()"
+            [ngModel]="organizationId()"
+            (ngModelChange)="organizationId.set($event)"
+          />
+        </div>
+
+        <div class="dt-editor__field">
+          <label class="kp-field__label">Фоновое изображение</label>
+          @if (backgroundImage()) {
+            <div class="dt-editor__bg-preview">
+              <img
+                [src]="backgroundImage()"
+                alt="Фон"
+                class="dt-editor__bg-img"
+                (error)="backgroundImage.set('')"
+              />
+              <div class="dt-editor__bg-actions">
+                <kp-button
+                  label="Заменить"
+                  lucideIcon="refresh-cw"
+                  size="small"
+                  severity="info"
+                  [text]="true"
+                  (buttonClick)="removeBackground()"
+                />
+                <kp-button
+                  label="Удалить"
+                  lucideIcon="trash-2"
+                  size="small"
+                  severity="danger"
+                  [text]="true"
+                  (buttonClick)="removeBackground()"
+                />
+              </div>
+            </div>
+          }
+          @if (!backgroundImage()) {
+            <kp-file-upload
+              accept="image/png,image/jpeg,image/gif,image/webp,image/svg+xml"
+              [auto]="true"
+              url="/api/v1/upload"
+              chooseLabel="Выбрать изображение"
+              (fileUpload)="onBackgroundUpload($event)"
+            />
+          }
+        </div>
+
+        <div class="dt-editor__field">
+          <kp-toggle
+            label="Шаблон по умолчанию"
+            [(ngModel)]="isDefault"
+          />
+        </div>
+
         <!-- Тулбар добавления блоков -->
         <div class="dt-editor__toolbar">
-          <span class="dt-editor__toolbar-label">Добавить блок:</span>
+          <span class="dt-editor__toolbar-label">Блоки:</span>
           <div class="dt-editor__toolbar-buttons">
             <kp-button
               label="+ Текст"
@@ -166,6 +237,31 @@
           </div>
         </div>
 
+        <!-- История действий (Undo/Redo) -->
+        <div class="dt-editor__toolbar">
+          <span class="dt-editor__toolbar-label">История ({{ undoSteps() }}/{{ redoSteps() }}):</span>
+          <div class="dt-editor__toolbar-buttons dt-editor__toolbar-row">
+            <kp-button
+              lucideIcon="rotate-ccw"
+              size="small"
+              severity="secondary"
+              [disabled]="!canUndo()"
+              pTooltip="Отменить (Ctrl+Z)"
+              tooltipPosition="top"
+              (buttonClick)="undo()"
+            />
+            <kp-button
+              lucideIcon="rotate-cw"
+              size="small"
+              severity="secondary"
+              [disabled]="!canRedo()"
+              pTooltip="Повторить (Ctrl+Shift+Z)"
+              tooltipPosition="top"
+              (buttonClick)="redo()"
+            />
+          </div>
+        </div>
+
         <!-- Предпросмотр -->
         <div class="dt-editor__preview-btn">
           <kp-button
@@ -184,6 +280,7 @@
         <kp-doc-canvas
           [blocks]="blocks()"
           [selectedBlockId]="selectedBlockId()"
+          [backgroundImage]="backgroundImage()"
           (blockSelect)="selectedBlockId.set($event)"
           (blockEdit)="onBlockEdit($event)"
           (blockDblClick)="onBlockDblClick($event)"

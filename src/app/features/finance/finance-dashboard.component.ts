@@ -70,15 +70,23 @@ function statusBreakdown<T extends { status: string }>(
       <p class="dash-subtitle">Состояние заказов, КП, договоров, закрытий и сверок</p>
 
       @if (loaded()) {
+        @let dashData = data();
+        @let ordersList = orderBreakdown();
+        @let proposalsList = cpBreakdown();
+        @let contractsList = contractBreakdown();
+        @let ordersTotal = orderBreakdownTotal();
+        @let proposalsTotal = cpBreakdownTotal();
+        @let contractsTotal = contractBreakdownTotal();
+
         <!-- KPI-карточки -->
         <div class="dash-kpi">
           <div class="dash-kpi__card">
-            <span class="dash-kpi__value">{{ data().orders.length }}</span>
+            <span class="dash-kpi__value">{{ dashData.orders.length }}</span>
             <span class="dash-kpi__label">Производственных заказов</span>
             <span class="dash-kpi__sub">🚧 {{ activeOrderCount() }} в работе</span>
           </div>
           <div class="dash-kpi__card dash-kpi__card--warn">
-            <span class="dash-kpi__value">{{ data().proposals.length }}</span>
+            <span class="dash-kpi__value">{{ dashData.proposals.length }}</span>
             <span class="dash-kpi__label">Коммерческих предложений</span>
             <span class="dash-kpi__sub">📄 {{ sentCpCount() }} отправлено</span>
           </div>
@@ -90,7 +98,7 @@ function statusBreakdown<T extends { status: string }>(
           <div class="dash-kpi__card dash-kpi__card--good">
             <span class="dash-kpi__value">{{ totalClosingAmount() | number:'1.0-0' }} ₽</span>
             <span class="dash-kpi__label">Сумма закрытий</span>
-            <span class="dash-kpi__sub">📊 {{ data().reconciliation.length }} актов сверки</span>
+            <span class="dash-kpi__sub">📊 {{ dashData.reconciliation.length }} актов сверки</span>
           </div>
         </div>
 
@@ -102,19 +110,19 @@ function statusBreakdown<T extends { status: string }>(
               🏭 Производственные заказы
               <a class="dash-block__link" routerLink="/production/orders">→ все</a>
             </h3>
-            @for (s of orderBreakdown(); track s.label) {
+            @for (s of ordersList; track s.label) {
               <div class="dash-bar">
                 <div class="dash-bar__label">
                   <span class="dash-bar__swatch" [style.background]="s.color"></span>
                   {{ s.label }}
                 </div>
                 <div class="dash-bar__track">
-                  <div class="dash-bar__fill" [style.width.%]="barPercent(s.count, orderBreakdownTotal())" [style.background]="s.color"></div>
+                  <div class="dash-bar__fill" [style.width.%]="barPercent(s.count, ordersTotal)" [style.background]="s.color"></div>
                 </div>
                 <span class="dash-bar__count">{{ s.count }}</span>
               </div>
             }
-            @if (!data().orders.length) {
+            @if (!dashData.orders.length) {
               <p class="dash-empty">Нет данных</p>
             }
           </div>
@@ -125,19 +133,19 @@ function statusBreakdown<T extends { status: string }>(
               📄 Коммерческие предложения
               <a class="dash-block__link" routerLink="/sales/proposals">→ все</a>
             </h3>
-            @for (s of cpBreakdown(); track s.label) {
+            @for (s of proposalsList; track s.label) {
               <div class="dash-bar">
                 <div class="dash-bar__label">
                   <span class="dash-bar__swatch" [style.background]="s.color"></span>
                   {{ s.label }}
                 </div>
                 <div class="dash-bar__track">
-                  <div class="dash-bar__fill" [style.width.%]="barPercent(s.count, cpBreakdownTotal())" [style.background]="s.color"></div>
+                  <div class="dash-bar__fill" [style.width.%]="barPercent(s.count, proposalsTotal)" [style.background]="s.color"></div>
                 </div>
                 <span class="dash-bar__count">{{ s.count }}</span>
               </div>
             }
-            @if (!data().proposals.length) {
+            @if (!dashData.proposals.length) {
               <p class="dash-empty">Нет данных — создайте КП в разделе Продажи</p>
             }
           </div>
@@ -148,19 +156,19 @@ function statusBreakdown<T extends { status: string }>(
               📑 Договоры
               <a class="dash-block__link" routerLink="/sales/contracts">→ все</a>
             </h3>
-            @for (s of contractBreakdown(); track s.label) {
+            @for (s of contractsList; track s.label) {
               <div class="dash-bar">
                 <div class="dash-bar__label">
                   <span class="dash-bar__swatch" [style.background]="s.color"></span>
                   {{ s.label }}
                 </div>
                 <div class="dash-bar__track">
-                  <div class="dash-bar__fill" [style.width.%]="barPercent(s.count, contractBreakdownTotal())" [style.background]="s.color"></div>
+                  <div class="dash-bar__fill" [style.width.%]="barPercent(s.count, contractsTotal)" [style.background]="s.color"></div>
                 </div>
                 <span class="dash-bar__count">{{ s.count }}</span>
               </div>
             }
-            @if (!data().contracts.length) {
+            @if (!dashData.contracts.length) {
               <p class="dash-empty">Нет данных — создайте договор в разделе Продажи</p>
             }
           </div>
@@ -239,7 +247,7 @@ function statusBreakdown<T extends { status: string }>(
     </kp-card>
   `,
   styles: [`
-    :host { display: block; max-width: 1200px; margin: 0 auto; padding: var(--space-6); }
+    :host { display: block; padding: var(--space-6); }
     .dash-title { font-size: var(--font-size-xl); font-weight: var(--font-weight-bold); margin: var(--space-4) 0 var(--space-1); }
     .dash-subtitle { color: var(--color-text-secondary); margin: 0 0 var(--space-6); font-size: var(--font-size-sm); }
 

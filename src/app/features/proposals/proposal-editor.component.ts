@@ -43,19 +43,22 @@ const STATUS_OPTIONS: SelectOption[] = [
     <div class="cp-editor">
       <kp-breadcrumb [items]="breadcrumbs" />
 
+      @let isCreating = isNew();
+      @let itemCount = items().length;
+
       <div class="cp-editor__header">
         <h1 class="cp-editor__title">
-          {{ isNew() ? 'Новое коммерческое предложение' : 'Редактирование КП ' + proposalNumber() }}
+          {{ isCreating ? 'Новое коммерческое предложение' : 'Редактирование КП ' + proposalNumber() }}
         </h1>
         <div class="cp-editor__header-actions">
-          @if (!isNew()) {
+          @if (!isCreating) {
             <kp-select
               label="Статус"
               [options]="statusOptions"
               [(ngModel)]="editStatus"
             />
           }
-          @if (isNew() && items().length > 0) {
+          @if (isCreating && itemCount > 0) {
             <kp-button
               label="Создать варианты"
               lucideIcon="copy"
@@ -119,8 +122,8 @@ const STATUS_OPTIONS: SelectOption[] = [
         <!-- Позиции КП (snapshot) -->
         <div class="cp-editor__section">
           <div class="cp-editor__section-header">
-            <h3 class="cp-editor__section-title">Позиции ({{ items().length }})</h3>
-            @if (isNew() && cartItemCount() > 0) {
+            <h3 class="cp-editor__section-title">Позиции ({{ itemCount }})</h3>
+            @if (isCreating && cartItemCount() > 0) {
               <kp-button
                 label="Загрузить из корзины ({{ cartItemCount() }})"
                 lucideIcon="shopping-cart"
@@ -131,10 +134,10 @@ const STATUS_OPTIONS: SelectOption[] = [
             }
           </div>
 
-          @if (items().length === 0) {
+          @if (itemCount === 0) {
             <div class="cp-editor__empty">
               <p>Нет позиций.</p>
-              @if (isNew()) {
+              @if (isCreating) {
                 <p>Нажмите «Загрузить из корзины» или добавьте товары в корзину через витрину.</p>
               }
             </div>
@@ -201,7 +204,7 @@ const STATUS_OPTIONS: SelectOption[] = [
           }
 
           <!-- Итого -->
-          @if (items().length > 0) {
+          @if (itemCount > 0) {
             <div class="cp-editor__summary">
               <span class="cp-editor__summary-label">Итого:</span>
               <span class="cp-editor__summary-value">{{ totalAmount().toLocaleString('ru-RU') }} ₽</span>
@@ -476,26 +479,32 @@ export class ProposalEditorComponent implements OnInit {
       return;
     }
 
-    const markup = this.clientMarkupPercent();
-    const newItems: ProposalItem[] = cartItems.map(ci => ({
-      id: generateId(),
-      sourceProductId: ci.productId,
-      productSku: ci.sku,
-      productName: ci.name,
-      productUnit: ci.unit,
-      productDescription: undefined,
-      quantity: ci.quantity,
-      unitPrice: ci.price,
-      markupPercent: markup,
-      total: Math.round(ci.price * (1 + markup / 100) * ci.quantity * 100) / 100,
-    }));
+    const clientMarkup = this.clientMarkupPercent();
+    let markedUpCount = 0;
+    const newItems: ProposalItem[] = cartItems.map(ci => {
+      // Приоритет: наценка клиента > наценка из товара (CartItem.markupPercent) > 0
+      const markup = clientMarkup > 0 ? clientMarkup : (ci.markupPercent ?? 0);
+      if (markup > 0) markedUpCount++;
+      return {
+        id: generateId(),
+        sourceProductId: ci.productId,
+        productSku: ci.sku,
+        productName: ci.name,
+        productUnit: ci.unit,
+        productDescription: undefined,
+        quantity: ci.quantity,
+        unitPrice: ci.price,
+        markupPercent: markup,
+        total: Math.round(ci.price * (1 + markup / 100) * ci.quantity * 100) / 100,
+      };
+    });
 
     this.items.update(prev => [...prev, ...newItems]);
     if (!silent) {
-      const msg = markup > 0
-        ? `Загружено ${newItems.length} позиций (наценка клиента: ${markup}%)`
-        : `Загружено ${newItems.length} позиций из корзины`;
-      this.notification.success(msg);
+      const parts = [`Загружено ${newItems.length} позиций`];
+      if (clientMarkup > 0) parts.push(`наценка клиента: ${clientMarkup}%`);
+      else if (markedUpCount > 0) parts.push(`наценка из товара`);
+      this.notification.success(parts.join(', '));
     }
   }
 
@@ -572,7 +581,7 @@ export class ProposalEditorComponent implements OnInit {
     }
   }
 
-  /** Создать 3 варианта КП с разными наценками (0% / 5% / 10%) */
+  /** Создать 3 варианта КП с разными наценками */
   async createVariants() {
     if (this.items().length === 0) {
       this.notification.error('Добавьте хотя бы одну позицию');
@@ -589,8 +598,12 @@ export class ProposalEditorComponent implements OnInit {
         notes: this.editNotes().trim() || undefined,
       };
 
-      const markups = [0, 5, 10];
-      const labels = ['базовая', 'средняя', 'максимальная'];
+      // Динамический диапазон наценок на основе текущих значений
+      const currentMarkups = this.items().map(i => i.markupPercent);
+      const maxMarkup = Math.max(...currentMarkups, 10);
+      const midMarkup = Math.round(maxMarkup / 2);
+      const markups = [0, midMarkup, maxMarkup];
+      const labels = ['без наценки', `рекомендуемая ${midMarkup}%`, `максимальная ${maxMarkup}%`];
       let created = 0;
 
       for (let i = 0; i < markups.length; i++) {
@@ -608,8 +621,8 @@ export class ProposalEditorComponent implements OnInit {
         const variantData = {
           ...baseData,
           notes: baseData.notes
-            ? `${baseData.notes} (наценка ${markups[i]}% — ${labels[i]})`
-            : `Наценка ${markups[i]}% (${labels[i]})`,
+            ? `${baseData.notes} (${labels[i]})`
+            : `${labels[i]}`,
         };
 
         const res = await firstValueFrom(this.proposalService.createWithItems(variantData, variantItems));
@@ -617,7 +630,7 @@ export class ProposalEditorComponent implements OnInit {
       }
 
       this.cartService.clearCart();
-      this.notification.success(`Создано ${created} варианта КП (наценка: 0%, 5%, 10%)`);
+      this.notification.success(`Создано ${created} варианта КП (наценка: ${markups.join('%, ')})`);
       this.router.navigate(['/sales/proposals']);
     } catch {
       this.notification.error('Ошибка создания вариантов');

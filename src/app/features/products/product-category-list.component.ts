@@ -13,6 +13,7 @@ import { KpInputComponent } from '../../shared/ui/kp-input.component';
 import { KpToggleComponent } from '../../shared/ui/kp-toggle.component';
 import { KpToastComponent } from '../../shared/ui/kp-toast.component';
 import { KpConfirmDialogComponent } from '../../shared/ui/kp-confirm-dialog.component';
+
 import { NotificationService } from '../../core/notification.service';
 import { ProductCategoryService } from '../../core/product-category.service';
 import { ConfirmationService } from 'primeng/api';
@@ -29,7 +30,7 @@ interface CategoryRow extends ProductCategory {
     CommonModule, FormsModule,
     KpButtonComponent, KpBreadcrumbComponent, KpCardComponent,
     KpTableComponent, KpDialogComponent, KpInputComponent,
-    KpToggleComponent, KpToastComponent, KpConfirmDialogComponent,
+    KpToggleComponent, KpToastComponent,
   ],
   providers: [ConfirmationService],
   template: `
@@ -61,8 +62,7 @@ interface CategoryRow extends ProductCategory {
 
     <kp-dialog
       [header]="editId() ? 'Редактировать категорию' : 'Добавить категорию'"
-      [visible]="dialogVisible()"
-      (visibleChange)="dialogVisible.set($event)"
+      [(visible)]="dialogVisible"
       width="500px"
     >
       <div class="pc-list__form">

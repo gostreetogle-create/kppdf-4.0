@@ -13,6 +13,7 @@ import { KpSelectComponent } from '../../shared/ui/kp-select.component';
 import { KpInputComponent } from '../../shared/ui/kp-input.component';
 import { KpToastComponent } from '../../shared/ui/kp-toast.component';
 import { KpConfirmDialogComponent } from '../../shared/ui/kp-confirm-dialog.component';
+
 import { NotificationService } from '../../core/notification.service';
 import { ProductService } from '../../core/product.service';
 import { ProductCategoryService } from '../../core/product-category.service';
@@ -36,7 +37,6 @@ interface ProductRow extends Product {
     KpButtonComponent, KpBreadcrumbComponent, KpCardComponent,
     KpTableComponent, KpSelectComponent,
     KpInputComponent, KpToastComponent,
-    KpConfirmDialogComponent,
   ],
   providers: [ConfirmationService],
   template: `
@@ -88,7 +88,7 @@ interface ProductRow extends Product {
     </kp-card>
   `,
   styles: [`
-    :host { display: block; max-width: 1200px; margin: 0 auto; padding: var(--space-6); }
+    :host { display: block; padding: var(--space-6); }
     .prod-list__header {
       display: flex; align-items: center; justify-content: space-between;
       flex-wrap: wrap; gap: var(--space-3); margin: var(--space-4) 0;

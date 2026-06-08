@@ -15,7 +15,7 @@ import { WorkerService } from '../../core/worker.service';
 import { ProductionOrderService } from '../../core/production-order.service';
 import { ProductService } from '../../core/product.service';
 import { OrganizationService } from '../../core/organization.service';
-import type { OrderTask, ProductionOrder, TaskStatus } from '../../../../shared/types/index.js';
+import type { OrderTask, ProductionOrder, Product, Organization, Worker, TaskStatus } from '../../../../shared/types/index.js';
 
 const STATUS_COLORS: Record<TaskStatus, string> = { pending: '#94a3b8', assigned: '#f59e0b', in_progress: '#3b82f6', done: '#22c55e', cancelled: '#ef4444' };
 const STATUS_GRADIENTS: Record<TaskStatus, string> = { pending: 'linear-gradient(135deg, #94a3b8, #cbd5e1)', assigned: 'linear-gradient(135deg, #f59e0b, #fbbf24)', in_progress: 'linear-gradient(135deg, #3b82f6, #60a5fa)', done: 'linear-gradient(135deg, #22c55e, #4ade80)', cancelled: 'linear-gradient(135deg, #ef4444, #f87171)' };
@@ -43,6 +43,10 @@ export class GanttChartComponent {
   private workerSvc = inject(WorkerService);
   private productSvc = inject(ProductService);
   private orgSvc = inject(OrganizationService);
+
+  cachedProducts = signal<Product[]>([]);
+  cachedOrganizations = signal<Organization[]>([]);
+  cachedWorkers = signal<Worker[]>([]);
 
   readonly STATUS_LABELS = STATUS_LABELS;
   readonly STATUS_COLORS = STATUS_COLORS;
@@ -204,11 +208,11 @@ export class GanttChartComponent {
 
   actualLeft(task: OrderTask): number { return this.colIndex(task.actualStartDate) * this.colWidth(); }
   actualWidth(task: OrderTask): number { return Math.max(this.durationInCols(task.actualStartDate, task.actualEndDate) * this.colWidth(), 2); }
-  workerName(wid: string): string { const w = this.workerSvc.getRawItems().find(x => x.id === wid); return w ? w.lastName : wid; }
+  workerName(wid: string): string { const w = this.cachedWorkers().find(x => x.id === wid); return w ? w.lastName : wid; }
 
   workerFullName(wid: string | undefined): string {
     if (!wid) return '—';
-    const w = this.workerSvc.getRawItems().find(x => x.id === wid);
+    const w = this.cachedWorkers().find(x => x.id === wid);
     if (!w) return '—';
     const i = (n: string | undefined) => n ? n.charAt(0) + '.' : '';
     return `${w.lastName} ${i(w.firstName)}${i(w.patronymic)}`;
@@ -379,11 +383,11 @@ export class GanttChartComponent {
   formNotes = signal('');
   formSubmitting = signal(false);
 
-  productOptions = computed(() => this.productSvc.getRawItems()
+  productOptions = computed(() => this.cachedProducts()
     .filter(p => p.productType === 'manufactured' && p.isActive)
     .map(p => ({ label: `${p.sku} — ${p.name}`, value: p.id })));
 
-  orgOptions = computed(() => this.orgSvc.getRawItems()
+  orgOptions = computed(() => this.cachedOrganizations()
     .filter(o => o.isActive)
     .map(o => ({ label: o.shortName || o.name, value: o.id })));
 
@@ -409,8 +413,8 @@ export class GanttChartComponent {
     if (!productId || !orgId || qty < 1) return;
     this.formSubmitting.set(true);
     try {
-      const product = this.productSvc.getRawItems().find(p => p.id === productId);
-      const org = this.orgSvc.getRawItems().find(o => o.id === orgId);
+      const product = this.cachedProducts().find(p => p.id === productId);
+      const org = this.cachedOrganizations().find(o => o.id === orgId);
       if (!product || !org) return;
       const sd = this.formStartDate() || new Date();
       const ed = this.formEndDate() || new Date(new Date().getTime() + 7 * 86400000);
@@ -439,7 +443,18 @@ export class GanttChartComponent {
     }
   }
 
-  constructor() { this.load(); }
+  constructor() { this.load(); this.loadCachedData(); }
+
+  private async loadCachedData() {
+    const [prodRes, orgRes, workerRes] = await Promise.all([
+      firstValueFrom(this.productSvc.getAll()),
+      firstValueFrom(this.orgSvc.getAll()),
+      firstValueFrom(this.workerSvc.getAll()),
+    ]);
+    if (prodRes.success) this.cachedProducts.set(prodRes.data);
+    if (orgRes.success) this.cachedOrganizations.set(orgRes.data);
+    if (workerRes.success) this.cachedWorkers.set(workerRes.data);
+  }
 
   async load() {
     const [tasks, orders] = await Promise.all([firstValueFrom(this.taskSvc.getTasks()), firstValueFrom(this.orderSvc.getAll())]);

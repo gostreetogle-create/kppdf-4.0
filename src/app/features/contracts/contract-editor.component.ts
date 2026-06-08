@@ -40,12 +40,14 @@ const STATUS_OPTIONS: SelectOption[] = [
     <div class="ct-editor">
       <kp-breadcrumb [items]="breadcrumbs" />
 
+      @let isCreating = isNew();
+
       <div class="ct-editor__header">
         <h1 class="ct-editor__title">
-          {{ isNew() ? 'Новый договор' : 'Редактирование ' + contractNumber() }}
+          {{ isCreating ? 'Новый договор' : 'Редактирование ' + contractNumber() }}
         </h1>
         <div class="ct-editor__header-actions">
-          @if (!isNew()) {
+          @if (!isCreating) {
             <kp-select
               label="Статус"
               [options]="statusOptions"
@@ -106,8 +108,9 @@ const STATUS_OPTIONS: SelectOption[] = [
         <!-- Позиции -->
         <div class="ct-editor__section">
           <div class="ct-editor__section-header">
-            <h3 class="ct-editor__section-title">Позиции ({{ items().length }})</h3>
-            @if (isNew() && editProposalId()) {
+            @let itemCount = items().length;
+            <h3 class="ct-editor__section-title">Позиции ({{ itemCount }})</h3>
+            @if (isCreating && editProposalId()) {
               <kp-button
                 label="Загрузить позиции из КП"
                 lucideIcon="file-text"
@@ -118,10 +121,10 @@ const STATUS_OPTIONS: SelectOption[] = [
             }
           </div>
 
-          @if (items().length === 0) {
+          @if (itemCount === 0) {
             <div class="ct-editor__empty">
               <p>Нет позиций.</p>
-              @if (isNew()) {
+              @if (isCreating) {
                 <p>Выберите КП и нажмите «Загрузить позиции из КП».</p>
               }
             </div>

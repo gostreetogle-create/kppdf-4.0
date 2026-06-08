@@ -13,6 +13,7 @@ import { KpInputComponent } from '../../shared/ui/kp-input.component';
 import { KpToggleComponent } from '../../shared/ui/kp-toggle.component';
 import { KpToastComponent } from '../../shared/ui/kp-toast.component';
 import { KpConfirmDialogComponent } from '../../shared/ui/kp-confirm-dialog.component';
+
 import { NotificationService } from '../../core/notification.service';
 import { DocTypeService } from '../../core/doc-type.service';
 import { ConfirmationService } from 'primeng/api';
@@ -29,7 +30,7 @@ interface DocTypeRow extends DocTypeDef {
     CommonModule, FormsModule,
     KpButtonComponent, KpBreadcrumbComponent, KpCardComponent,
     KpTableComponent, KpDialogComponent, KpInputComponent,
-    KpToggleComponent, KpToastComponent, KpConfirmDialogComponent,
+    KpToggleComponent, KpToastComponent,
   ],
   providers: [ConfirmationService],
   template: `
@@ -62,8 +63,7 @@ interface DocTypeRow extends DocTypeDef {
     <!-- Диалог добавления/редактирования -->
     <kp-dialog
       [header]="editId() ? 'Редактировать тип документа' : 'Добавить тип документа'"
-      [visible]="dialogVisible()"
-      (visibleChange)="dialogVisible.set($event)"
+      [(visible)]="dialogVisible"
       width="500px"
     >
       <div class="dt-list__form">

@@ -24,7 +24,7 @@ const STATUS_LABELS: Record<string, string> = { draft: 'Черновик', final
       <kp-table storageKey="financial-reports" [data]="rows()" [columns]="columns" [rows]="20" [paginator]="true" emptyMessage="Отчёты не найдены" [showActions]="true" (rowDelete)="onDelete($event)" />
     </kp-card>
   `,
-  styles: [`:host { display: block; max-width: 1200px; margin: 0 auto; padding: var(--space-6); } .page__title { font-size: var(--font-size-xl); font-weight: var(--font-weight-bold); margin: var(--space-4) 0; }`],
+  styles: [`:host { display: block; padding: var(--space-6); } .page__title { font-size: var(--font-size-xl); font-weight: var(--font-weight-bold); margin: var(--space-4) 0; }`],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class FinancialReportListComponent {

@@ -176,8 +176,7 @@ import { inject } from '@angular/core';
           <kp-button label="Открыть диалог" lucideIcon="external-link" (buttonClick)="dialogVisible.set(true)" />
           <kp-dialog
             header="Пример диалога"
-            [visible]="dialogVisible()"
-            (visibleChange)="dialogVisible.set($event)"
+            [(visible)]="dialogVisible"
           >
             <p>Это содержимое диалога.</p>
             <p class="uikit__muted">Здесь можно разместить форму, текст или любой другой контент.</p>
@@ -570,10 +569,12 @@ export class UiKitComponent {
     'sun', 'moon', 'menu', 'bell',
     'check', 'x', 'search', 'plus', 'minus',
     'external-link', 'triangle-alert', 'rotate-ccw',
-    'align-left',
-    'eye', 'eye-off', 'pencil', 'trash-2', 'copy', 'download', 'printer',
+    'align-left', 'text-align-center', 'text-align-end',
+    'bold', 'italic', 'underline',
+    'eye', 'eye-off', 'pencil', 'trash-2', 'trash', 'copy', 'download', 'printer',
     'grip-vertical', 'arrow-up-down',
-    'table',
+    'table', 'landmark',
+    'file-text', 'user-plus', 'list-todo', 'braces',
   ];
 
   breadcrumbItems: MenuItem[] = [

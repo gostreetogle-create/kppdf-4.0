@@ -12,6 +12,7 @@ import { KpToastComponent } from '../../shared/ui/kp-toast.component';
 import { KpTableComponent, TableColumn } from '../../shared/ui/kp-table.component';
 import { KpInputComponent } from '../../shared/ui/kp-input.component';
 import { KpConfirmDialogComponent } from '../../shared/ui/kp-confirm-dialog.component';
+
 import { NotificationService } from '../../core/notification.service';
 import { StorageItemService } from '../../core/storage-item.service';
 import { ConfirmationService } from 'primeng/api';
@@ -27,7 +28,7 @@ interface StorageItemRow extends StorageItem {
   imports: [
     CommonModule, FormsModule, RouterLink,
     KpCardComponent, KpButtonComponent, KpBreadcrumbComponent, KpToastComponent,
-    KpTableComponent, KpInputComponent, KpConfirmDialogComponent,
+    KpTableComponent, KpInputComponent,
   ],
   providers: [ConfirmationService],
   template: `

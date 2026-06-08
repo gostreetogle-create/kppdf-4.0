@@ -39,8 +39,8 @@ type ButtonSize = 'small' | 'large';
   `,
   styles: [`
     .kp-btn__lucide {
-      width: 1.25rem;
-      height: 1.25rem;
+      width: 1.75rem;
+      height: 1.75rem;
     }
   `],
   changeDetection: ChangeDetectionStrategy.OnPush

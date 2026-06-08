@@ -87,7 +87,11 @@ export const routes: Routes = [
       },
       {
         path: 'sales/cart',
-        loadComponent: () => import('./features/cart/cart.component').then(m => m.CartComponent)
+        loadComponent: () => import('./features/proposal-showcase/proposal-showcase.component').then(m => m.ProposalShowcaseComponent)
+      },
+      {
+        path: 'sales/markup-analysis',
+        loadComponent: () => import('./features/markup-analysis/markup-analysis.component').then(m => m.MarkupAnalysisComponent)
       },
       {
         path: 'sales/proposals',

@@ -128,9 +128,8 @@
     @defer (on idle) {
     <kp-dialog
       header="Предпросмотр таблицы: {{ templateName() || 'Новый шаблон' }}"
-      [visible]="previewVisible()"
-      (visibleChange)="previewVisible.set($event)"
-      width="800px"
+      [(visible)]="previewVisible"
+      width="1100px"
     >
       <kp-table
         [data]="previewData()"

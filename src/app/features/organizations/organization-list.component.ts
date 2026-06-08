@@ -85,12 +85,18 @@ export class OrganizationListComponent implements OnInit {
   }
 
   async loadTabs() {
-    const total = await firstValueFrom(this.orgService.getCountByRole());
-    const tabs: Tab[] = [{ id: 'all', label: 'Все', count: total }];
+    // Загружаем все организации для подсчёта по ролям
+    const allOrgs = await firstValueFrom(this.orgService.getOrganizations());
+    const orgs = allOrgs.data || [];
+
+    const tabs: Tab[] = [{ id: 'all', label: 'Все', count: orgs.length }];
 
     // Динамические вкладки для каждой роли из справочника
     for (const role of this.allRoleDefs()) {
-      const count = await firstValueFrom(this.orgService.getCountByRole(role.slug));
+      const count = orgs.filter(o => {
+        const roleId = this.allRoleDefs().find(r => r.slug === role.slug)?.id;
+        return roleId ? o.counterpartyRoleIds.includes(roleId) : false;
+      }).length;
       tabs.push({ id: role.slug, label: role.name, count });
     }
 

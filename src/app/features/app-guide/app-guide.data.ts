@@ -106,7 +106,7 @@ export const APP_PHASES: GuidePhase[] = [
         title: '📋 КП и Заказы',
         description: 'Формирование и отслеживание заказов',
         items: [
-          { label: 'Корзина', description: 'Временный список товаров перед созданием КП', icon: '🛒', routerLink: '/sales/cart', status: 'done' },
+          { label: 'Оформление КП', description: 'Витрина товаров + A4-документ для быстрого создания КП', icon: '📋', routerLink: '/sales/cart', status: 'done' },
           { label: 'Коммерческие предложения', description: 'КП со статусами + snapshot товаров', icon: '📋', routerLink: '/sales/proposals', status: 'done' },
           { label: '3 варианта КП', description: 'Для разных юрлиц группы на 1 запрос', icon: '📑', status: 'planned' },
           { label: 'Договоры', description: 'На основе КП с выбором шаблона', icon: '✍️', routerLink: '/sales/contracts', status: 'done' },
@@ -239,8 +239,8 @@ export const DEPENDANCY_LEVELS: DependancyLevel[] = [
     subtitle: 'Операционная деятельность — нужны товары, клиенты и шаблоны документов',
     gradient: 'linear-gradient(135deg, #2563eb, #3b82f6)',
     modules: [
-      { icon: '🛒', name: 'Корзина', dependsOn: ['Товары и услуги', 'Клиенты (физ.лица)'], enables: 'Временный список для КП', status: 'done' },
-      { icon: '📋', name: 'Коммерческие предложения', dependsOn: ['Корзина', 'Шаблоны документов'], enables: 'Документ со snapshot товаров', status: 'done' },
+      { icon: '📋', name: 'Оформление КП', dependsOn: ['Товары и услуги', 'Шаблоны документов'], enables: 'Витрина товаров + быстрый выбор в документ', status: 'done' },
+      { icon: '📋', name: 'Коммерческие предложения', dependsOn: ['Оформление КП', 'Шаблоны документов'], enables: 'Документ со snapshot товаров', status: 'done' },
       { icon: '✍️', name: 'Договоры', dependsOn: ['Коммерческие предложения'], enables: 'Юридическое оформление сделки', status: 'done' },
     ],
   },

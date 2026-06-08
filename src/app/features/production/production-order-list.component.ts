@@ -18,9 +18,7 @@ import { ProductionOrderService } from '../../core/production-order.service';
 import { OrderTaskService } from '../../core/order-task.service';
 import { ProductService } from '../../core/product.service';
 import { OrganizationService } from '../../core/organization.service';
-import type { ProductionOrder, MissingDataIssue } from '../../../../shared/types/index.js';
-
-import type { ProductionOrderStatus } from '../../../../shared/types/index.js';
+import type { ProductionOrder, ProductionOrderStatus, Product, Organization, MissingDataIssue } from '../../../../shared/types/index.js';
 const STATUS_LABELS: Record<ProductionOrderStatus, string> = { accepted: 'Принят', in_design: 'Проектирование', in_production: 'В производстве', ready: 'Готов', shipped: 'Отгружен', closed: 'Закрыт' };
 const STATUS_BADGE = { accepted: 'info', in_design: 'warn', in_production: 'info', ready: 'success', shipped: 'info', closed: 'secondary' } as const;
 const NEXT_STATUS: Partial<Record<ProductionOrderStatus, ProductionOrderStatus>> = { accepted: 'in_design', in_design: 'in_production', in_production: 'ready', ready: 'shipped', shipped: 'closed' };
@@ -97,7 +95,8 @@ const DOC_TEMPLATES = [
 
     <!-- Диалог: отгрузка -->
     <kp-dialog header="🚚 Отгрузка заказа" [(visible)]="shipmentDialogVisible" width="480px" (dialogHide)="shipmentOrder.set(null)">
-      <p style="margin-bottom: var(--space-3);">Заказ <strong>{{ shipmentOrder()?.number }}</strong> — {{ shipmentOrder()?.productName }}</p>
+      @let shipment = shipmentOrder();
+      <p style="margin-bottom: var(--space-3);">Заказ <strong>{{ shipment?.number }}</strong> — {{ shipment?.productName }}</p>
       <div class="po-form">
         <kp-select label="Шаблон документа" [options]="docTemplates" [(ngModel)]="shipmentTemplate" placeholder="Выберите шаблон" />
         <kp-input label="Примечание" [(ngModel)]="shipmentNote" placeholder="Номер накладной, дата..." />
@@ -110,11 +109,12 @@ const DOC_TEMPLATES = [
 
     <!-- Диалог: проблемы комплектации -->
     <kp-dialog header="🔍 Проблемы комплектации" [(visible)]="missingDialogVisible" width="520px" (dialogHide)="missingIssues.set([])">
-      @if (missingIssues().length === 0) {
+      @let missingList = missingIssues();
+      @if (missingList.length === 0) {
         <p style="color: var(--color-success); padding: var(--space-4);">✅ Все данные в наличии.</p>
       } @else {
         <div class="po-missing">
-          @for (issue of missingIssues(); track issue.componentId + issue.type) {
+          @for (issue of missingList; track issue.componentId + issue.type) {
             <div class="po-missing__item">
               <span class="po-missing__icon">{{ issue.type === 'no_drawing' ? '📐' : issue.type === 'no_materials' ? '📦' : issue.type === 'no_work_types' ? '🔧' : '❓' }}</span>
               <div class="po-missing__body">
@@ -141,6 +141,8 @@ export class ProductionOrderListComponent {
   private notification = inject(NotificationService);
 
   rows = signal<ProductionOrder[]>([]);
+  cachedProducts = signal<Product[]>([]);
+  cachedOrganizations = signal<Organization[]>([]);
   breadcrumbs: MenuItem[] = [{ label: '🏭 Производство' }, { label: 'Производственные заказы' }];
 
   readonly STATUS_LABELS = STATUS_LABELS;
@@ -158,10 +160,10 @@ export class ProductionOrderListComponent {
   formNotes = signal('');
   formSubmitting = signal(false);
 
-  productOptions = computed(() => this.productSvc.getRawItems()
+  productOptions = computed(() => this.cachedProducts()
     .filter(p => p.productType === 'manufactured' && p.isActive)
     .map(p => ({ label: `${p.sku} — ${p.name}`, value: p.id })));
-  orgOptions = computed(() => this.orgSvc.getRawItems()
+  orgOptions = computed(() => this.cachedOrganizations()
     .filter(o => o.isActive)
     .map(o => ({ label: o.shortName || o.name, value: o.id })));
 
@@ -196,7 +198,16 @@ export class ProductionOrderListComponent {
     { icon: 'play', severity: 'success', tooltip: 'Следующий статус', visible: (r: unknown) => !!(NEXT_STATUS[(r as ProductionOrder).status]) },
   ];
 
-  constructor() { this.loadRows(); }
+  constructor() { this.loadRows(); this.loadCachedData(); }
+
+  private async loadCachedData() {
+    const [prodRes, orgRes] = await Promise.all([
+      firstValueFrom(this.productSvc.getAll()),
+      firstValueFrom(this.orgSvc.getAll()),
+    ]);
+    if (prodRes.success) this.cachedProducts.set(prodRes.data);
+    if (orgRes.success) this.cachedOrganizations.set(orgRes.data);
+  }
 
   async loadRows() {
     const r = await firstValueFrom(this.svc.getAll());
@@ -221,7 +232,7 @@ export class ProductionOrderListComponent {
     if (!productId || !orgId || qty < 1) return;
     this.formSubmitting.set(true);
     try {
-      const product = this.productSvc.getRawItems().find(p => p.id === productId);
+      const product = this.cachedProducts().find(p => p.id === productId);
       if (!product) return;
       const sd = this.formStartDate() || new Date();
       const ed = this.formEndDate() || new Date(Date.now() + 7 * 86400000);

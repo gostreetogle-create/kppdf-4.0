@@ -38,11 +38,12 @@ const NEXT_STATUS: Partial<Record<TaskStatus, TaskStatus>> = { pending: 'assigne
 
     <!-- Диалог: проблемы комплектации -->
     <kp-dialog [visible]="missingDialogVisible()" header="🔍 Проблемы комплектации" (closed)="missingDialogVisible.set(false)">
-      @if (missingIssues().length === 0) {
+      @let issuesList = missingIssues();
+      @if (issuesList.length === 0) {
         <p style="color: var(--color-success); padding: var(--space-4);">✅ Все данные в наличии. Заказ готов к производству!</p>
       } @else {
         <div class="missing-list">
-          @for (issue of missingIssues(); track issue.componentId + issue.type) {
+          @for (issue of issuesList; track issue.componentId + issue.type) {
             <div class="missing-item">
               <span class="missing-item__icon">{{ issue.type === 'no_drawing' ? '📐' : issue.type === 'no_materials' ? '📦' : issue.type === 'no_work_types' ? '🔧' : '❓' }}</span>
               <div class="missing-item__body">
@@ -60,11 +61,12 @@ const NEXT_STATUS: Partial<Record<TaskStatus, TaskStatus>> = { pending: 'assigne
 
     <!-- Диалог: назначение исполнителя -->
     <kp-dialog [visible]="assignDialogVisible()" header="👷 Назначить исполнителя" (closed)="assignDialogVisible.set(false)">
-      @if (availableWorkers().length === 0) {
+      @let workersList = availableWorkers();
+      @if (workersList.length === 0) {
         <p style="color: var(--color-text-secondary); padding: var(--space-4);">Нет доступных работников для этого вида работ.</p>
       } @else {
         <div class="worker-list">
-          @for (w of availableWorkers(); track w.id) {
+          @for (w of workersList; track w.id) {
             <div class="worker-item" (click)="assignTo(w.id)" style="cursor:pointer; padding:var(--space-2); border-radius:var(--radius-sm); transition:background 0.15s;"
               onmouseover="this.style.background='var(--color-surface)'" onmouseout="this.style.background='transparent'">
               <span class="worker-item__name">{{ w.fullName }}</span>
@@ -80,7 +82,7 @@ const NEXT_STATUS: Partial<Record<TaskStatus, TaskStatus>> = { pending: 'assigne
       }
     </kp-dialog>
   `,
-  styles: [`:host { display: block; max-width: 1200px; margin: 0 auto; padding: var(--space-6); } .page__title { font-size: var(--font-size-xl); font-weight: var(--font-weight-bold); margin: var(--space-4) 0; } .ot-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--space-3); } .ot-controls { display: flex; gap: var(--space-2); align-items: center; } .ot-filter { width: 260px; } .missing-list { display: flex; flex-direction: column; gap: var(--space-3); max-height: 400px; overflow-y: auto; } .missing-item { display: flex; gap: var(--space-3); padding: var(--space-3); background: var(--color-surface); border-radius: var(--radius-md); border: 1px solid var(--color-border); } .missing-item__icon { font-size: 1.5rem; flex-shrink: 0; } .missing-item__body p { margin: var(--space-1) 0 0; color: var(--color-text-secondary); font-size: var(--font-size-sm); } .missing-actions { margin-top: var(--space-4); display: flex; justify-content: flex-end; } .worker-list { display: flex; flex-direction: column; gap: var(--space-1); max-height: 300px; overflow-y: auto; } .worker-item { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-2) var(--space-3); } .worker-item__name { font-weight: var(--font-weight-medium); min-width: 140px; } .worker-item__grade { color: var(--color-text-secondary); font-size: var(--font-size-sm); } .worker-item__busy { color: var(--color-warning); font-size: var(--font-size-xs); } .worker-actions { margin-top: var(--space-3); display: flex; justify-content: flex-end; }`],
+  styles: [`:host { display: block; padding: var(--space-6); } .page__title { font-size: var(--font-size-xl); font-weight: var(--font-weight-bold); margin: var(--space-4) 0; } .ot-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--space-3); } .ot-controls { display: flex; gap: var(--space-2); align-items: center; } .ot-filter { width: 260px; } .missing-list { display: flex; flex-direction: column; gap: var(--space-3); max-height: 400px; overflow-y: auto; } .missing-item { display: flex; gap: var(--space-3); padding: var(--space-3); background: var(--color-surface); border-radius: var(--radius-md); border: 1px solid var(--color-border); } .missing-item__icon { font-size: 1.5rem; flex-shrink: 0; } .missing-item__body p { margin: var(--space-1) 0 0; color: var(--color-text-secondary); font-size: var(--font-size-sm); } .missing-actions { margin-top: var(--space-4); display: flex; justify-content: flex-end; } .worker-list { display: flex; flex-direction: column; gap: var(--space-1); max-height: 300px; overflow-y: auto; } .worker-item { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-2) var(--space-3); } .worker-item__name { font-weight: var(--font-weight-medium); min-width: 140px; } .worker-item__grade { color: var(--color-text-secondary); font-size: var(--font-size-sm); } .worker-item__busy { color: var(--color-warning); font-size: var(--font-size-xs); } .worker-actions { margin-top: var(--space-3); display: flex; justify-content: flex-end; }`],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class OrderTaskListComponent {

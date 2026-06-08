@@ -45,41 +45,45 @@ const BLOCK_TYPE_LABELS: Record<string, string> = {
           aria-label="Список блоков документа"
           tabindex="0"
           [cdkDropListLockAxis]="'y'"
+          [cdkDropListDisabled]="!editable()"
           (cdkDropListDropped)="onBlockDrop($event)"
           (keydown)="onKeyDown($event)"
         >
           @for (block of blocks(); track block.id) {
             <div
               class="canvas__block"
-              [class.canvas__block--selected]="selectedBlockId() === block.id"
+              [class.canvas__block--selected]="selectedBlockId() === block.id && editable()"
               cdkDrag
               cdkDragLockAxis="y"
               cdkDragBoundary=".canvas__blocks-list"
+              [cdkDragDisabled]="!editable()"
               role="listitem"
               [attr.aria-label]="getBlockLabel(block)"
               [attr.aria-selected]="selectedBlockId() === block.id"
               (click)="blockSelect.emit(block.id)"
               (dblclick)="blockDblClick.emit(block)"
             >
-              <!-- Кастомный превью — компактная плашка с иконкой и названием -->
-              <ng-template cdkDragPreview>
-                <div class="canvas__drag-preview">
-                  <svg [lucideIcon]="getBlockIcon(block.type)" class="canvas__drag-preview-icon"></svg>
-                  <span>{{ getBlockLabel(block) }}</span>
-                </div>
-              </ng-template>
+              @if (editable()) {
+                <!-- Кастомный превью — компактная плашка с иконкой и названием -->
+                <ng-template cdkDragPreview>
+                  <div class="canvas__drag-preview">
+                    <svg [lucideIcon]="getBlockIcon(block.type)" class="canvas__drag-preview-icon"></svg>
+                    <span>{{ getBlockLabel(block) }}</span>
+                  </div>
+                </ng-template>
 
-              <!-- Кастомный placeholder — видимая пунктирная зона -->
-              <ng-template cdkDragPlaceholder>
-                <div class="canvas__drag-placeholder">
-                  <svg lucideIcon="arrow-up-down" class="canvas__drag-placeholder-icon"></svg>
-                </div>
-              </ng-template>
+                <!-- Кастомный placeholder — видимая пунктирная зона -->
+                <ng-template cdkDragPlaceholder>
+                  <div class="canvas__drag-placeholder">
+                    <svg lucideIcon="arrow-up-down" class="canvas__drag-placeholder-icon"></svg>
+                  </div>
+                </ng-template>
 
-              <!-- Drag handle (visible on hover) -->
-              <div class="canvas__drag-handle" aria-hidden="true">
-                <svg lucideIcon="grip-vertical"></svg>
-              </div>
+                <!-- Drag handle (visible on hover) -->
+                <div class="canvas__drag-handle" aria-hidden="true">
+                  <svg lucideIcon="grip-vertical"></svg>
+                </div>
+              }
 
               @switch (block.type) {
                 @case ('text') {

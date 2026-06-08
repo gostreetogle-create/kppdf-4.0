@@ -17,9 +17,22 @@
 }
 
 .preview__canvas-wrap {
-  max-height: 82vh;
-  overflow-y: auto;
+  height: 75vh;
+  overflow: hidden;
   border-radius: 8px;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  background: #e5e7eb;
+  padding: 8px;
+}
+
+.preview__canvas-scaler {
+  will-change: transform;
+}
+
+.preview__canvas-scaler kp-doc-canvas {
+  display: block;
 }
 
 .preview__footer {
@@ -100,6 +113,22 @@
     border: none;
     border-top: 1px solid #000;
     margin: 0;
+  }
+
+  .print-block__table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 10pt;
+  }
+  .print-block__table th,
+  .print-block__table td {
+    border: 1px solid #000;
+    padding: 2mm 3mm;
+    text-align: left;
+  }
+  .print-block__table th {
+    background: #f0f0f0;
+    font-weight: 700;
   }
 
   .print-block__table-placeholder {

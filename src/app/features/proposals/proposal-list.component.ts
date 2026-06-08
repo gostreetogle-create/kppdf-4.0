@@ -10,6 +10,7 @@ import { KpCardComponent } from '../../shared/ui/kp-card.component';
 import { KpTableComponent, TableColumn, TableExtraAction } from '../../shared/ui/kp-table.component';
 import { KpToastComponent } from '../../shared/ui/kp-toast.component';
 import { KpConfirmDialogComponent } from '../../shared/ui/kp-confirm-dialog.component';
+
 import { KpDocPreviewDialogComponent } from '../../shared/ui/kp-doc-preview-dialog.component';
 import { NotificationService } from '../../core/notification.service';
 import { CommercialProposalService } from '../../core/commercial-proposal.service';
@@ -32,7 +33,7 @@ interface ProposalRow extends CommercialProposal {
   imports: [
     CommonModule, RouterLink,
     KpButtonComponent, KpBreadcrumbComponent, KpCardComponent,
-    KpTableComponent, KpToastComponent, KpConfirmDialogComponent, KpDocPreviewDialogComponent,
+    KpTableComponent, KpToastComponent, KpDocPreviewDialogComponent,
   ],
   providers: [ConfirmationService],
   template: `
@@ -209,7 +210,7 @@ export class ProposalListComponent {
       }
     }
     if (p.organizationId) {
-      const orgRes = await firstValueFrom(this.orgService.getById(p.organizationId));
+      const orgRes = await firstValueFrom(this.orgService.getOrganization(p.organizationId));
       if (orgRes.success && orgRes.data) {
         orgName = orgRes.data.shortName;
       }

@@ -1,7 +1,6 @@
 <kp-dialog
   [header]="'Предпросмотр: ' + templateName()"
-  [visible]="visible()"
-  (visibleChange)="visible.set($event)"
+  [(visible)]="visible"
   width="1000px"
 >
   <div class="preview">
@@ -13,12 +12,14 @@
       <span class="preview__label">Формат A4</span>
     </div>
 
-    <div class="preview__canvas-wrap">
-      <kp-doc-canvas
-        [blocks]="blocks()"
-        [editable]="false"
-        [backgroundImage]="backgroundImage()"
-      />
+    <div #previewCanvasWrap class="preview__canvas-wrap">
+      <div class="preview__canvas-scaler" [style.transform]="'scale(' + pageScale() + ')'" [style.transform-origin]="'top center'">
+        <kp-doc-canvas
+          [blocks]="blocks()"
+          [editable]="false"
+          [backgroundImage]="backgroundImage()"
+        />
+      </div>
     </div>
 
     <div class="preview__footer no-print">
@@ -83,9 +84,36 @@
               @if (block.title) {
                 <div class="print-block__title">{{ block.title }}</div>
               }
-              <div class="print-block__table-placeholder">
-                [Таблица: {{ block.tableTemplateId || 'не выбрана' }}]
-              </div>
+              @let td = getTableData(block.id);
+              @if (td) {
+                <table class="print-block__table">
+                  <thead>
+                    <tr>
+                      @for (col of td.template.columns; track col.fieldName) {
+                        <th>{{ col.label }}</th>
+                      }
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (row of td.rows; track $index) {
+                      <tr>
+                        @for (col of td.template.columns; track col.fieldName) {
+                          <td>{{ getFieldValue(row, col.fieldName) }}</td>
+                        }
+                      </tr>
+                    }
+                    @if (td.rows.length === 0) {
+                      <tr>
+                        <td [attr.colspan]="td.template.columns.length" style="text-align:center;color:#999;">Нет данных</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              } @else {
+                <div class="print-block__table-placeholder">
+                  [Таблица: {{ block.tableTemplateId || 'не выбрана' }}]
+                </div>
+              }
             }
           }
         </div>

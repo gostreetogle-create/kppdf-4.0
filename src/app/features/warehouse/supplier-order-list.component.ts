@@ -10,6 +10,7 @@ import { KpCardComponent } from '../../shared/ui/kp-card.component';
 import { KpTableComponent, TableColumn, TableExtraAction } from '../../shared/ui/kp-table.component';
 import { KpToastComponent } from '../../shared/ui/kp-toast.component';
 import { KpConfirmDialogComponent } from '../../shared/ui/kp-confirm-dialog.component';
+
 import { NotificationService } from '../../core/notification.service';
 import { SupplierOrderService } from '../../core/supplier-order.service';
 import { ConfirmationService } from 'primeng/api';
@@ -27,7 +28,7 @@ interface OrderRow extends SupplierOrder {
   imports: [
     CommonModule, RouterLink,
     KpButtonComponent, KpBreadcrumbComponent, KpCardComponent,
-    KpTableComponent, KpToastComponent, KpConfirmDialogComponent,
+    KpTableComponent, KpToastComponent,
   ],
   providers: [ConfirmationService],
   template: `

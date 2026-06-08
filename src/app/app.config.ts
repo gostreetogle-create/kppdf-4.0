@@ -15,9 +15,14 @@ import {
   LucideHome, LucidePalette, LucideBook, LucideBuilding, LucideCog, LucideFile,
   LucideEyeOff, LucideX, LucidePlus,
   LucideFlag, LucideRotateCcw,
-  LucideSend, LucideThumbsUp, LucideThumbsDown,
-  LucidePlay, LucideTruck, LucidePackageCheck,
-  LucideCamera, LucideStar,
+  LucideSend,
+  LucidePlay,
+  LucideCamera, LucideStar, LucideLandmark,
+  LucideTextAlignCenter, LucideTextAlignEnd,
+  LucideBold, LucideItalic, LucideUnderline,
+  LucideTrash, LucideFileText, LucideUserPlus,
+  LucideListTodo, LucideBraces, LucideRotateCw,
+  LucidePercent,
 } from '@lucide/angular';
 import Aura from '@primeuix/themes/aura';
 
@@ -52,9 +57,15 @@ export const appConfig: ApplicationConfig = {
       LucideEyeOff, LucideX, LucidePlus,
       LucideDownload, LucidePrinter, LucideShoppingCart, LucideTag,
       LucideFlag, LucideRotateCcw,
-      LucideSend, LucideThumbsUp, LucideThumbsDown,
-      LucidePlay, LucideTruck, LucidePackageCheck,
-      LucideCamera, LucideStar,
+      LucideSend,
+      LucidePlay,
+      LucideCamera, LucideStar, LucideLandmark,
+      LucideTextAlignCenter, LucideTextAlignEnd,
+      LucideBold, LucideItalic, LucideUnderline,
+      LucideTrash, LucideFileText, LucideUserPlus,
+      LucideListTodo, LucideBraces,
+      LucideRotateCw,
+      LucidePercent,
     ),
   ]
 };

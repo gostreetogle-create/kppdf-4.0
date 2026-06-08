@@ -78,15 +78,20 @@ export class TableTemplateEditorComponent implements OnInit {
       }))
   );
 
-  /** Фейковые данные для предпросмотра (1 строка с плейсхолдерами) */
+  /** Фейковые данные для предпросмотра (3 строки с тестовыми данными) */
   previewData = computed<Record<string, string>[]>(() => {
     const cols = this.previewColumns();
     if (cols.length === 0) return [];
-    const row: Record<string, string> = {};
-    for (const col of cols) {
-      row[col.field] = '{{' + col.field + '}}';
+    const rows: Record<string, string>[] = [];
+    const sampleValues = ['Значение 1', 'Значение 2', 'Значение 3'];
+    for (const sv of sampleValues) {
+      const row: Record<string, string> = {};
+      for (const col of cols) {
+        row[col.field] = sv;
+      }
+      rows.push(row);
     }
-    return [row];
+    return rows;
   });
 
   tableOptions = computed<SelectOption[]>(() =>

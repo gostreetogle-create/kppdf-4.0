@@ -65,8 +65,7 @@ const PLACEHOLDER_CATEGORIES = [...new Set(PLACEHOLDER_GROUPS.map(p => p.categor
   template: `
     <kp-dialog
       header="Редактирование текстового блока"
-      [visible]="visible()"
-      (visibleChange)="visible.set($event)"
+      [(visible)]="visible"
       width="900px"
     >
       <div class="editor">

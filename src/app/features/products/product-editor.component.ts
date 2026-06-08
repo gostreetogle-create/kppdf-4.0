@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, signal, computed, linkedSignal, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -9,7 +9,6 @@ import { generateId } from '../../core/crud-factory';
 
 import { KpButtonComponent } from '../../shared/ui/kp-button.component';
 import { KpBreadcrumbComponent } from '../../shared/ui/kp-breadcrumb.component';
-import { KpCardComponent } from '../../shared/ui/kp-card.component';
 import { KpInputComponent } from '../../shared/ui/kp-input.component';
 import { KpSelectComponent } from '../../shared/ui/kp-select.component';
 import { KpToggleComponent } from '../../shared/ui/kp-toggle.component';
@@ -27,7 +26,7 @@ import type { ProductCategory, ProductPhoto, ProductComponent, ComponentMaterial
   standalone: true,
   imports: [
     CommonModule, FormsModule,
-    KpButtonComponent, KpBreadcrumbComponent, KpCardComponent,
+    KpButtonComponent, KpBreadcrumbComponent,
     KpInputComponent, KpSelectComponent, KpToggleComponent, KpToastComponent,
     KpDialogComponent,
   ],
@@ -37,20 +36,24 @@ import type { ProductCategory, ProductPhoto, ProductComponent, ComponentMaterial
     <div class="pe-page">
       <kp-breadcrumb [items]="breadcrumbs()" />
 
+      @let isCreating = isNew();
+      @let totalPhotos = photos().length;
+      @let isMfg = productType() === 'manufactured';
+
       <!-- Header with SKU badge + actions -->
       <div class="pe-hero">
         <div class="pe-hero__info">
-          <div class="pe-hero__sku">{{ isNew() ? 'Новый товар' : sku() }}</div>
+          <div class="pe-hero__sku">{{ isCreating ? 'Новый товар' : sku() }}</div>
           <div class="pe-hero__title">
-            @if (!isNew()) {
+            @if (!isCreating) {
               <input class="pe-hero__title-input" [ngModel]="name()" (ngModelChange)="name.set($event)" placeholder="Название товара" />
             } @else {
               <h1 class="pe-hero__title-h1">{{ name() || 'Новый товар' }}</h1>
             }
           </div>
-          @if (!isNew()) {
+          @if (!isCreating) {
             <div class="pe-hero__meta">
-              <span class="pe-hero__meta-tag" [class.pe-hero__meta-tag--mfg]="productType() === 'manufactured'">{{ productType() === 'manufactured' ? '🔧 Изготавливаемый' : '🛒 Покупной' }}</span>
+              <span class="pe-hero__meta-tag" [class.pe-hero__meta-tag--mfg]="isMfg">{{ isMfg ? '🔧 Изготавливаемый' : '🛒 Покупной' }}</span>
               <span class="pe-hero__meta-tag">{{ unit() }}</span>
               @if (basePrice()) {
                 <span class="pe-hero__meta-tag pe-hero__meta-tag--price">{{ basePrice()!.toLocaleString('ru-RU') }} ₽</span>
@@ -75,12 +78,12 @@ import type { ProductCategory, ProductPhoto, ProductComponent, ComponentMaterial
           <section class="pe-section">
             <div class="pe-section__hed">
               <h3 class="pe-section__title">📷 Фотографии</h3>
-              <span class="pe-section__count">{{ photos().length }}</span>
-              @if (!isNew()) {
+              <span class="pe-section__count">{{ totalPhotos }}</span>
+              @if (!isCreating) {
                 <kp-button lucideIcon="camera" severity="secondary" [text]="true" size="small" (buttonClick)="openAddPhotoDialog()" />
               }
             </div>
-            @if (!isNew()) {
+            @if (!isCreating) {
               <div class="pe-photos">
                 @for (photo of photos(); track photo.id) {
                   <div class="pe-photo" [class.pe-photo--main]="photo.isMain">
@@ -97,8 +100,9 @@ import type { ProductCategory, ProductPhoto, ProductComponent, ComponentMaterial
                     </div>
                     <div class="pe-photo__actions">
                       @if (!photo.isMain) { <kp-button lucideIcon="star" severity="info" [text]="true" size="small" title="Сделать главным" (buttonClick)="setMainPhoto(photo.id)" /> }
-                      @if (photos().length > 1 && photo.sortOrder > 1) { <kp-button lucideIcon="chevron-up" severity="secondary" [text]="true" size="small" (buttonClick)="movePhoto(photo.id, -1)" /> }
-                      @if (photos().length > 1 && photo.sortOrder < photos().length) { <kp-button lucideIcon="chevron-down" severity="secondary" [text]="true" size="small" (buttonClick)="movePhoto(photo.id, 1)" /> }
+                      @let hasMultiplePhotos = totalPhotos > 1;
+                      @if (hasMultiplePhotos && photo.sortOrder > 1) { <kp-button lucideIcon="chevron-up" severity="secondary" [text]="true" size="small" (buttonClick)="movePhoto(photo.id, -1)" /> }
+                      @if (hasMultiplePhotos && photo.sortOrder < totalPhotos) { <kp-button lucideIcon="chevron-down" severity="secondary" [text]="true" size="small" (buttonClick)="movePhoto(photo.id, 1)" /> }
                       <kp-button lucideIcon="trash-2" severity="danger" [text]="true" size="small" (buttonClick)="deletePhoto(photo.id)" />
                     </div>
                   </div>
@@ -115,7 +119,7 @@ import type { ProductCategory, ProductPhoto, ProductComponent, ComponentMaterial
           </section>
 
           <!-- ─── Компоненты / BOM ─── -->
-          @if (productType() === 'manufactured' && !isNew()) {
+          @if (isMfg && !isCreating) {
             <section class="pe-section">
               <div class="pe-section__hed">
                 <h3 class="pe-section__title">🔩 Спецификация (BOM)</h3>
@@ -246,8 +250,7 @@ import type { ProductCategory, ProductPhoto, ProductComponent, ComponentMaterial
     <!-- Диалог добавления фото -->
     <kp-dialog
       header="Добавить фотографию"
-      [visible]="addPhotoDialogVisible()"
-      (visibleChange)="addPhotoDialogVisible.set($event)"
+      [(visible)]="addPhotoDialogVisible"
       width="500px"
     >
       <div class="pe-photo-add">
@@ -274,8 +277,7 @@ import type { ProductCategory, ProductPhoto, ProductComponent, ComponentMaterial
     <!-- Диалог добавления/редактирования компонента -->
     <kp-dialog
       [header]="editingCompId() ? 'Редактировать компонент' : 'Добавить компонент'"
-      [visible]="compDialogVisible()"
-      (visibleChange)="compDialogVisible.set($event)"
+      [(visible)]="compDialogVisible"
       width="650px"
     >
       <div class="pe-comp-dialog">
@@ -329,7 +331,7 @@ import type { ProductCategory, ProductPhoto, ProductComponent, ComponentMaterial
   `,
   styles: [`
     :host { display: block; padding: var(--space-6); }
-    .pe-page { max-width: 1200px; margin: 0 auto; }
+    
 
     /* ── Hero header ── */
     .pe-hero {
@@ -600,7 +602,14 @@ export class ProductEditorComponent {
   addPhotoDialogVisible = signal(false);
   newPhotoUrl = signal('');
   editingCaptionId = signal<string | null>(null);
-  editCaption = signal('');
+  editCaption = linkedSignal<string | null, string>({
+    source: () => this.editingCaptionId(),
+    computation: (id) => {
+      if (!id) return '';
+      const photo = this.photos().find(p => p.id === id);
+      return photo?.caption ?? '';
+    },
+  });
 
   // ── Компоненты ──
   components = signal<ProductComponent[]>([]);
@@ -798,7 +807,7 @@ export class ProductEditorComponent {
 
   startEditCaption(photo: ProductPhoto) {
     this.editingCaptionId.set(photo.id);
-    this.editCaption.set(photo.caption || '');
+    // editCaption сбрасывается автоматически через linkedSignal
   }
 
   async saveCaption(photoId: string) {
