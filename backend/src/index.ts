@@ -26,6 +26,7 @@ const app = express();
 const log = logger.child({ module: 'server' });
 
 // Security middleware
+app.set('trust proxy', 1); // доверять Nginx (X-Forwarded-For для rate-limit)
 app.use(helmet());
 app.use(cors({ origin: env.CORS_ORIGIN, credentials: true }));
 app.use(cookieParser());
