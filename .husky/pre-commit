@@ -1,27 +1,55 @@
 #!/usr/bin/env sh
-# Pre-commit hook: lint → build → test
-# Если хоть одна команда падает — коммит блокируется
+# ========================================
+# Pre-commit hook для kppdf-4.0
+# 1. Branch name validation
+# 2. Lint
+# 3. Build
+# 4. Tests
+# ========================================
 
-echo "🔍 Проверка кода перед коммитом..."
+BRANCH="$(git symbolic-ref --short HEAD 2>/dev/null)"
 
+echo "🔍 Проверка кода перед коммитом (ветка: $BRANCH)..."
+
+# ─── 1/4: Branch name validation ───────────────────────────────────────
 echo ""
-echo "📋 1/3 — Линтер..."
+echo "📌 1/4 — Проверка имени ветки..."
+
+# Разрешённые префиксы: feature/, fix/, chore/, refactor/, docs/, release/, main
+case "$BRANCH" in
+  main) ;;
+  feature/*|fix/*|chore/*|refactor/*|docs/*|release/*) ;;
+  *)
+    echo "❌ Неверное имя ветки: $BRANCH"
+    echo "   Допустимые форматы: feature/*, fix/*, chore/*, refactor/*, docs/*, release/*"
+    echo "   Подробнее: BRANCHING.md"
+    exit 1
+    ;;
+esac
+
+echo "✅ Имя ветки корректно"
+
+# ─── 2/4: Lint ─────────────────────────────────────────────────────────
+echo ""
+echo "📋 2/4 — Линтер..."
 npx --no ng lint
 if [ $? -ne 0 ]; then
   echo "❌ Линтер не прошёл. Коммит отменён."
   exit 1
 fi
 
+# ─── 3/4: Build ────────────────────────────────────────────────────────
 echo ""
-echo "🔨 2/3 — Сборка..."
+echo "🔨 3/4 — Сборка..."
 npx --no ng build
 if [ $? -ne 0 ]; then
   echo "❌ Сборка не удалась. Коммит отменён."
   exit 1
 fi
 
+# ─── 4/4: Tests ────────────────────────────────────────────────────────
 echo ""
-echo "🧪 3/3 — Тесты..."
+echo "🧪 4/4 — Тесты..."
 npx --no vitest run
 if [ $? -ne 0 ]; then
   echo "❌ Тесты не прошли. Коммит отменён."

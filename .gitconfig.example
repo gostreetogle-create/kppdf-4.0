@@ -1,0 +1,62 @@
+# ========================================
+# .gitconfig.example — Рекомендуемые настройки git для kppdf-4.0
+# ========================================
+#
+# Применить:
+#   git config --local include.path ../../.gitconfig.example
+#
+# Или скопировать нужные секции в .git/config вручную.
+# ========================================
+
+[core]
+    # Авто-конвертация CRLF → LF при коммите (Windows → Linux)
+    autocrlf = input
+    # Чувствительность к регистру (Linux = true, Windows = false)
+    ignorecase = false
+    # Кодировка сообщений коммитов
+    quotepath = false
+
+[push]
+    # По умолчанию пушить только текущую ветку
+    default = current
+    # Авто-установка upstream при первом push
+    autoSetupRemote = true
+
+[pull]
+    # rebase вместо merge при git pull
+    rebase = true
+
+[merge]
+    # Количество контекстных строк при конфликте
+    conflictstyle = zdiff3
+
+[diff]
+    # Цветной diff
+    colorMoved = default
+    algorithm = histogram
+
+[alias]
+    # Краткий лог (граф + однострочники)
+    lg = log --graph --oneline --decorate --all
+
+    # Статус компактно
+    st = status -s
+
+    # Последние N коммитов
+    last = log -1 HEAD
+
+    # Отменить последний коммит (сохраняя изменения)
+    uncommit = reset --soft HEAD~1
+
+    # Показать изменения в staged файлах
+    staged = diff --cached
+
+    # Пуш текущей ветки с upstream
+    pushu = push -u origin HEAD
+
+    # Отформатировать лог для CHANGELOG
+    changelog = log --no-merges --format=\"- %s (%h)\"
+
+# Инициализация новых репозиториев (глобально):
+#   git config --global init.defaultBranch main
+# В уже инициализированном репозитории не применяется.
