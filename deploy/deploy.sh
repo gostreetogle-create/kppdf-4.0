@@ -223,8 +223,13 @@ EOF
   # Пишем .env на сервере
   ${SSH_CMD} "echo '${ENV_B64}' | base64 -d > /tmp/kppdf40-env && ${SSH_SUDO} mv /tmp/kppdf40-env ${REMOTE_DIR}/.env && ${SSH_SUDO} chmod 600 ${REMOTE_DIR}/.env" 2>&1
 
+  # Собираем флаги для серверного режима
+  REMOTE_ARGS=""
+  [[ "${SKIP_BUILD}" -eq 1 ]] && REMOTE_ARGS+=" --skip-build"
+  [[ "${SKIP_SEED}" -eq 1 ]] && REMOTE_ARGS+=" --skip-seed"
+
   # Распаковываем deploy.sh из архива и запускаем
-  ${SSH_CMD} "${SSH_SUDO} tar xzf /tmp/${ARCHIVE_NAME} -C ${REMOTE_DIR}/ deploy/deploy.sh && ${SSH_SUDO} bash ${REMOTE_DIR}/deploy/deploy.sh /tmp/${ARCHIVE_NAME}" 2>&1 | sed 's/^/  /'
+  ${SSH_CMD} "${SSH_SUDO} tar xzf /tmp/${ARCHIVE_NAME} -C ${REMOTE_DIR}/ deploy/deploy.sh && ${SSH_SUDO} bash ${REMOTE_DIR}/deploy/deploy.sh${REMOTE_ARGS} /tmp/${ARCHIVE_NAME}" 2>&1 | sed 's/^/  /'
 
   # Чистим архив
   ${SSH_CMD} "rm -f /tmp/${ARCHIVE_NAME}" 2>&1
@@ -362,6 +367,23 @@ EOF
 
   if [[ "${BACKEND_READY}" -eq 0 ]]; then
     warn "Backend не ответил. Проверьте: docker logs kppdf40-backend --tail 50"
+  fi
+
+  # ─── Шаг 4.5: Seed (если бэкенд готов и не пропущен) ───
+  if [[ "${SKIP_SEED}" -eq 1 ]]; then
+    log "Seed пропущен (--skip-seed)"
+  elif [[ "${BACKEND_READY}" -eq 1 ]]; then
+    log "Запускаю seed (docker exec kppdf40-backend npx tsx src/seed.ts --force)..."
+    SEED_OUTPUT=$(docker exec kppdf40-backend npx tsx src/seed.ts --force 2>&1) && SEED_OK=1 || SEED_OK=0
+    echo "${SEED_OUTPUT}" | while IFS= read -r line; do echo "  ${line}"; done
+    if [[ "${SEED_OK}" -eq 1 ]]; then
+      SEED_COUNT=$(echo "${SEED_OUTPUT}" | grep -o '[0-9]\+ записей' | grep -o '[0-9]\+' | tail -1)
+      ok "Seed выполнен: ${SEED_COUNT:-?} записей"
+    else
+      warn "Seed завершился с ошибкой (возможно, данные уже есть)"
+    fi
+  else
+    warn "Seed пропущен — бэкенд не готов"
   fi
 
   # ─── Шаг 5: Проверка ───
