@@ -50,6 +50,12 @@ export class ApiService {
     );
   }
 
+  patch<T>(path: string, body: unknown): Observable<ApiResponse<T>> {
+    return this.http.patch<ApiResponse<T>>(`${this.apiUrl}${path}`, body).pipe(
+      timeout(DEFAULT_TIMEOUT)
+    );
+  }
+
   getPaginated<T>(
     path: string,
     page = 1,

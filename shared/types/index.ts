@@ -120,6 +120,8 @@ export interface DocBlock {
   height?: number;
   showLine?: boolean;
   settings?: DocBlockSettings;
+  /** Внутренние данные (не сохраняются в шаблон БД). Строки для table-блока в режиме preview. */
+  _inlineRows?: Record<string, unknown>[];
 }
 
 // ========================================

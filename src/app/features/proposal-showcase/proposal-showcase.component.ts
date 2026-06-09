@@ -630,7 +630,7 @@ export class ProposalShowcaseComponent {
           type: 'table',
           order: 1,
           title: `Товары (${items.length} позиций)`,
-          content: items.map(i => `${i.sku} — ${i.name} × ${i.quantity} = ${(i.price * i.quantity).toLocaleString('ru-RU')} ₽`).join('\\n'),
+          _inlineRows: items.map(item => this.cartItemToRow(item)),
         });
       }
       return blocks;
@@ -645,21 +645,47 @@ export class ProposalShowcaseComponent {
       blocks.push({ ...b, id: b.id + '-inst' });
     }
 
-    // Append selected items as a text block at the end
+    // If there are selected items, populate the FIRST table block with product data
     if (items.length > 0) {
-      const itemLines = items.map(i =>
-        `• ${i.name} (${i.sku}) — ${i.quantity} × ${i.price.toLocaleString('ru-RU')} ₽ = ${(i.price * i.quantity).toLocaleString('ru-RU')} ₽`
-      );
-      blocks.push({
-        id: 'sel-items',
-        type: 'text',
-        order: blocks.length,
-        title: `Выбрано товаров: ${items.length} на сумму ${items.reduce((s, i) => s + i.price * i.quantity, 0).toLocaleString('ru-RU')} ₽`,
-        content: itemLines.join('\n'),
-      });
+      const tableBlock = blocks.find(b => b.type === 'table' && b.tableTemplateId);
+      if (tableBlock) {
+        // Заполняем table-блок инлайн-данными из корзины
+        tableBlock._inlineRows = items.map(item => this.cartItemToRow(item));
+      } else {
+        // Fallback: нет table-блоков в шаблоне → добавляем текстовый блок
+        const itemLines = items.map(i =>
+          `• ${i.name} (${i.sku}) — ${i.quantity} × ${i.price.toLocaleString('ru-RU')} ₽ = ${(i.price * i.quantity).toLocaleString('ru-RU')} ₽`
+        );
+        blocks.push({
+          id: 'sel-items',
+          type: 'text',
+          order: blocks.length,
+          title: `Выбрано товаров: ${items.length} на сумму ${this.totalWithMarkup().toLocaleString('ru-RU')} ₽`,
+          content: itemLines.join('\n'),
+        });
+      }
     }
     return blocks;
   });
+
+  /** Сформировать строку таблицы из позиции корзины (поля под любые column.fieldName) */
+  private cartItemToRow(item: CartItem): Record<string, unknown> {
+    const total = this.itemTotal(item);
+    return {
+      name: item.name,
+      sku: item.sku,
+      price: item.price,
+      unitPrice: item.price,
+      quantity: item.quantity,
+      unit: item.unit,
+      total,
+      totalAmount: total,
+      productName: item.name,
+      productSku: item.sku,
+      productUnit: item.unit,
+      markupPercent: item.markupPercent ?? 0,
+    };
+  }
 
   /** Background image from selected template */
   selectedBackgroundImage = computed(() => {

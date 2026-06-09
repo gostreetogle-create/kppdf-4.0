@@ -2,6 +2,8 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { provideNoopAnimations } from '@angular/platform-browser/animations';
+import { provideHttpClient } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { MessageService, ConfirmationService } from 'primeng/api';
 import { firstValueFrom } from 'rxjs';
 import { ContractListComponent } from './contract-list.component';
@@ -9,9 +11,16 @@ import { ContractService } from '../../core/contract.service';
 import { NotificationService } from '../../core/notification.service';
 import type { Contract } from '../../../../shared/types/index.js';
 
+const MOCK_CONTRACT: Contract = {
+  id: 'c-1', number: 'Д-0001', organizationId: 'org-1', clientId: 'cli-1',
+  status: 'draft', items: [{ id: 'ci-1', sourceProductId: 'p1', productSku: 'SP0001', productName: 'Стойка', productUnit: 'шт', quantity: 2 }],
+  notes: '', createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-01-01T00:00:00.000Z',
+};
+
 describe('ContractListComponent', () => {
   let contractService: ContractService;
   let router: Router;
+  let httpMock: HttpTestingController;
 
   beforeEach(async () => {
     TestBed.configureTestingModule({
@@ -22,6 +31,8 @@ describe('ContractListComponent', () => {
           { path: 'sales/contracts/:id/edit', component: ContractListComponent },
         ]),
         provideNoopAnimations(),
+        provideHttpClient(),
+        provideHttpClientTesting(),
         MessageService, ConfirmationService,
         NotificationService, ContractService,
       ],
@@ -29,29 +40,35 @@ describe('ContractListComponent', () => {
     await TestBed.compileComponents();
     contractService = TestBed.inject(ContractService);
     router = TestBed.inject(Router);
+    httpMock = TestBed.inject(HttpTestingController);
   });
 
-  afterEach(() => TestBed.resetTestingModule());
+  afterEach(() => { httpMock.verify(); TestBed.resetTestingModule(); });
 
   function createComponent(): ContractListComponent {
     let c!: ContractListComponent;
     TestBed.runInInjectionContext(() => { c = new ContractListComponent(); });
+    // Конструктор вызывает load() → GET
+    httpMock.expectOne('/api/v1/contracts').flush({ success: true, data: [] });
     return c;
   }
 
   async function seedContract(status: 'draft' | 'active' = 'draft'): Promise<Contract> {
-    const res = await firstValueFrom(contractService.createContract({
+    const p = firstValueFrom(contractService.createContract({
       organizationId: 'org-1', clientId: 'cli-1', status,
       items: [{ id: 'ci-1', sourceProductId: 'p1', productSku: 'SP0001', productName: 'Стойка', productUnit: 'шт', quantity: 2 }],
     }));
-    return res.data!;
+    httpMock.expectOne('/api/v1/contracts').flush({ success: true, data: { ...MOCK_CONTRACT, status } });
+    return (await p).data!;
   }
 
   it('создаётся', () => { expect(createComponent()).toBeTruthy(); });
 
   it('значения по умолчанию', async () => {
     const c = createComponent();
-    await c.load();
+    const lp = c.load();
+    httpMock.expectOne('/api/v1/contracts').flush({ success: true, data: [] });
+    await lp;
     expect(c.loading()).toBe(false);
     expect(c.breadcrumbs.length).toBe(2);
     expect(c.tableColumns.length).toBe(4);
@@ -61,7 +78,9 @@ describe('ContractListComponent', () => {
   it('load загружает договоры', async () => {
     await seedContract();
     const c = createComponent();
-    await c.load();
+    const lp = c.load();
+    httpMock.expectOne('/api/v1/contracts').flush({ success: true, data: [MOCK_CONTRACT] });
+    await lp;
     expect(c.rows().length).toBe(1);
     expect(c.rows()[0].statusLabel).toBe('Черновик');
   });
@@ -91,7 +110,9 @@ describe('ContractListComponent', () => {
 
   it('changeStatus меняет статус', async () => {
     const draft = await seedContract('draft');
-    const res = await firstValueFrom(contractService.changeStatus(draft.id, 'active'));
+    const p = firstValueFrom(contractService.changeStatus(draft.id, 'active'));
+    httpMock.expectOne('/api/v1/contracts/' + draft.id).flush({ success: true, data: { ...MOCK_CONTRACT, status: 'active' } });
+    const res = await p;
     expect(res.success).toBe(true);
     expect(res.data!.status).toBe('active');
   });

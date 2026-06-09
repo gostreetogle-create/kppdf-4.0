@@ -2,6 +2,8 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { provideNoopAnimations } from '@angular/platform-browser/animations';
+import { provideHttpClient } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { MessageService, ConfirmationService } from 'primeng/api';
 import { firstValueFrom } from 'rxjs';
 import { ProposalListComponent } from './proposal-list.component';
@@ -9,9 +11,34 @@ import { CommercialProposalService } from '../../core/commercial-proposal.servic
 import { NotificationService } from '../../core/notification.service';
 import type { CommercialProposal } from '../../../../shared/types/index.js';
 
+const MOCK_CP: CommercialProposal = {
+  id: 'cp-1',
+  number: 'КП-0001',
+  organizationId: 'org-1',
+  clientId: 'cli-1',
+  status: 'draft',
+  items: [{
+    id: 'pi-1',
+    sourceProductId: 'prod-1',
+    productSku: 'SP0001',
+    productName: 'Стойка баскетбольная',
+    productUnit: 'шт',
+    quantity: 2,
+    unitPrice: 85000,
+    markupPercent: 5,
+    total: 178500,
+  }],
+  totalAmount: 178500,
+  notes: '',
+  templateId: '',
+  createdAt: '2026-01-01T00:00:00.000Z',
+  updatedAt: '2026-01-01T00:00:00.000Z',
+};
+
 describe('ProposalListComponent', () => {
   let proposalService: CommercialProposalService;
   let router: Router;
+  let httpMock: HttpTestingController;
 
   beforeEach(async () => {
     TestBed.configureTestingModule({
@@ -22,6 +49,8 @@ describe('ProposalListComponent', () => {
           { path: 'sales/proposals/:id/edit', component: ProposalListComponent },
         ]),
         provideNoopAnimations(),
+        provideHttpClient(),
+        provideHttpClientTesting(),
         MessageService,
         ConfirmationService,
         NotificationService,
@@ -31,20 +60,26 @@ describe('ProposalListComponent', () => {
     await TestBed.compileComponents();
     proposalService = TestBed.inject(CommercialProposalService);
     router = TestBed.inject(Router);
+    httpMock = TestBed.inject(HttpTestingController);
   });
 
-  afterEach(() => TestBed.resetTestingModule());
+  afterEach(() => {
+    httpMock.verify();
+    TestBed.resetTestingModule();
+  });
 
   function createComponent(): ProposalListComponent {
     let component!: ProposalListComponent;
     TestBed.runInInjectionContext(() => {
       component = new ProposalListComponent();
     });
+    // Конструктор вызывает this.load() → HTTP GET
+    httpMock.expectOne('/api/v1/commercial-proposals').flush({ success: true, data: [] });
     return component;
   }
 
   async function seedProposal(status: 'draft' | 'sent' = 'draft'): Promise<CommercialProposal> {
-    const res = await firstValueFrom(proposalService.createWithItems(
+    const promise = firstValueFrom(proposalService.createWithItems(
       { organizationId: 'org-1', clientId: 'cli-1', status },
       [{
         id: 'pi-1',
@@ -58,7 +93,8 @@ describe('ProposalListComponent', () => {
         total: 178500,
       }],
     ));
-    return res.data!;
+    httpMock.expectOne('/api/v1/commercial-proposals').flush({ success: true, data: { ...MOCK_CP, status } });
+    return (await promise).data!;
   }
 
   // ─────── Создание и значения по умолчанию ───────
@@ -69,7 +105,10 @@ describe('ProposalListComponent', () => {
 
   it('значения по умолчанию', async () => {
     const c = createComponent();
-    await c.load();
+    const loadPromise = c.load();
+    // load делает GET
+    httpMock.expectOne('/api/v1/commercial-proposals').flush({ success: true, data: [] });
+    await loadPromise;
     expect(c.loading()).toBe(false);
     expect(c.breadcrumbs.length).toBe(2);
     expect(c.breadcrumbs[0].label).toBe('Продажи');
@@ -87,9 +126,13 @@ describe('ProposalListComponent', () => {
   // ─────── Загрузка КП ───────
 
   it('load загружает КП из сервиса', async () => {
+    // Seed — делает POST + flush
     await seedProposal();
     const c = createComponent();
-    await c.load();
+    const loadPromise = c.load();
+    // load делает GET
+    httpMock.expectOne('/api/v1/commercial-proposals').flush({ success: true, data: [MOCK_CP] });
+    await loadPromise;
     expect(c.rows().length).toBe(1);
     expect(c.rows()[0].number).toBe('КП-0001');
     expect(c.rows()[0].statusLabel).toBe('Черновик');
@@ -99,7 +142,9 @@ describe('ProposalListComponent', () => {
 
   it('load обрабатывает пустой список', async () => {
     const c = createComponent();
-    await c.load();
+    const loadPromise = c.load();
+    httpMock.expectOne('/api/v1/commercial-proposals').flush({ success: true, data: [] });
+    await loadPromise;
     expect(c.rows().length).toBe(0);
   });
 
@@ -108,10 +153,14 @@ describe('ProposalListComponent', () => {
   it('rows содержат правильные statusLabel для всех статусов', async () => {
     // Создаём КП и меняем его статус через changeStatus
     const draft = await seedProposal('draft');
-    await firstValueFrom(proposalService.changeStatus(draft.id, 'sent'));
+    const changePromise = firstValueFrom(proposalService.changeStatus(draft.id, 'sent'));
+    httpMock.expectOne('/api/v1/commercial-proposals/cp-1/status').flush({ success: true, data: { ...MOCK_CP, status: 'sent' } });
+    await changePromise;
 
     const c = createComponent();
-    await c.load();
+    const loadPromise = c.load();
+    httpMock.expectOne('/api/v1/commercial-proposals').flush({ success: true, data: [{ ...MOCK_CP, status: 'sent' }] });
+    await loadPromise;
 
     // После changeStatus КП должен быть 'sent'
     expect(c.rows().length).toBe(1);
@@ -167,15 +216,21 @@ describe('ProposalListComponent', () => {
   it('changeStatus меняет статус и список обновляется', async () => {
     const draft = await seedProposal('draft');
     const c = createComponent();
-    await c.load();
+    const loadPromise1 = c.load();
+    httpMock.expectOne('/api/v1/commercial-proposals').flush({ success: true, data: [MOCK_CP] });
+    await loadPromise1;
 
-    // Меняем статус через сервис (onStatusChange обёрнут в диалог подтверждения)
-    const res = await firstValueFrom(proposalService.changeStatus(draft.id, 'sent'));
+    // Меняем статус через сервис
+    const changePromise = firstValueFrom(proposalService.changeStatus(draft.id, 'sent'));
+    httpMock.expectOne('/api/v1/commercial-proposals/cp-1/status').flush({ success: true, data: { ...MOCK_CP, status: 'sent' } });
+    const res = await changePromise;
     expect(res.success).toBe(true);
     expect(res.data!.status).toBe('sent');
 
     // Перезагружаем и проверяем
-    await c.load();
+    const loadPromise2 = c.load();
+    httpMock.expectOne('/api/v1/commercial-proposals').flush({ success: true, data: [{ ...MOCK_CP, status: 'sent' }] });
+    await loadPromise2;
     expect(c.rows()[0].statusLabel).toBe('Отправлено');
   });
 
@@ -184,14 +239,20 @@ describe('ProposalListComponent', () => {
   it('удаление КП работает', async () => {
     await seedProposal();
     const c = createComponent();
-    await c.load();
+    const loadPromise1 = c.load();
+    httpMock.expectOne('/api/v1/commercial-proposals').flush({ success: true, data: [MOCK_CP] });
+    await loadPromise1;
     expect(c.rows().length).toBe(1);
 
-    // Удаляем напрямую через сервис (минуя диалог подтверждения)
-    const res = await firstValueFrom(proposalService.deleteProposal(c.rows()[0].id));
+    // Удаляем напрямую через сервис
+    const delPromise = firstValueFrom(proposalService.deleteProposal(c.rows()[0].id));
+    httpMock.expectOne('/api/v1/commercial-proposals/cp-1').flush({ success: true, data: null });
+    const res = await delPromise;
     expect(res.success).toBe(true);
 
-    await c.load();
+    const loadPromise2 = c.load();
+    httpMock.expectOne('/api/v1/commercial-proposals').flush({ success: true, data: [] });
+    await loadPromise2;
     expect(c.rows().length).toBe(0);
   });
 

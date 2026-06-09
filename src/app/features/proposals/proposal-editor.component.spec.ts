@@ -2,6 +2,8 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { provideNoopAnimations } from '@angular/platform-browser/animations';
+import { provideHttpClient } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { MessageService, ConfirmationService } from 'primeng/api';
 import { firstValueFrom } from 'rxjs';
 import { ProposalEditorComponent } from './proposal-editor.component';
@@ -10,7 +12,7 @@ import { CartService } from '../../core/cart.service';
 import { OrganizationService } from '../../core/organization.service';
 import { ClientService } from '../../core/client.service';
 import { NotificationService } from '../../core/notification.service';
-import type { ProposalItem, Client } from '../../../../shared/types/index.js';
+import type { ProposalItem, Client, CommercialProposal } from '../../../../shared/types/index.js';
 
 const MOCK_CLIENT_WITH_MARKUP: Client = {
   id: 'cli-3', lastName: 'Сидорова', firstName: 'Анна',
@@ -39,11 +41,35 @@ function makeItem(overrides?: Partial<ProposalItem>): ProposalItem {
   };
 }
 
+const MOCK_CP: CommercialProposal = {
+  id: 'cp-1',
+  number: 'КП-0001',
+  organizationId: 'org-1',
+  clientId: 'cli-1',
+  status: 'draft',
+  items: [makeItem()],
+  totalAmount: 178500,
+  notes: 'Тестовое КП',
+  templateId: '',
+  createdAt: '2026-01-01T00:00:00.000Z',
+  updatedAt: '2026-01-01T00:00:00.000Z',
+};
+
+function flushCreateProposal(httpMock: HttpTestingController, overrides?: Partial<CommercialProposal>) {
+  const req = httpMock.expectOne('/api/v1/commercial-proposals');
+  req.flush({ success: true, data: { ...MOCK_CP, ...overrides } });
+}
+
+function flushGetProposals(httpMock: HttpTestingController, data: CommercialProposal[]) {
+  httpMock.expectOne('/api/v1/commercial-proposals').flush({ success: true, data });
+}
+
 describe('ProposalEditorComponent', () => {
   let notification: NotificationService;
   let proposalService: CommercialProposalService;
   let cartService: CartService;
   let router: Router;
+  let httpMock: HttpTestingController;
 
   beforeEach(async () => {
     TestBed.configureTestingModule({
@@ -54,6 +80,8 @@ describe('ProposalEditorComponent', () => {
           { path: 'sales/proposals/:id/edit', component: ProposalEditorComponent },
         ]),
         provideNoopAnimations(),
+        provideHttpClient(),
+        provideHttpClientTesting(),
         MessageService,
         ConfirmationService,
         NotificationService,
@@ -68,9 +96,11 @@ describe('ProposalEditorComponent', () => {
     proposalService = TestBed.inject(CommercialProposalService);
     cartService = TestBed.inject(CartService);
     router = TestBed.inject(Router);
+    httpMock = TestBed.inject(HttpTestingController);
   });
 
   afterEach(() => {
+    httpMock.verify();
     TestBed.resetTestingModule();
     cartService.clearCart();
   });
@@ -267,7 +297,7 @@ describe('ProposalEditorComponent', () => {
     expect(notifySpy).toHaveBeenCalledWith('Добавьте хотя бы одну позицию');
   });
 
-  // ─────── save: создание нового КП ───────
+  // ─────── save: создание нового КП (HTTP) ───────
 
   it('save создаёт новый КП и очищает корзину', async () => {
     const c = createComponent();
@@ -278,21 +308,25 @@ describe('ProposalEditorComponent', () => {
 
     const navigateSpy = vi.spyOn(router, 'navigate').mockResolvedValue(true);
     const notifySpy = vi.spyOn(notification, 'success');
-    await c.save();
+
+    // save делает HTTP POST
+    const savePromise = c.save();
+    flushCreateProposal(httpMock);
+    await savePromise;
 
     expect(notifySpy).toHaveBeenCalledWith('Коммерческое предложение создано');
     expect(navigateSpy).toHaveBeenCalledWith(['/sales/proposals']);
     expect(cartService.isEmpty()).toBe(true);
 
-    // Проверяем что КП создано в сервисе
-    const all = await firstValueFrom(proposalService.getProposals());
+    // Проверяем что КП доступно через сервис (GET)
+    const getPromise = firstValueFrom(proposalService.getProposals());
+    flushGetProposals(httpMock, [MOCK_CP]);
+    const all = await getPromise;
     expect(all.data!.length).toBe(1);
     expect(all.data![0].number).toMatch(/^КП-\d{4}$/);
     expect(all.data![0].items.length).toBe(1);
     expect(all.data![0].notes).toBe('Тестовое КП');
   });
-
-  // ─────── cancel ───────
 
   // ─────── createVariants ───────
 
@@ -303,13 +337,36 @@ describe('ProposalEditorComponent', () => {
 
     const navSpy = vi.spyOn(router, 'navigate').mockResolvedValue(true);
     const notifySpy = vi.spyOn(notification, 'success');
-    await c.createVariants();
+
+    // createVariants делает 3 последовательных POST (markup: 0, 5, 10)
+    const variantPromise = c.createVariants();
+
+    // Первый запрос (0%)
+    flushCreateProposal(httpMock, { number: 'КП-0001', items: [makeItem({ unitPrice: 100000, markupPercent: 0, total: 200000 })] });
+    await Promise.resolve(); // даём продолжиться async-функции
+
+    // Второй запрос (5%)
+    flushCreateProposal(httpMock, { number: 'КП-0002', items: [makeItem({ unitPrice: 100000, markupPercent: 5, total: 210000 })] });
+    await Promise.resolve();
+
+    // Третий запрос (10%)
+    flushCreateProposal(httpMock, { number: 'КП-0003', items: [makeItem({ unitPrice: 100000, markupPercent: 10, total: 220000 })] });
+    await variantPromise;
 
     expect(notifySpy).toHaveBeenCalledWith('Создано 3 варианта КП (наценка: 0%, 5%, 10)');
     expect(navSpy).toHaveBeenCalledWith(['/sales/proposals']);
 
     // Проверяем что 3 КП созданы с разными наценками
-    const all = await firstValueFrom(proposalService.getProposals());
+    const getPromise = firstValueFrom(proposalService.getProposals());
+    httpMock.expectOne('/api/v1/commercial-proposals').flush({
+      success: true,
+      data: [
+        { ...MOCK_CP, number: 'КП-0001', items: [makeItem({ unitPrice: 100000, markupPercent: 0, total: 200000 })] },
+        { ...MOCK_CP, number: 'КП-0002', items: [makeItem({ unitPrice: 100000, markupPercent: 5, total: 210000 })] },
+        { ...MOCK_CP, number: 'КП-0003', items: [makeItem({ unitPrice: 100000, markupPercent: 10, total: 220000 })] },
+      ],
+    });
+    const all = await getPromise;
     expect(all.data!.length).toBe(3);
     const markups = all.data!.map(cp => cp.items[0].markupPercent).sort((a, b) => a - b);
     expect(markups).toEqual([0, 5, 10]);

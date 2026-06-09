@@ -1,57 +1,37 @@
-import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
-import { BaseCrudService } from './crud-factory.js';
+import { Injectable, inject } from '@angular/core';
+import { firstValueFrom, Observable } from 'rxjs';
 import type { ApiResponse, Warehouse } from '../../../shared/types/index.js';
+import { ApiService } from './api.service.js';
 
 @Injectable({ providedIn: 'root' })
-export class WarehouseService extends BaseCrudService<Warehouse> {
-  constructor() {
-    super();
-    this.items = [
-      {
-        id: 'wh-1',
-        name: 'Основной склад',
-        address: 'ул. Заводская, 15',
-        zoneNames: ['Трубный', 'Листовой', 'Окрасочный', 'Деревообработка'],
-        roleIds: [],
-        isActive: true,
-        createdAt: '2026-06-01T00:00:00.000Z',
-        updatedAt: '2026-06-01T00:00:00.000Z',
-      },
-      {
-        id: 'wh-2',
-        name: 'Склад готовой продукции',
-        address: 'ул. Заводская, 15, корпус Б',
-        zoneNames: ['Готовая продукция', 'Отгрузка'],
-        roleIds: [],
-        isActive: true,
-        createdAt: '2026-06-01T00:00:00.000Z',
-        updatedAt: '2026-06-01T00:00:00.000Z',
-      },
-    ];
-  }
+export class WarehouseService {
+  private api = inject(ApiService);
+  private basePath = '/warehouses';
 
   getWarehouses(): Observable<ApiResponse<Warehouse[]>> {
-    return this.getAll();
+    return this.api.get<Warehouse[]>(this.basePath);
   }
 
   getWarehouse(id: string): Observable<ApiResponse<Warehouse | undefined>> {
-    return this.getById(id);
+    return this.api.getById<Warehouse>(this.basePath, id);
   }
 
-  getWarehousesByRole(roleId: string): Warehouse[] {
-    return this.items.filter(w => w.isActive && (w.roleIds.includes(roleId) || w.roleIds.length === 0));
+  /** Получить склады по роли (async, загружает список из API) */
+  async getWarehousesByRole(roleId: string): Promise<Warehouse[]> {
+    const res = await firstValueFrom(this.getWarehouses());
+    const warehouses = res.success ? res.data : [];
+    return warehouses.filter(w => w.isActive && (w.roleIds.includes(roleId) || w.roleIds.length === 0));
   }
 
   createWarehouse(data: Omit<Warehouse, 'id' | 'createdAt' | 'updatedAt'>): Observable<ApiResponse<Warehouse>> {
-    return this.create(data as Warehouse);
+    return this.api.post<Warehouse>(this.basePath, data);
   }
 
   updateWarehouse(id: string, data: Partial<Omit<Warehouse, 'id' | 'createdAt'>>): Observable<ApiResponse<Warehouse>> {
-    return this.update(id, data);
+    return this.api.put<Warehouse>(this.basePath, id, data);
   }
 
   deleteWarehouse(id: string): Observable<ApiResponse<void>> {
-    return this.delete(id);
+    return this.api.delete<void>(this.basePath, id);
   }
 }

@@ -330,8 +330,8 @@ export class FinanceDashboardComponent {
     try {
       const [orders, proposals, contracts, closings, ra, reports] = await Promise.all([
         firstValueFrom(this.orderSvc.getAll()),
-        firstValueFrom(this.cpSvc.getAll()),
-        firstValueFrom(this.contractSvc.getAll()),
+        firstValueFrom(this.cpSvc.getProposals()),
+        firstValueFrom(this.contractSvc.getContracts()),
         firstValueFrom(this.closingSvc.getAll()),
         firstValueFrom(this.raSvc.getAll()),
         firstValueFrom(this.reportSvc.getAll()),

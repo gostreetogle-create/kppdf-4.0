@@ -1,9 +1,8 @@
-import { Injectable } from '@angular/core';
-import { Observable, of, delay } from 'rxjs';
-import { BaseCrudService, generateId, nowISO } from './crud-factory.js';
+import { Injectable, inject } from '@angular/core';
+import { Observable, of } from 'rxjs';
 import type { ApiResponse, Contract, ContractItem, ContractStatus, CommercialProposal } from '../../../shared/types/index.js';
+import { ApiService } from './api.service.js';
 
-/** Счётчик номеров договоров */
 let contractCounter = 0;
 
 function generateContractNumber(): string {
@@ -12,18 +11,16 @@ function generateContractNumber(): string {
 }
 
 @Injectable({ providedIn: 'root' })
-export class ContractService extends BaseCrudService<Contract> {
-  constructor() {
-    super();
-    this.items = [];
-  }
+export class ContractService {
+  private api = inject(ApiService);
+  private basePath = '/contracts';
 
   getContracts(): Observable<ApiResponse<Contract[]>> {
-    return this.getAll();
+    return this.api.get<Contract[]>(this.basePath);
   }
 
   getContract(id: string): Observable<ApiResponse<Contract | undefined>> {
-    return this.getById(id);
+    return this.api.getById<Contract>(this.basePath, id);
   }
 
   /** Создать договор из КП (snapshot позиций без цен) */
@@ -31,9 +28,8 @@ export class ContractService extends BaseCrudService<Contract> {
     data: Omit<Contract, 'id' | 'number' | 'items' | 'createdAt' | 'updatedAt'>,
     proposal: CommercialProposal,
   ): Observable<ApiResponse<Contract>> {
-    const now = nowISO();
     const items: ContractItem[] = proposal.items.map(pi => ({
-      id: generateId(),
+      id: pi.id,
       sourceProductId: pi.sourceProductId,
       productSku: pi.productSku,
       productName: pi.productName,
@@ -41,56 +37,43 @@ export class ContractService extends BaseCrudService<Contract> {
       quantity: pi.quantity,
     }));
 
-    const contract: Contract = {
+    return this.api.post<Contract>(this.basePath, {
       ...data,
-      id: generateId(),
       number: generateContractNumber(),
       status: 'draft',
       items,
-      createdAt: now,
-      updatedAt: now,
-    };
-
-    this.items.push(contract);
-    return of({ success: true, data: this.cloneItem(contract) }).pipe(delay(this.delayMs));
+    });
   }
 
   /** Создать договор вручную */
-  createContract(data: Omit<Contract, 'id' | 'number' | 'items' | 'createdAt' | 'updatedAt'> & { items?: ContractItem[] }): Observable<ApiResponse<Contract>> {
-    const now = nowISO();
-    const contract: Contract = {
+  createContract(
+    data: Omit<Contract, 'id' | 'number' | 'items' | 'createdAt' | 'updatedAt'> & { items?: ContractItem[] },
+  ): Observable<ApiResponse<Contract>> {
+    return this.api.post<Contract>(this.basePath, {
       ...data,
-      id: generateId(),
       number: generateContractNumber(),
       status: 'draft',
       items: data.items || [],
-      createdAt: now,
-      updatedAt: now,
-    };
-
-    this.items.push(contract);
-    return of({ success: true, data: this.cloneItem(contract) }).pipe(delay(this.delayMs));
+    });
   }
 
   updateContract(id: string, data: Partial<Omit<Contract, 'id' | 'number' | 'createdAt'>>): Observable<ApiResponse<Contract>> {
-    return this.update(id, data);
+    return this.api.put<Contract>(this.basePath, id, data);
   }
 
   deleteContract(id: string): Observable<ApiResponse<void>> {
-    return this.delete(id);
+    return this.api.delete<void>(this.basePath, id);
   }
 
   changeStatus(id: string, newStatus: ContractStatus): Observable<ApiResponse<Contract>> {
-    const contract = this.items.find(c => c.id === id);
-    if (!contract) {
-      return of({ success: false, data: undefined as unknown as Contract, message: 'Договор не найден' }).pipe(delay(this.delayMs));
+    const validStatuses: ContractStatus[] = ['draft', 'active', 'completed', 'terminated'];
+    if (!validStatuses.includes(newStatus)) {
+      return of({
+        success: false,
+        data: undefined as unknown as Contract,
+        message: `Недопустимый статус: ${newStatus}`,
+      });
     }
-    const updated = { ...contract, status: newStatus, updatedAt: nowISO() };
-    this.items = this.items.map(c => c.id === id ? updated : c);
-    return of({ success: true, data: this.cloneItem(updated) }).pipe(delay(this.delayMs));
-  }
-
-  protected override cloneItem(c: Contract): Contract {
-    return { ...c, items: c.items.map(i => ({ ...i })) };
+    return this.api.put<Contract>(this.basePath, id, { status: newStatus });
   }
 }

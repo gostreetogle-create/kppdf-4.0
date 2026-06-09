@@ -121,7 +121,13 @@ export class KpDocBlockTableComponent {
     effect(async () => {
       const block = this.block();
       const tid = block.tableTemplateId;
-      const isInstance = this.mode() === 'instance';
+      const inlineData = block._inlineRows;
+      // Если есть инлайн-данные (из витрины/КП) — используем их вместо API
+      const effectiveMode = inlineData ? 'instance' : this.mode();
+
+      if (inlineData) {
+        this.rows.set(inlineData);
+      }
 
       if (tid) {
         try {
@@ -129,19 +135,19 @@ export class KpDocBlockTableComponent {
           if (res.success && res.data) {
             this.tmpl.set(res.data);
 
-            // В режиме instance загружаем реальные данные
-            if (isInstance && res.data.columns.length > 0) {
+            // В режиме instance загружаем реальные данные, если нет инлайн-данных
+            if (!inlineData && effectiveMode === 'instance' && res.data.columns.length > 0) {
               const tableName = res.data.columns[0].tableName;
               await this.loadTableData(tableName);
             }
           }
         } catch {
           this.tmpl.set(undefined);
-          this.rows.set([]);
+          if (!inlineData) this.rows.set([]);
         }
       } else {
         this.tmpl.set(undefined);
-        this.rows.set(null);
+        if (!inlineData) this.rows.set(null);
       }
     });
   }

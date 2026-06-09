@@ -189,7 +189,7 @@ export class WarehouseDashboardComponent implements OnInit {
     this.loading.set(true);
     try {
       const role = this.authService.currentUser()?.role || '';
-      const warehouses = this.warehouseService.getWarehousesByRole(role);
+      const warehouses = await this.warehouseService.getWarehousesByRole(role);
 
       if (warehouses.length === 1) {
         this.router.navigate(['/warehouse', warehouses[0].id], { replaceUrl: true });

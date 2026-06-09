@@ -1,90 +1,79 @@
-import { describe, it, expect, beforeEach } from 'vitest';
-import { StorageItemService } from './storage-item.service';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { TestBed } from '@angular/core/testing';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { provideHttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
+import { StorageItemService } from './storage-item.service';
+import { API_URL } from './api-url.token';
+import type { StorageItem } from '../../../shared/types/index.js';
+
+const MOCK_SI: StorageItem = {
+  id: 'si-1', name: 'Сварочный аппарат', description: 'TIG-200',
+  weightKg: 15, dimensions: '450×200', notes: 'Цех №1',
+  isActive: true, createdAt: '2026-06-01T00:00:00.000Z', updatedAt: '2026-06-01T00:00:00.000Z',
+};
+
+function flushGet(httpMock: HttpTestingController, data: StorageItem[]) {
+  httpMock.expectOne('/api/v1/storage-items').flush({ success: true, data });
+}
 
 describe('StorageItemService', () => {
   let service: StorageItemService;
+  let httpMock: HttpTestingController;
 
   beforeEach(() => {
-    service = new StorageItemService();
-    service['items'] = [];
+    TestBed.configureTestingModule({
+      providers: [provideHttpClient(), provideHttpClientTesting(), { provide: API_URL, useValue: '/api/v1' }],
+    });
+    service = TestBed.inject(StorageItemService);
+    httpMock = TestBed.inject(HttpTestingController);
   });
 
-  describe('createStorageItem', () => {
-    it('создаёт инвентарь с авто-id и датами', async () => {
-      const res = await firstValueFrom(service.createStorageItem({
-        name: 'Сварочный аппарат TIG-200',
-        isActive: true,
-      }));
+  afterEach(() => { httpMock.verify(); TestBed.resetTestingModule(); });
 
-      expect(res.success).toBe(true);
-      expect(res.data!.id).toBeTruthy();
-      expect(res.data!.name).toBe('Сварочный аппарат TIG-200');
-      expect(res.data!.createdAt).toBeTruthy();
-    });
-
-    it('создаёт инвентарь с полными данными', async () => {
-      const res = await firstValueFrom(service.createStorageItem({
-        name: 'Токарный станок',
-        description: 'Настольный токарный станок по металлу',
-        weightKg: 45,
-        dimensions: '600×300×300',
-        notes: 'Серийный № TS-2024-001',
-        isActive: true,
-      }));
-
-      expect(res.data!.description).toBe('Настольный токарный станок по металлу');
-      expect(res.data!.weightKg).toBe(45);
-      expect(res.data!.dimensions).toBe('600×300×300');
-      expect(res.data!.notes).toBe('Серийный № TS-2024-001');
-    });
+  it('getStorageItems возвращает пустой массив', async () => {
+    const p = firstValueFrom(service.getStorageItems());
+    flushGet(httpMock, []);
+    expect((await p).data).toEqual([]);
   });
 
-  describe('getStorageItems', () => {
-    it('возвращает пустой массив при инициализации', async () => {
-      const res = await firstValueFrom(service.getStorageItems());
-      expect(res.data).toEqual([]);
-    });
-
-    it('возвращает все позиции после создания', async () => {
-      await firstValueFrom(service.createStorageItem({ name: 'Позиция 1', isActive: true }));
-      await firstValueFrom(service.createStorageItem({ name: 'Позиция 2', isActive: true }));
-
-      const res = await firstValueFrom(service.getStorageItems());
-      expect(res.data.length).toBe(2);
-    });
+  it('getStorageItems возвращает все после создания', async () => {
+    const p = firstValueFrom(service.getStorageItems());
+    flushGet(httpMock, [MOCK_SI]);
+    expect((await p).data!.length).toBe(1);
   });
 
-  describe('getStorageItem', () => {
-    it('возвращает позицию по id', async () => {
-      const cr = await firstValueFrom(service.createStorageItem({ name: 'Дрель', isActive: true }));
-      const res = await firstValueFrom(service.getStorageItem(cr.data!.id));
-
-      expect(res.success).toBe(true);
-      expect(res.data!.name).toBe('Дрель');
-    });
+  it('createStorageItem создаёт через POST', async () => {
+    const p = firstValueFrom(service.createStorageItem({ name: 'Тест', isActive: true }));
+    const req = httpMock.expectOne('/api/v1/storage-items');
+    expect(req.request.method).toBe('POST');
+    req.flush({ success: true, data: { ...MOCK_SI, name: 'Тест' } });
+    expect((await p).data!.name).toBe('Тест');
   });
 
-  describe('updateStorageItem', () => {
-    it('обновляет поля', async () => {
-      const cr = await firstValueFrom(service.createStorageItem({ name: 'Старое', isActive: true }));
-      const res = await firstValueFrom(service.updateStorageItem(cr.data!.id, {
-        name: 'Новое',
-        notes: 'Заметка',
-      }));
-
-      expect(res.data!.name).toBe('Новое');
-      expect(res.data!.notes).toBe('Заметка');
-    });
+  it('getStorageItem возвращает по id', async () => {
+    const p = firstValueFrom(service.getStorageItem('si-1'));
+    httpMock.expectOne('/api/v1/storage-items/si-1').flush({ success: true, data: MOCK_SI });
+    expect((await p).data!.id).toBe('si-1');
   });
 
-  describe('deleteStorageItem', () => {
-    it('удаляет позицию', async () => {
-      const cr = await firstValueFrom(service.createStorageItem({ name: 'На удаление', isActive: true }));
-      await firstValueFrom(service.deleteStorageItem(cr.data!.id));
+  it('updateStorageItem обновляет через PUT', async () => {
+    const p = firstValueFrom(service.updateStorageItem('si-1', { name: 'Новое' }));
+    const req = httpMock.expectOne('/api/v1/storage-items/si-1');
+    expect(req.request.method).toBe('PUT');
+    req.flush({ success: true, data: { ...MOCK_SI, name: 'Новое' } });
+    expect((await p).data!.name).toBe('Новое');
+  });
 
-      const all = await firstValueFrom(service.getStorageItems());
-      expect(all.data.length).toBe(0);
-    });
+  it('deleteStorageItem удаляет через DELETE', async () => {
+    const p = firstValueFrom(service.deleteStorageItem('si-1'));
+    httpMock.expectOne('/api/v1/storage-items/si-1').flush({ success: true, data: null });
+    expect((await p).success).toBe(true);
+  });
+
+  it('getStorageItem возвращает undefined для несуществующего', async () => {
+    const p = firstValueFrom(service.getStorageItem('nonexistent'));
+    httpMock.expectOne('/api/v1/storage-items/nonexistent').flush({ success: false, data: undefined });
+    expect((await p).data).toBeUndefined();
   });
 });
