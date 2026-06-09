@@ -74,7 +74,7 @@ export interface IDocumentTemplate extends Document {
   description?: string;
   docType: string;
   pageSize?: string;
-  backgroundImage?: string;
+  backgroundImages?: string[];
   organizationId?: string;
   isDefault?: boolean;
   blocks: IDocBlock[];
@@ -85,7 +85,7 @@ const documentTemplateSchema = new Schema<IDocumentTemplate>({
   description: { type: String, trim: true, default: '' },
   docType: { type: String, required: true, trim: true, enum: ['quotation', 'contract', 'invoice', 'shipping'] },
   pageSize: { type: String, enum: ['A4', 'A5', 'letter'], default: 'A4' },
-  backgroundImage: { type: String, default: '' },
+  backgroundImages: { type: [String], default: [] },
   organizationId: { type: String, default: '' },
   isDefault: { type: Boolean, default: false },
   blocks: { type: [docBlockSchema], default: [] },

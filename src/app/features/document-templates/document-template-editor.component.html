@@ -162,36 +162,42 @@
         </div>
 
         <div class="dt-editor__field">
-          <label class="kp-field__label">Фоновое изображение</label>
-          @if (backgroundImage()) {
-            <div class="dt-editor__bg-preview">
-              <img
-                [src]="backgroundImage()"
-                alt="Фон"
-                class="dt-editor__bg-img"
-                (error)="backgroundImage.set('')"
+          <label class="kp-field__label">Фоновые изображения (для разных страниц)</label>
+
+          @if (backgroundImages().length > 0) {
+            <div class="dt-editor__bg-gallery">
+              @for (img of backgroundImages(); track $index) {
+                <div class="dt-editor__bg-thumb">
+                  <img
+                    [src]="img"
+                    alt="Фон страницы {{$index + 1}}"
+                    class="dt-editor__bg-thumb-img"
+                    (error)="removeBackground($index)"
+                  />
+                  @if ($index === 0) {
+                    <span class="dt-editor__bg-thumb-badge">Стр. 1</span>
+                  }
+                  <button
+                    class="dt-editor__bg-thumb-remove"
+                    title="Удалить фон"
+                    (click)="removeBackground($index)"
+                  >
+                    <svg lucideIcon="x" width="14" height="14"></svg>
+                  </button>
+                </div>
+              }
+            </div>
+            <div class="dt-editor__bg-add-more">
+              <kp-file-upload
+                accept="image/png,image/jpeg,image/gif,image/webp,image/svg+xml"
+                [auto]="true"
+                url="/api/v1/upload"
+                chooseLabel="+ Добавить фон"
+                (fileUpload)="onBackgroundUpload($event)"
               />
-              <div class="dt-editor__bg-actions">
-                <kp-button
-                  label="Заменить"
-                  lucideIcon="refresh-cw"
-                  size="small"
-                  severity="info"
-                  [text]="true"
-                  (buttonClick)="removeBackground()"
-                />
-                <kp-button
-                  label="Удалить"
-                  lucideIcon="trash-2"
-                  size="small"
-                  severity="danger"
-                  [text]="true"
-                  (buttonClick)="removeBackground()"
-                />
-              </div>
             </div>
           }
-          @if (!backgroundImage()) {
+          @if (backgroundImages().length === 0) {
             <kp-file-upload
               accept="image/png,image/jpeg,image/gif,image/webp,image/svg+xml"
               [auto]="true"
@@ -287,7 +293,7 @@
         <kp-doc-canvas
           [blocks]="blocks()"
           [selectedBlockId]="selectedBlockId()"
-          [backgroundImage]="backgroundImage()"
+          [backgroundImages]="backgroundImages()"
           (blockSelect)="selectedBlockId.set($event)"
           (blockEdit)="onBlockEdit($event)"
           (blockDblClick)="onBlockDblClick($event)"

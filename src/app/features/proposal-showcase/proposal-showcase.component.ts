@@ -205,7 +205,7 @@ import { generateId } from '../../core/crud-factory.js';
             <kp-doc-canvas
               [blocks]="docBlocks()"
               [editable]="false"
-              [backgroundImage]="selectedBackgroundImage()"
+              [backgroundImages]="selectedBackgroundImage() ? [selectedBackgroundImage()] : []"
             />
           </div>
         </div>
@@ -687,12 +687,15 @@ export class ProposalShowcaseComponent {
     };
   }
 
-  /** Background image from selected template */
+  /** Background images from selected template (first image as default, with old-field fallback) */
   selectedBackgroundImage = computed(() => {
     const tmplId = this.selectedTemplateId();
     if (!tmplId) return '';
     const tmpl = this.templates().find(t => t.id === tmplId);
-    return tmpl?.backgroundImage ?? '';
+    const images = tmpl?.backgroundImages;
+    if (images && images.length > 0) return images[0];
+    // Fallback: старый формат (single backgroundImage)
+    return (tmpl as unknown as Record<string, unknown>)['backgroundImage'] as string ?? '';
   });
 
   constructor() {

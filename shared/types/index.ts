@@ -188,7 +188,8 @@ export interface DocumentTemplate {
   description?: string;
   docType: DocType;
   pageSize?: 'A4' | 'A5' | 'letter';
-  backgroundImage?: string;
+  /** Массив фоновых изображений для разных страниц */
+  backgroundImages?: string[];
   /** ID организации, которая выставляет документ */
   organizationId?: string;
   /** Флажок «по умолчанию» — автоматически подставлять при создании */

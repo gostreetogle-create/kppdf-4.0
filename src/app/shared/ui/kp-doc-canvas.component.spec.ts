@@ -39,10 +39,10 @@ describe('KpDocCanvasComponent', () => {
     });
   });
 
-  it('backgroundImage по умолчанию пустая строка', () => {
+  it('backgroundImages по умолчанию пустой массив', () => {
     TestBed.runInInjectionContext(() => {
       const comp = new KpDocCanvasComponent();
-      expect(comp.backgroundImage()).toBe('');
+      expect(comp.backgroundImages()).toEqual([]);
     });
   });
 

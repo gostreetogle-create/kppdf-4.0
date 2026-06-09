@@ -32,7 +32,7 @@ export class KpDocPreviewDialogComponent {
   pdfLoading = signal(false);
   templateName = signal('');
   docType = signal('');
-  backgroundImage = signal('');
+  backgroundImages = signal<string[]>([]);
   blocks = signal<DocBlock[]>([]);
   docTypeLabel = signal('');
 
@@ -46,11 +46,11 @@ export class KpDocPreviewDialogComponent {
   /** Коэффициент масштабирования A4-страницы, чтобы полностью помещалась в диалоге */
   pageScale = signal(1);
 
-  open(templateName: string, docType: string, blocks: DocBlock[], backgroundImage = '') {
+  open(templateName: string, docType: string, blocks: DocBlock[], backgroundImages: string[] = []) {
     this.templateName.set(templateName);
     this.docType.set(docType);
     this.docTypeLabel.set(DOC_TYPE_LABELS[docType] ?? docType);
-    this.backgroundImage.set(backgroundImage);
+    this.backgroundImages.set(backgroundImages);
     this.blocks.set(blocks.map(b => ({
       ...b,
       columns: b.columns?.map(c => ({ ...c })),

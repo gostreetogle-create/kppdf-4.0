@@ -31,7 +31,7 @@ const BLOCK_TYPE_LABELS: Record<string, string> = {
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="canvas__workspace">
-      <div class="canvas__page" [style.background-image]="backgroundImage() ? 'url(' + backgroundImage() + ')' : 'none'">
+      <div class="canvas__page" [style.background-image]="(backgroundImages()[0]) ? 'url(' + backgroundImages()[0] + ')' : 'none'">
         @if (blocks().length === 0) {
           <div class="canvas__empty">
             Добавьте блоки с помощью панели инструментов слева
@@ -299,7 +299,7 @@ export class KpDocCanvasComponent {
   blocks = input<DocBlock[]>([]);
   mode = input<'template' | 'instance'>('template');
   editable = input(true);
-  backgroundImage = input<string>('');
+  backgroundImages = input<string[]>([]);
   selectedBlockId = input<string>('');
 
   blockSelect = output<string>();

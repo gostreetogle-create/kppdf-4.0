@@ -6,6 +6,7 @@ import { MenuItem } from 'primeng/api';
 import { TooltipModule } from 'primeng/tooltip';
 import { firstValueFrom } from 'rxjs';
 import { DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
+import { LucideDynamicIcon } from '@lucide/angular';
 
 import { KpInputComponent } from '../../shared/ui/kp-input.component';
 import { KpSelectComponent, SelectOption } from '../../shared/ui/kp-select.component';
@@ -81,7 +82,7 @@ function removeDraftFromLS(id: string | null): void {
     KpInputComponent, KpSelectComponent, KpButtonComponent, KpToggleComponent,
     KpBreadcrumbComponent, KpCardComponent, KpToastComponent, KpDialogComponent,
     KpDocCanvasComponent, KpDocTextEditorDialogComponent, KpDocPreviewDialogComponent, KpFileUploadComponent,
-    TooltipModule,
+    TooltipModule, LucideDynamicIcon,
   ],
   templateUrl: './document-template-editor.component.html',
   styleUrls: ['./document-template-editor.component.scss'],
@@ -108,7 +109,7 @@ export class DocumentTemplateEditorComponent implements OnInit {
     this.docType();
     this.organizationId();
     this.isDefault();
-    this.backgroundImage();
+    this.backgroundImages();
     this.blocks();
     this.scheduleAutoSave();
   });
@@ -129,7 +130,7 @@ export class DocumentTemplateEditorComponent implements OnInit {
   docType = signal<string>('quotation');
   organizationId = signal<string>('');
   isDefault = signal(false);
-  backgroundImage = signal<string>('');
+  backgroundImages = signal<string[]>([]);
   blocks = signal<DocBlock[]>([]);
   selectedBlockId = signal('');
   loading = signal(false);
@@ -212,7 +213,9 @@ export class DocumentTemplateEditorComponent implements OnInit {
           this.docType.set(t.docType);
           this.organizationId.set(t.organizationId ?? '');
           this.isDefault.set(t.isDefault ?? false);
-          this.backgroundImage.set(t.backgroundImage ?? '');
+          // Поддержка старого формата (single backgroundImage) через bracket notation
+          const tmpl = t as unknown as Record<string, unknown>;
+          this.backgroundImages.set(t.backgroundImages ?? (tmpl['backgroundImage'] ? [tmpl['backgroundImage'] as string] : []));
           this.blocks.set(t.blocks.map(b => ({ ...b, columns: b.columns?.map(c => ({ ...c })) })));
           this.breadcrumbs[2] = { label: t.name };
         } else {
@@ -250,7 +253,7 @@ export class DocumentTemplateEditorComponent implements OnInit {
     if (draft['docType']) this.docType.set(draft['docType'] as string);
     if (draft['blocks'] && Array.isArray(draft['blocks'])) this.blocks.set(draft['blocks'] as DocBlock[]);
     if (draft['organizationId']) this.organizationId.set(draft['organizationId'] as string);
-    if (draft['backgroundImage']) this.backgroundImage.set(draft['backgroundImage'] as string);
+    if (draft['backgroundImages']) this.backgroundImages.set(draft['backgroundImages'] as string[]);
     if (typeof draft['isDefault'] === 'boolean') this.isDefault.set(draft['isDefault']);
 
   }
@@ -269,7 +272,7 @@ export class DocumentTemplateEditorComponent implements OnInit {
       docType: this.docType(),
       organizationId: this.organizationId(),
       isDefault: this.isDefault(),
-      backgroundImage: this.backgroundImage(),
+      backgroundImages: this.backgroundImages(),
       blocks: this.blocks(),
     };
     saveDraftToLS(this.templateId(), state);
@@ -539,7 +542,7 @@ export class DocumentTemplateEditorComponent implements OnInit {
       const evt = event as unknown as { xhr: XMLHttpRequest };
       const response = JSON.parse(evt.xhr.response);
       if (response.success && response.data?.url) {
-        this.backgroundImage.set(response.data.url);
+        this.backgroundImages.update(imgs => [...imgs, response.data.url]);
         this.notification.success('Фоновое изображение загружено');
       } else {
         this.notification.error(response.message || 'Ошибка загрузки файла');
@@ -549,9 +552,9 @@ export class DocumentTemplateEditorComponent implements OnInit {
     }
   }
 
-  /** Удалить фоновое изображение */
-  removeBackground() {
-    this.backgroundImage.set('');
+  /** Удалить фоновое изображение по индексу */
+  removeBackground(index: number) {
+    this.backgroundImages.update(imgs => imgs.filter((_, i) => i !== index));
   }
 
   textEditor = viewChild(KpDocTextEditorDialogComponent);
@@ -583,7 +586,7 @@ export class DocumentTemplateEditorComponent implements OnInit {
         pageSize: 'A4' as const,
         organizationId: this.organizationId() || undefined,
         isDefault: this.isDefault(),
-        backgroundImage: this.backgroundImage() || undefined,
+        backgroundImages: this.backgroundImages().length > 0 ? this.backgroundImages() : undefined,
         blocks: this.blocks(),
       };
       if (this.isNew()) {
@@ -610,7 +613,7 @@ export class DocumentTemplateEditorComponent implements OnInit {
       this.templateName() || 'Без названия',
       this.docType(),
       this.blocks(),
-      this.backgroundImage(),
+      this.backgroundImages(),
     );
   }
 
