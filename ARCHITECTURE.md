@@ -16,7 +16,7 @@
 | **Стилизация** | SCSS + CSS Custom Properties (токены) | — |
 | **Drag & Drop** | @angular/cdk/drag-drop | ^21.0.0 |
 | **Бэкенд** | Express + Mongoose + TypeScript | 5.x / 8.x |
-| **База данных** | MongoDB | 7.x |
+| **База данных** | MongoDB | 8.x (4.4 на production – CPU без AVX) |
 | **Тесты** | Vitest + Angular TestBed | 2.x |
 | **Линтер** | ESLint (angular-eslint) | 9.x |
 | **CI/CD** | GitHub Actions | — |
@@ -29,26 +29,56 @@
 ```
 kppdf-4.0/
 ├── src/app/
-│   ├── core/                    # Сервисы (НЕ знают о страницах)
-│   │   ├── api.service.ts
+│   ├── core/                    # Сервисы (HTTP через ApiService, 0 in-memory)
+│   │   ├── api.service.ts       # HTTP-клиент (get/post/put/patch/delete)
 │   │   ├── api-url.token.ts     # InjectionToken для URL API
-│   │   ├── auth.service.ts
-│   │   ├── auth.interceptor.ts
-│   │   ├── cart.service.ts      # Корзина (snapshot товаров)
+│   │   ├── auth.service.ts      # JWT-аутентификация
+│   │   ├── auth.interceptor.ts  # HttpInterceptorFn (токен + рефреш)
+│   │   ├── auth.guard.ts        # canActivateChild (редирект на /login)
+│   │   ├── role.guard.ts        # requireRole(...) для разделов
+│   │   ├── cart.service.ts      # Корзина товаров
+│   │   ├── certificate.service.ts  # Сертификаты
 │   │   ├── client.service.ts    # Клиенты-физ.лица
+│   │   ├── commercial-proposal.service.ts  # КП (создание, наценка, статусы)
+│   │   ├── contract.service.ts  # Договоры (createFromProposal, changeStatus)
 │   │   ├── counterparty-role.service.ts  # Виды контрагентов
-│   │   ├── crud-factory.ts      # Базовая in-memory CRUD-реализация
+│   │   ├── crud-factory.ts      # Базовая in-memory CRUD-реализация (deprecated → см. ApiService)
 │   │   ├── doc-type.service.ts  # Типы документов
 │   │   ├── document-template.service.ts
 │   │   ├── feature-flag.service.ts  # Флаги возможностей
+│   │   ├── financial-report.service.ts  # Финансовые отчёты
+│   │   ├── global-error-handler.ts
+│   │   ├── inventor-file.service.ts  # CAD-файлы
+│   │   ├── inventory.service.ts  # Инвентаризация
+│   │   ├── invoice.service.ts   # Входящие счета (авто-СФ нумерация)
 │   │   ├── notification.service.ts
-│   │   ├── organization.service.ts   # Контрагенты (юр.лица/ИП)
-│   │   ├── product-category.service.ts  # Категории товаров
-│   │   ├── product.service.ts   # Товары (CRUD + авто-SKU)
+│   │   ├── order-closing.service.ts  # Закрытия заказов
+│   │   ├── order-task.service.ts  # Задачи производства (статусы, назначение, авто-задачи)
+│   │   ├── organization.service.ts   # Контрагенты
+│   │   ├── product-category.service.ts
+│   │   ├── product-component.service.ts  # BOM-компоненты
+│   │   ├── product-photo.service.ts
+│   │   ├── product.service.ts   # Товары
+│   │   ├── production-order.service.ts  # Производственные заказы
+│   │   ├── purchase-request.service.ts  # Заявки на закупку
+│   │   ├── reconciliation-act.service.ts  # Акты сверки
+│   │   ├── role.service.ts      # Роли пользователей
+│   │   ├── rpp.service.ts       # RPP
+│   │   ├── status-workflow.service.ts  # Воркфлоу статусов
+│   │   ├── storage-item.service.ts  # Складские позиции
+│   │   ├── supplier-order.service.ts  # Заказы поставщикам
 │   │   ├── table-registry.service.ts
 │   │   ├── table-template.service.ts
+│   │   ├── tender.service.ts    # Тендеры
 │   │   ├── theme.service.ts
-│   │   └── global-error-handler.ts
+│   │   ├── undo-redo-stack.ts
+│   │   ├── user.service.ts      # Пользователи
+│   │   ├── warehouse.service.ts  # Склады
+│   │   ├── work-center.service.ts  # Рабочие центры
+│   │   ├── work-type.service.ts  # Типы работ
+│   │   └── worker.service.ts    # Исполнители
+│   │
+│   │   Итого: 34 сервиса, все на HTTP через inject(ApiService)
 │   │
 │   ├── shared/ui/               # UI Kit — обёртки над PrimeNG (kp-*)
 │   │   ├── kp-button.component.ts       # Кнопка (label, icon, lucideIcon, severity, size)
@@ -74,20 +104,28 @@ kppdf-4.0/
 │   │   ├── kp-doc-text-editor-dialog.component.ts
 │   │   └── kp-doc-preview-dialog.component.ts
 │   │
-│   ├── features/                # Страницы (НЕ зависят друг от друга)
-│   │   ├── app-guide/           # 🗺️ Карта приложения (бизнес-логика)
-│   │   ├── cart/                # 🛒 Корзина (snapshot товаров → КП)
-│   │   ├── clients/             # 👤 Клиенты-физ.лица (CRUD)
-│   │   ├── counterparty-roles/  # 🏷️ Виды контрагентов (CRUD)
+│   ├── features/                # Страницы (ролевой доступ, НЕ зависят друг от друга)
+│   │   ├── admin/               # Администрирование: тендеры, статусы, пользователи, RPP, сертификаты, CAD
+│   │   ├── app-guide/           # 🗺 Карта приложения
+│   │   ├── cart/                # 🛒 Корзина → КП
+│   │   ├── clients/             # 👤 Клиенты-физ.лица
+│   │   ├── contracts/           # 📑 Договоры (список + редактор)
+│   │   ├── counterparty-roles/  # 🏷 Виды контрагентов
 │   │   ├── dashboard/
-│   │   ├── doc-types/           # 📄 Типы документов (CRUD)
-│   │   ├── document-templates/  # Шаблоны документов (список + редактор)
-│   │   ├── feature-flags/       # 🚩 Флаги возможностей
+│   │   ├── doc-types/           # 📄 Типы документов
+│   │   ├── document-templates/  # Шаблоны документов
+│   │   ├── feature-flags/       # 🚩 Флаги
+│   │   ├── finance/             # 💰 Бухгалтерия: дашборд, закрытия, сверки, отчёты
 │   │   ├── login/
-│   │   ├── organizations/       # 🏢 Контрагенты (CRUD, замена suppliers)
-│   │   ├── products/            # 🏪 Товары + категории (CRUD + витрина)
-│   │   ├── table-templates/     # Шаблоны таблиц (список + редактор)
-│   │   └── ui-kit/              # Демо-страница UI Kit
+│   │   ├── markup-analysis/     # 📊 Анализ наценки
+│   │   ├── organizations/       # 🏢 Контрагенты
+│   │   ├── production/          # 🏭 Производство: заказы, задачи, Гант, работники, центры, типы работ
+│   │   ├── products/            # 🏪 Товары + категории + фотогалерея + BOM
+│   │   ├── proposal-showcase/   # 🛍 Витрина КП
+│   │   ├── proposals/           # 📄 Коммерческие предложения
+│   │   ├── table-templates/     # Шаблоны таблиц
+│   │   ├── ui-kit/              # Демо UI Kit
+│   │   └── warehouse/           # 📦 Склад: dashboard, поставки, закупки, счета, позиции
 │   │
 │   ├── layout/
 │   │   └── admin-layout.component.*  # Оболочка (sidebar, topbar, theme toggle)
@@ -96,9 +134,14 @@ kppdf-4.0/
 │   └── app.routes.ts            # Lazy-loaded маршруты
 │
 ├── shared/types/index.ts        # Общие типы (Organization, Client, Product, CartItem, CounterpartyRoleDef, DocTypeDef, FeatureFlagDef, DocBlock, DocumentTemplate, TableTemplate, ...)
-├── backend/                     # Express API
+├── backend/                     # Express API (~20 CRUD-модулей)
 │   └── src/
-│       ├── modules/             # Модели Mongoose: user, organization, counterparty-role + CRUD-роутеры
+│       ├── modules/             # Модели Mongoose: user, organization, counterparty-role, product,
+│       │                       #   client, contract, commercial-proposal, work-type, work-center,
+│       │                       #   worker, production-order, order-task, warehouse, storage-item,
+│       │                       #   purchase-request, supplier-order, invoice, order-closing,
+│       │                       #   reconciliation-act, financial-report, tender, table-template,
+│       │                       #   document-template + CRUD-роутеры
 │       ├── middleware/           # auth.ts, error-handler.ts
 │       └── utils/               # crud-factory.ts, logger.ts, api-response.ts
 ├── src/styles/
@@ -128,12 +171,27 @@ core ← shared ← features ← layout
 
 ## 4. Ключевые паттерны
 
-### 4.1 CRUD-сущности (Организации, Клиенты, Товары, ...)
-Образец: `features/organizations/` или `features/products/`
-- `*-list.component.*` — список с kp-table + поиск
-- `*-editor.component.*` — форма создания/редактирования (2-4 секции полей)
-- `core/*.service.ts` — mock CRUD + seed-данные (позже заменить на HttpClient)
-- Маршруты: `/references/<entity>`, `/references/<entity>/new`, `/references/<entity>/:id/edit`
+### 4.1 CRUD-сущности — HTTP (ApiService)
+Все сервисы используют HTTP через `inject(ApiService)`. Образец: `core/work-type.service.ts`.
+
+```typescript
+@Injectable({ providedIn: 'root' })
+export class MyService {
+  private api = inject(ApiService);
+  private basePath = '/my-entity';
+
+  getAll(): Observable<ApiResponse<MyType[]>> {
+    return this.api.get<MyType[]>(this.basePath);
+  }
+  // ... getById, create, update, delete, patch
+}
+```
+
+- **Фронтенд:** `core/*.service.ts` — `inject(ApiService)` + HTTP-методы
+- **Бэкенд:** `backend/src/modules/` — Mongoose-модель + роутер через `createCrudRouter`
+- **PATCH:** для смены статуса, назначения, обновления дат
+- **Маршруты:** с ролевым `canActivateChild` (admin, manager, production, accountant, storekeeper)
+- **Тесты:** `HttpTestingController` — образец в любом `*.service.spec.ts`
 
 ### 4.2 UI-компоненты (kp-*)
 Образец: `shared/ui/kp-button.component.ts`
@@ -149,44 +207,33 @@ core ← shared ← features ← layout
 
 ---
 
-## 5. Маршруты (lazy-loaded)
+## 5. Маршруты (lazy-loaded, ролевой доступ)
 
-| Путь | Компонент | Модуль |
-|------|-----------|--------|
-| `/login` | LoginComponent | — |
-| `/dashboard` | DashboardComponent | — |
-| `/ui-kit` | UiKitComponent | — |
-| `/admin/document-templates` | DocumentTemplateListComponent | features |
-| `/admin/document-templates/new` | DocumentTemplateEditorComponent | features |
-| `/admin/document-templates/:id/edit` | DocumentTemplateEditorComponent | features |
-| `/admin/table-templates` | TableTemplateListComponent | features |
-| `/admin/table-templates/new` | TableTemplateEditorComponent | features |
-| `/admin/table-templates/:id/edit` | TableTemplateEditorComponent | features |
-| `/references/organizations` | OrganizationListComponent | features |
-| `/references/organizations/new` | OrganizationEditorComponent | features |
-| `/references/organizations/:id/edit` | OrganizationEditorComponent | features |
-| `/references/clients` | ClientListComponent | features |
-| `/references/counterparty-roles` | CounterpartyRoleListComponent | features |
-| `/references/counterparty-roles/new` | CounterpartyRoleEditorComponent | features |
-| `/references/counterparty-roles/:id/edit` | CounterpartyRoleEditorComponent | features |
-| `/references/doc-types` | DocTypeListComponent | features |
-| `/references/product-categories` | ProductCategoryListComponent | features |
-| `/sales/cart` | CartComponent | features |
-| `/sales/products` | ProductListComponent | features |
-| `/sales/products/new` | ProductEditorComponent | features |
-| `/sales/products/:id/edit` | ProductEditorComponent | features |
-| `/app-guide` | AppGuideComponent | features |
-| `/admin/feature-flags` | FeatureFlagsComponent | features |
+| Раздел | Роли | Пути |
+|--------|------|------|
+| `/login` | — | Вход |
+| `/dashboard` | auth | Главная |
+| `/ui-kit` | auth | Витрина UI Kit |
+| `/app-guide` | auth | Карта приложения |
+| **`/admin/*`** | admin | Тендеры, статусы, пользователи, RPP, сертификаты, CAD, шаблоны |
+| **`/references/*`** | admin, manager, production | Организации, клиенты, роли, типы документов, категории |
+| **`/sales/*`** | admin, manager | Корзина, КП, договоры, товары, анализ наценки |
+| **`/production/*`** | admin, production | Типы работ, центры, исполнители, заказы, задачи, Гант |
+| **`/finance/*`** | admin, accountant | Дашборд, закрытия, сверки, отчёты |
+| **`/warehouse/*`** | admin, storekeeper | Дашборд, склады, позиции, закупки, поставщики, счета |
+
+Ролевой доступ реализован через `requireRole(...roles)` guard на `canActivateChild`.
 
 ---
 
 ## 6. Зарегистрированные lucide-иконки (app.config.ts)
 
-Всего **38 иконок**: Pencil, Trash2, Eye, Copy, GripVertical, ChevronUp, ChevronDown,
+Всего **42 иконки**: Pencil, Trash2, Eye, Copy, GripVertical, ChevronUp, ChevronDown,
 AlignLeft, Table, Minus, ArrowUpDown, Box, Check, Search, ExternalLink, TriangleAlert,
 ChevronLeft, ChevronRight, Sun, Moon, Menu, Bell, Home, Palette, Book, Building, Cog, File,
-EyeOff, X, Plus, Download, Printer, ShoppingCart, Tag, Flag, RotateCcw
+EyeOff, X, Plus, Download, Printer, ShoppingCart, Tag, Flag, RotateCcw, FileSignature,
+Stamp, ClipboardCheck, Package, Truck
 
 ---
 
-*Обновлён: 2026-06-07 (Buffy — аудит: убраны supplier, добавлены cart/products/clients/app-guide/counterparty-roles/doc-types/feature-flags)*
+*Обновлён: 2026-06-09 (v1.15 — все 34 сервиса на HTTP, 0 in-memory, ролевые маршруты, PATCH-эндпоинты, 443 теста)*

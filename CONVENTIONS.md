@@ -53,13 +53,66 @@ grep "LucideИмя" node_modules/@lucide/angular/types/lucide-angular.d.ts
 
 ## 🟡 Паттерны (стандартные приёмы)
 
-### Новая CRUD-сущность — по образцу Организаций
-1. Интерфейс в `shared/types/index.ts`
-2. Сервис в `core/<name>.service.ts` (mock CRUD + seed)
-3. `features/<name>/<name>-list.component.*` (список + поиск)
-4. `features/<name>/<name>-editor.component.*` (форма)
-5. 3 lazy-маршрута в `app.routes.ts`
-6. Пункт меню в `admin-layout.component.ts`
+### Новая CRUD-сущность — HTTP (ApiService)
+Все сервисы используют HTTP через `inject(ApiService)`. Образец: `work-type.service.ts`.
+
+1. Интерфейс в `shared/types/<module>.ts`
+2. Сервис в `core/<name>.service.ts`:
+   ```typescript
+   @Injectable({ providedIn: 'root' })
+   export class MyService {
+     private api = inject(ApiService);
+     private basePath = '/my-entity';
+
+     getAll(): Observable<ApiResponse<MyType[]>> {
+       return this.api.get<MyType[]>(this.basePath);
+     }
+     getById(id: string): Observable<ApiResponse<MyType>> {
+       return this.api.getById<MyType>(this.basePath, id);
+     }
+     create(data: CreateMyData): Observable<ApiResponse<MyType>> {
+       return this.api.post<MyType>(this.basePath, data);
+     }
+     update(id: string, data: Partial<MyType>): Observable<ApiResponse<MyType>> {
+       return this.api.put<MyType>(`${this.basePath}/${id}`, data);
+     }
+     delete(id: string): Observable<ApiResponse<MyType>> {
+       return this.api.delete<MyType>(this.basePath, id);
+     }
+   }
+   ```
+3. Бэкенд: модель Mongoose + CRUD-роутер через `createCrudRouter` в `backend/src/modules/`
+4. Регистрация роута в `backend/src/index.ts`: `app.use('/api/v1/my-entity', myRoutes)`
+5. `features/<name>/<name>-list.component.*` (список + поиск)
+6. `features/<name>/<name>-editor.component.*` (форма)
+7. 3 lazy-маршрута в `app.routes.ts` (с ролевым `canActivateChild`)
+8. Пункт меню в `admin-layout.component.ts`
+9. Тесты: `HttpTestingController` — образец в любом `*.service.spec.ts`
+
+### Смена статуса / PATCH-запросы
+```typescript
+// Сервис
+changeStatus(id: string, status: EntityStatus): Observable<ApiResponse<MyType>> {
+  return this.api.patch<MyType>(`${this.basePath}/${id}/status`, { status });
+}
+
+// Бэкенд (в роутере)
+router.patch('/:id/status', async (req, res) => {
+  const doc = await MyModel.findByIdAndUpdate(req.params.id, { status: req.body.status }, { new: true });
+  res.json({ success: true, data: doc });
+});
+```
+
+### Ролевой доступ к маршрутам
+```typescript
+// app.routes.ts
+{
+  path: 'sales',
+  canActivateChild: [requireRole('admin', 'manager')],
+  children: [ ... ]
+}
+```
+Роли: `admin`, `manager`, `production`, `accountant`, `storekeeper`.
 
 ### Новая иконка lucide
 1. `grep "LucideИмя" node_modules/@lucide/angular/types/lucide-angular.d.ts` — проверить существование
@@ -114,4 +167,4 @@ grep "LucideИмя" node_modules/@lucide/angular/types/lucide-angular.d.ts
 
 ---
 
-*Создан: 2026-06-06*
+*Создан: 2026-06-06 · Обновлён: 2026-06-09 (v1.15 — все сервисы на HTTP, ролевые гуарды, PATCH-паттерн)*
