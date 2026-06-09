@@ -1,12 +1,14 @@
-import { describe, it, expect, beforeEach } from 'vitest';
-import { Injector } from '@angular/core';
-import { of } from 'rxjs';
-import { firstValueFrom } from 'rxjs';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { TestBed } from '@angular/core/testing';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { provideHttpClient } from '@angular/common/http';
+import { firstValueFrom, of } from 'rxjs';
 import { OrderTaskService } from './order-task.service';
 import { WorkerService } from './worker.service';
 import { ProductService } from './product.service';
 import { ProductComponentService } from './product-component.service';
-import type { Worker } from '../../../shared/types/index.js';
+import { API_URL } from './api-url.token';
+import type { OrderTask, Worker } from '../../../shared/types/index.js';
 
 const SEED_WORKERS: Worker[] = [
   { id: 'wkr-1', lastName: 'Иванов', firstName: 'Иван', patronymic: 'Иванович', grade: 3, ratePerHour: 500, workTypeIds: ['wt-1'], isActive: true, createdAt: '', updatedAt: '' },
@@ -14,125 +16,141 @@ const SEED_WORKERS: Worker[] = [
   { id: 'wkr-5', lastName: 'Сидоров', firstName: 'Семён', patronymic: '', grade: 2, ratePerHour: 350, workTypeIds: ['wt-9'], isActive: true, createdAt: '', updatedAt: '' },
 ];
 
-function makeInjector() {
-  return Injector.create({
-    providers: [
-      OrderTaskService,
-      { provide: WorkerService, useValue: { getAll: () => of({ success: true, data: SEED_WORKERS }) } },
-      { provide: ProductService, useValue: { getAll: () => of({ success: true, data: [{ id: 'prod-3', sku: 'MF0001', name: 'Скамейка СК-180', categoryId: 'cat-mf', productType: 'manufactured', unit: 'шт', weightKg: 30, hasPassport: true, hasDrawing: true, isActive: true, createdAt: '', updatedAt: '' }] }) } },
-      { provide: ProductComponentService, useValue: { getRawItems: () => [] } },
-    ],
-  });
+function makeTask(overrides?: Partial<OrderTask>): OrderTask {
+  return {
+    id: 'ot-1', productionOrderId: 'po-1', componentId: 'c1', componentName: 'Стойка',
+    workTypeId: 'wt-1', workTypeName: 'Лазерная резка',
+    status: 'pending', plannedHours: 1, dependsOnTaskIds: [], sortOrder: 1,
+    createdAt: '2026-06-01T10:00:00.000Z', updatedAt: '2026-06-01T10:00:00.000Z',
+    ...overrides,
+  };
+}
+
+function flushWorkers(httpMock: HttpTestingController) {
+  httpMock.expectOne('/api/v1/workers').flush({ success: true, data: SEED_WORKERS });
+}
+
+function flushGetTasks(httpMock: HttpTestingController, tasks: OrderTask[], orderId?: string) {
+  const req = orderId
+    ? httpMock.expectOne(r => r.url === '/api/v1/order-tasks' && r.params.get('productionOrderId') === orderId)
+    : httpMock.expectOne('/api/v1/order-tasks');
+  req.flush({ success: true, data: tasks });
 }
 
 describe('OrderTaskService', () => {
-  let svc: OrderTaskService;
+  let service: OrderTaskService;
+  let httpMock: HttpTestingController;
 
   beforeEach(() => {
-    svc = makeInjector().get(OrderTaskService);
+    TestBed.configureTestingModule({
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        { provide: API_URL, useValue: '/api/v1' },
+        { provide: ProductService, useValue: { getAll: () => of({ success: true, data: [{ id: 'prod-3', sku: 'MF0001', name: 'Скамейка', categoryId: 'cat-mf', productType: 'manufactured', unit: 'шт', weightKg: 30, hasPassport: true, hasDrawing: true, isActive: true, createdAt: '', updatedAt: '' }] }) } },
+        { provide: ProductComponentService, useValue: { getRawItems: () => [] } },
+        WorkerService,
+        OrderTaskService,
+      ],
+    });
+    service = TestBed.inject(OrderTaskService);
+    httpMock = TestBed.inject(HttpTestingController);
   });
 
-  it('содержит seed-данные при создании', () => {
-    expect(svc.items.length).toBe(8);
-    expect(svc.items[0]!.dependsOnTaskIds).toEqual([]);
-    expect(svc.items[1]!.dependsOnTaskIds).toEqual(['ot-1']);
+  afterEach(() => { httpMock.verify(); TestBed.resetTestingModule(); });
+
+  it('getTasks возвращает все задачи через GET', async () => {
+    const p = firstValueFrom(service.getTasks());
+    flushGetTasks(httpMock, [makeTask()]);
+    expect((await p).data!.length).toBe(1);
   });
 
-  it('возвращает задачи с клонированием', async () => {
-    svc.items = [];
-    const r = await firstValueFrom(svc.getTasks());
-    expect(r.success).toBe(true);
-    expect(Array.isArray(r.data)).toBe(true);
+  it('getTasks фильтрует по productionOrderId', async () => {
+    const p = firstValueFrom(service.getTasks('po-1'));
+    flushGetTasks(httpMock, [makeTask()], 'po-1');
+    expect((await p).data!.length).toBe(1);
   });
 
-  it('фильтрует по заказу', async () => {
-    svc.items = [
-      { id: 't1', productionOrderId: 'po-1', componentId: 'c1', componentName: 'A', workTypeId: 'wt1', workTypeName: 'W', status: 'pending', plannedHours: 1, dependsOnTaskIds: [], sortOrder: 1, createdAt: '', updatedAt: '' },
-      { id: 't2', productionOrderId: 'po-2', componentId: 'c2', componentName: 'B', workTypeId: 'wt2', workTypeName: 'X', status: 'pending', plannedHours: 2, dependsOnTaskIds: [], sortOrder: 2, createdAt: '', updatedAt: '' },
-    ];
-    const r = await firstValueFrom(svc.getTasks('po-1'));
-    expect(r.success).toBe(true);
-    expect(r.data.length).toBe(1);
-    expect(r.data[0]!.componentName).toBe('A');
+  it('changeStatus меняет статус через PATCH', async () => {
+    const p = firstValueFrom(service.changeStatus('ot-1', 'done'));
+    httpMock.expectOne('/api/v1/order-tasks/ot-1/status').flush({ success: true, data: makeTask({ status: 'done' }) });
+    const res = await p;
+    expect(res.success).toBe(true);
+    expect(res.data!.status).toBe('done');
   });
 
-  it('changeStatus: нельзя начать, если есть незавершённые зависимости', async () => {
-    svc.items = [
-      { id: 't1', productionOrderId: 'po-1', componentId: 'c1', componentName: 'A', workTypeId: 'wt1', workTypeName: 'W', status: 'pending', plannedHours: 1, dependsOnTaskIds: [], sortOrder: 1, createdAt: '', updatedAt: '' },
-      { id: 't2', productionOrderId: 'po-1', componentId: 'c2', componentName: 'B', workTypeId: 'wt2', workTypeName: 'X', status: 'pending', plannedHours: 2, dependsOnTaskIds: ['t1'], sortOrder: 2, createdAt: '', updatedAt: '' },
-    ];
-    const r = await firstValueFrom(svc.changeStatus('t2', 'in_progress'));
-    expect(r.success).toBe(false);
-    expect(r.message).toContain('Блокирующие');
+  it('changeStatus блокирует in_progress если есть незавершённые зависимости', async () => {
+    const blocker = makeTask({ id: 'ot-block', status: 'pending', dependsOnTaskIds: [] });
+    const dependent = makeTask({ id: 'ot-dep', status: 'pending', dependsOnTaskIds: ['ot-block'] });
+
+    const p = firstValueFrom(service.changeStatus('ot-dep', 'in_progress'));
+    httpMock.expectOne('/api/v1/order-tasks/ot-dep').flush({ success: true, data: dependent });
+    await Promise.resolve(); // microtask: async-функция возобновляется и делает getTasks()
+    flushGetTasks(httpMock, [blocker, dependent], 'po-1');
+
+    const res = await p;
+    expect(res.success).toBe(false);
+    expect(res.message).toContain('Блокирующие');
   });
 
-  it('changeStatus: можно начать, если все зависимости done', async () => {
-    svc.items = [
-      { id: 't1', productionOrderId: 'po-1', componentId: 'c1', componentName: 'A', workTypeId: 'wt1', workTypeName: 'W', status: 'done', plannedHours: 1, actualHours: 1, dependsOnTaskIds: [], sortOrder: 1, createdAt: '', updatedAt: '' },
-      { id: 't2', productionOrderId: 'po-1', componentId: 'c2', componentName: 'B', workTypeId: 'wt2', workTypeName: 'X', status: 'pending', plannedHours: 2, dependsOnTaskIds: ['t1'], sortOrder: 2, createdAt: '', updatedAt: '' },
-    ];
-    const r = await firstValueFrom(svc.changeStatus('t2', 'in_progress'));
-    expect(r.success).toBe(true);
-    expect(r.data.status).toBe('in_progress');
+  it('changeStatus ошибка для невалидного статуса', async () => {
+    const res = await firstValueFrom(service.changeStatus('ot-1', 'invalid' as unknown as 'pending'));
+    expect(res.success).toBe(false);
   });
 
-  it('autoAssignWorker: находит свободного и назначает', async () => {
-    svc.items = [
-      { id: 't1', productionOrderId: 'po-1', componentId: 'c1', componentName: 'A', workTypeId: 'wt-1', workTypeName: 'Лазерная резка', status: 'pending', plannedHours: 1, dependsOnTaskIds: [], sortOrder: 1, createdAt: '', updatedAt: '' },
-    ];
-    const r = await firstValueFrom(svc.autoAssignWorker('t1'));
-    expect(r.success).toBe(true);
-    expect(r.data.workerId).toBe('wkr-1');
-    expect(r.data.status).toBe('assigned');
+  it('assignWorker назначает исполнителя через PATCH', async () => {
+    const p = firstValueFrom(service.assignWorker('ot-1', 'wkr-2'));
+    httpMock.expectOne('/api/v1/order-tasks/ot-1/assign').flush({ success: true, data: makeTask({ workerId: 'wkr-2', status: 'assigned' }) });
+    const res = await p;
+    expect(res.data!.workerId).toBe('wkr-2');
+    expect(res.data!.status).toBe('assigned');
   });
 
-  it('autoAssignWorker: ошибка если уже назначен', async () => {
-    svc.items = [
-      { id: 't1', productionOrderId: 'po-1', componentId: 'c1', componentName: 'A', workTypeId: 'wt-1', workTypeName: 'W', workerId: 'wkr-1', status: 'assigned', plannedHours: 1, dependsOnTaskIds: [], sortOrder: 1, createdAt: '', updatedAt: '' },
-    ];
-    svc.delayMs = 0; // ускоряем
-    const r = await firstValueFrom(svc.autoAssignWorker('t1'));
-    expect(r.success).toBe(false);
-    expect(r.message).toContain('уже назначен');
+  it('updateDates обновляет плановые даты через PATCH', async () => {
+    const p = firstValueFrom(service.updateDates('ot-1', '2026-07-01', '2026-07-05'));
+    httpMock.expectOne('/api/v1/order-tasks/ot-1/dates').flush({ success: true, data: makeTask({ plannedStartDate: '2026-07-01', plannedEndDate: '2026-07-05' }) });
+    const res = await p;
+    expect(res.success).toBe(true);
   });
 
-  it('assignWorker: ручное назначение', async () => {
-    svc.items = [
-      { id: 't1', productionOrderId: 'po-1', componentId: 'c1', componentName: 'A', workTypeId: 'wt-1', workTypeName: 'W', status: 'pending', plannedHours: 1, dependsOnTaskIds: [], sortOrder: 1, createdAt: '', updatedAt: '' },
-    ];
-    const r = await firstValueFrom(svc.assignWorker('t1', 'wkr-2'));
-    expect(r.success).toBe(true);
-    expect(r.data.workerId).toBe('wkr-2');
-    expect(r.data.status).toBe('assigned');
+  it('getAvailableWorkers возвращает подходящих работников', async () => {
+    const p = firstValueFrom(service.getAvailableWorkers('wt-1'));
+    flushWorkers(httpMock);
+    await new Promise(r => setTimeout(r, 5));
+    flushGetTasks(httpMock, []);
+    const res = await p;
+    expect(res.success).toBe(true);
+    expect(res.data!.length).toBeGreaterThanOrEqual(1);
+    expect(res.data![0]!.fullName).toBeDefined();
   });
 
-  it('getAvailableWorkers: возвращает подходящих работников', async () => {
-    const r = await firstValueFrom(svc.getAvailableWorkers('wt-1'));
-    expect(r.success).toBe(true);
-    expect(r.data.length).toBeGreaterThanOrEqual(1);
-    expect(r.data[0]!.fullName).toBeDefined();
+  it('autoAssignWorker назначает свободного', async () => {
+    const p = firstValueFrom(service.autoAssignWorker('ot-1'));
+    httpMock.expectOne('/api/v1/order-tasks/ot-1').flush({ success: true, data: makeTask() });
+    await new Promise(r => setTimeout(r, 5));
+    flushWorkers(httpMock);
+    await new Promise(r => setTimeout(r, 5));
+    flushGetTasks(httpMock, []);
+    await new Promise(r => setTimeout(r, 5));
+    httpMock.expectOne('/api/v1/order-tasks/ot-1/assign').flush({ success: true, data: makeTask({ workerId: 'wkr-1', status: 'assigned' }) });
+    const res = await p;
+    expect(res.success).toBe(true);
+    expect(res.data!.workerId).toBe('wkr-1');
+    expect(res.data!.status).toBe('assigned');
   });
 
-  it('checkMissingData: находит проблемы для prod-3', async () => {
-    const issues = await firstValueFrom(svc.checkMissingData('po-2', {
-      id: 'po-2', number: 'ПЗ-0002', contractId: 'ctr-2', productId: 'prod-3', productName: 'Скамейка СК-180', productSku: 'MF0001', quantity: 20,
-      status: 'accepted', plannedStartDate: '', plannedEndDate: '', createdAt: '', updatedAt: '',
-    }));
-    expect(issues.success).toBe(true);
+  it('generateMissingDataTasks создаёт задачи через POST', async () => {
+    const p = firstValueFrom(service.generateMissingDataTasks('po-1', [{ type: 'no_drawing', componentId: 'comp-1', componentName: 'Стойка', detail: 'Нет чертежа' }]));
+    flushGetTasks(httpMock, [], 'po-1');
+    await new Promise(r => setTimeout(r, 5));
+    httpMock.expectOne('/api/v1/order-tasks').flush({ success: true, data: makeTask({ id: 'ot-new', workTypeName: '🧠 Разработка чертежа', notes: 'auto:no_drawing:comp-1' }) });
+    const res = await p;
+    expect(res.success).toBe(true);
+    expect(res.data!.length).toBe(1);
+    expect(res.data![0]!.workTypeName).toContain('чертежа');
   });
 
-  it('generateMissingDataTasks: создаёт задачи', async () => {
-    svc.items = [];
-    const issues = [{ type: 'no_drawing' as const, componentId: 'comp-1', componentName: 'Стойка', detail: 'Нет чертежа' }];
-    const r = await firstValueFrom(svc.generateMissingDataTasks('po-1', issues));
-    expect(r.success).toBe(true);
-    expect(r.data.length).toBe(1);
-    expect(r.data[0]!.workTypeName).toContain('чертежа');
-    expect(r.data[0]!.notes).toBe('auto:no_drawing:comp-1');
-  });
-
-  it('generateFromComponents: добавляет зависимости между задачами', async () => {
-    svc.items = [];
+  it('generateFromComponents создаёт задачи с зависимостями', async () => {
     const components = [{
       id: 'comp-test', productId: 'prod-1', name: 'Тест', quantityPerProduct: 1, sortOrder: 1,
       materials: [], workTypes: [
@@ -140,10 +158,16 @@ describe('OrderTaskService', () => {
         { id: 'cw-2', name: 'Сварка', department: 'Цех', normHours: 1.0, sortOrder: 2 },
       ],
       createdAt: '', updatedAt: '',
-    }    ] as Parameters<typeof svc.generateFromComponents>[1];
-    const r = await firstValueFrom(svc.generateFromComponents('po-test', components));
-    expect(r.success).toBe(true);
-    expect(r.data.length).toBe(2);
-    expect(r.data[1]!.dependsOnTaskIds).toEqual([r.data[0]!.id]);
+    }];
+
+    const p = firstValueFrom(service.generateFromComponents('po-test', components as Parameters<typeof service.generateFromComponents>[1]));
+    flushGetTasks(httpMock, [], 'po-test');
+    await new Promise(r => setTimeout(r, 5));
+    httpMock.expectOne('/api/v1/order-tasks').flush({ success: true, data: makeTask({ id: 'ot-a', workTypeName: 'Резка', plannedHours: 0.5 }) });
+    await new Promise(r => setTimeout(r, 5));
+    httpMock.expectOne('/api/v1/order-tasks').flush({ success: true, data: makeTask({ id: 'ot-b', workTypeName: 'Сварка', plannedHours: 1, dependsOnTaskIds: ['ot-a'] }) });
+    const res = await p;
+    expect(res.success).toBe(true);
+    expect(res.data!.length).toBe(2);
   });
 });

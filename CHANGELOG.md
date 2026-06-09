@@ -6,6 +6,54 @@
 
 ---
 
+## [1.15.0] — 2026-06-09 — Все сервисы на HTTP + Ролевые гуарды + Бэкенд OrderTask
+
+### Added
+- **OrderTaskService → HTTP:** последний in-memory сервис переведён на `inject(ApiService)`
+  - `changeStatus(id, status)` — клиентская валидация зависимостей (блокирующие задачи) перед PATCH
+  - `assignWorker(id, workerId)` — PATCH `/api/v1/order-tasks/:id/assign`
+  - `updateDates(id, dates)` — PATCH `/api/v1/order-tasks/:id/dates`
+  - `getAvailableWorkers(workTypeId)` — вычисление `busyUntil` на основе загруженных задач
+  - `autoAssignWorker(id)` — подбор наименее загруженного исполнителя нужной квалификации
+  - `generateMissingDataTasks(orderId)` / `generateFromComponents(orderId)` — создание задач через POST
+  - Async-методы обёрнуты в `from()` для сохранения Observable API
+- **Бэкенд OrderTask:** `order-task.model.ts` (Mongoose), `order-task.routes.ts` (CRUD + PATCH /status, /assign, /dates), регистрация `/api/v1/order-tasks` в `index.ts`
+- **Auth Guard:** `auth.guard.ts` — `canActivateChild` на корневом маршруте, редирект на `/login` без токена
+- **Role Guard:** `role.guard.ts` — `requireRole(...roles)` для разграничения доступа к разделам
+- **ApiService.patch():** новый метод для PATCH-запросов (смена статусов, назначение исполнителя)
+
+### Changed
+- **10 сервисов переведены на HTTP** (с in-memory `BaseCrudService` на `inject(ApiService)`):
+  - **Batch 1 (простые):** `WorkTypeService`, `OrderClosingService`, `FinancialReportService`, `ReconciliationActService`
+  - **Batch 2 (обёртки):** `StorageItemService`, `WarehouseService` (сохранены wrapper-методы)
+  - **Batch 3 (нумерация+статус):** `InvoiceService`, `PurchaseRequestService`, `SupplierOrderService` (авто-нумерация КП/Д/ЗП/СФ/ПЗ сохранена)
+  - **Batch 4 (договоры):** `ContractService` (createFromProposal, createContract, changeStatus)
+- **Маршруты с ролевой защитой:** `app.routes.ts` — группировка по разделам с `canActivateChild: [requireRole(...)]`
+  - `/admin/*` → admin only
+  - `/references/*` → admin, manager, production
+  - `/sales/*` → admin, manager
+  - `/production/*` → admin, production
+  - `/finance/*` → admin, accountant
+  - `/warehouse/*` → admin, storekeeper
+- **eslint:** `varsIgnorePattern: '^_'` для неиспользуемых переменных с префиксом `_`
+- **backend/start-dev.ps1:** авто-запуск Docker Desktop, MongoDB-контейнера, освобождение порта 3000
+- **WarehouseService.getWarehousesByRole:** стал async (загружает склады из API перед фильтрацией)
+
+### Tests
+- **443 теста** (pass: 443, fail: 0, skip: 3)
+- 14 spec-файлов переписаны под `HttpTestingController`
+- `order-task.service.spec.ts` — 11 тестов с `from(async()...)` + `setTimeout` для microtask-ов
+- `contract-list.component.spec.ts`, `contract-editor.component.spec.ts` — обновлены под HTTP
+- `storage-item.service.spec.ts`, `warehouse.service.spec.ts` — обновлены под HTTP
+
+### Technical
+- **0 in-memory сервисов** осталось — все 34 сервиса на HTTP
+- **Все 14 сервисов Фаз 2–5** конвертированы: WorkType, OrderClosing, FinancialReport, ReconciliationAct, StorageItem, Warehouse, Invoice, PurchaseRequest, SupplierOrder, Contract, OrderTask (+ уже были на HTTP: WorkCenter, Worker, ProductionOrder)
+- Вызывающий код обновлён: `finance-dashboard`, `warehouse-dashboard`, `contract-list`, `contract-editor`
+- Типы статусов исправлены: `ContractStatus`, `SupplierOrderStatus`, `PurchaseRequestStatus`
+
+---
+
 ## [1.14.2] — 2026-06-08 — Полный аудит проекта + Чек-лист + Деплой kppdf-4.0
 
 ### Added

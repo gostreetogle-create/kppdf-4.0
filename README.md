@@ -55,7 +55,7 @@ npx ng serve
 | **БД** | MongoDB 8 + Mongoose 8 |
 | **Аутентификация** | JWT access + refresh · HttpOnly cookies |
 | **AI-инфраструктура** | ChromaDB (векторная БД, 3 557 документов) · AGENTS.md · ARCHITECTURE.md |
-| **Тесты** | Vitest + jsdom · 433 теста |
+| **Тесты** | Vitest + jsdom · 443 теста |
 | **CI/CD** | GitHub Actions (lint → test → build) |
 | **Контейнеризация** | Docker Compose (3 сервиса) |
 
@@ -67,14 +67,24 @@ npx ng serve
 ├── src/app/
 │   ├── core/                     # Сервисы (API, auth, theme, CRUD-сервисы)
 │   ├── shared/ui/               # UI Kit: 16 kp-* компонентов + документные блоки
-│   ├── features/                # Страницы
+│   ├── features/                # Страницы (ролевой доступ)
 │   │   ├── dashboard/           # Главная
 │   │   ├── login/               # Вход
 │   │   ├── ui-kit/              # Витрина компонентов
+│   │   ├── admin/               # Администрирование (тендеры, статусы, пользователи, RPP, сертификаты, CAD)
 │   │   ├── document-templates/  # Конструктор документов (A4 canvas, drag-and-drop)
 │   │   ├── table-templates/     # Конструктор таблиц
 │   │   ├── organizations/       # CRUD-справочник организаций
-│   │   └── suppliers/           # CRUD-справочник поставщиков
+│   │   ├── counterparty-roles/  # Роли контрагентов
+│   │   ├── doc-types/           # Типы документов
+│   │   ├── clients/             # Клиенты
+│   │   ├── products/            # Товары + категории + фотогалерея + BOM
+│   │   ├── proposals/           # Коммерческие предложения (3 варианта наценки)
+│   │   ├── contracts/           # Договоры
+│   │   ├── production/          # Производство: заказы, задачи, Гант, работники, центры, типы работ
+│   │   ├── warehouse/           # Склад: dashboard, поставки, закупки, счета, складские позиции
+│   │   ├── finance/             # Бухгалтерия: дашборд, закрытия, сверки, отчёты
+│   │   └── feature-flags/       # Флаги функций
 │   └── layout/                  # Оболочка (sidebar, topbar, theme toggle)
 │
 ├── backend/                     # Express API
@@ -169,7 +179,7 @@ core → shared → features → layout
 npm start              # ng serve (порт 4200)
 npm run build          # production сборка
 npx ng lint            # ESLint
-npx vitest run         # 433 теста
+npx vitest run         # 443 теста
 
 # Docker
 docker compose up -d            # Запустить все сервисы
@@ -200,6 +210,29 @@ cd backend && npm run dev       # tsx --watch (порт 3000)
 | GET | `/api/v1/auth/me` | Профиль (🔒) |
 | GET/POST | `/api/v1/organizations` | Список / Создать организацию (🔒) |
 | GET/PUT/DELETE | `/api/v1/organizations/:id` | Чтение / Обновление / Удаление (🔒) |
+| GET/POST | `/api/v1/products` | Список / Создать товар (🔒) |
+| GET/POST | `/api/v1/clients` | Список / Создать клиента (🔒) |
+| GET/POST | `/api/v1/contracts` | Список / Создать договор (🔒) |
+| GET/POST | `/api/v1/proposals` | Список / Создать КП (🔒) |
+| GET/POST | `/api/v1/work-types` | Типы работ (🔒) |
+| GET/POST | `/api/v1/work-centers` | Рабочие центры (🔒) |
+| GET/POST | `/api/v1/workers` | Исполнители (🔒) |
+| GET/POST | `/api/v1/production-orders` | Производственные заказы (🔒) |
+| GET/POST | `/api/v1/order-tasks` | Задачи производства (🔒) |
+| PATCH | `/api/v1/order-tasks/:id/status` | Смена статуса задачи (🔒) |
+| PATCH | `/api/v1/order-tasks/:id/assign` | Назначение исполнителя (🔒) |
+| PATCH | `/api/v1/order-tasks/:id/dates` | Обновление дат задачи (🔒) |
+| GET/POST | `/api/v1/warehouses` | Склады (🔒) |
+| GET/POST | `/api/v1/storage-items` | Складские позиции (🔒) |
+| GET/POST | `/api/v1/purchase-requests` | Заявки на закупку (🔒) |
+| GET/POST | `/api/v1/supplier-orders` | Заказы поставщикам (🔒) |
+| GET/POST | `/api/v1/incoming-invoices` | Входящие счета (🔒) |
+| GET/POST | `/api/v1/order-closings` | Закрытия заказов (🔒) |
+| GET/POST | `/api/v1/reconciliation-acts` | Акты сверки (🔒) |
+| GET/POST | `/api/v1/financial-reports` | Финансовые отчёты (🔒) |
+| GET/POST | `/api/v1/tenders` | Тендеры (🔒) |
+| GET/POST | `/api/v1/table-templates` | Шаблоны таблиц (🔒) |
+| GET/POST | `/api/v1/document-templates` | Шаблоны документов (🔒) |
 
 ### CRUD Factory
 

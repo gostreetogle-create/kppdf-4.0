@@ -45,6 +45,7 @@ import tenderRoutes from './modules/tender.routes.js';
 import userRoutes from './modules/user.routes.js';
 import warehouseRoutes from './modules/warehouse.routes.js';
 import workTypeRoutes from './modules/work-type.routes.js';
+import orderTaskRoutes from './modules/order-task.routes.js';
 import inventoryRoutes from './modules/inventory.routes.js';
 
 import uploadRoutes from './modules/upload.routes.js';
@@ -109,6 +110,7 @@ app.use('/api/v1/tenders', tenderRoutes);
 app.use('/api/v1/users', userRoutes);
 app.use('/api/v1/warehouses', warehouseRoutes);
 app.use('/api/v1/work-types', workTypeRoutes);
+app.use('/api/v1/order-tasks', orderTaskRoutes);
 app.use('/api/v1/inventory', inventoryRoutes);
 
 // File upload
