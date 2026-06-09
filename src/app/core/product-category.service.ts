@@ -17,7 +17,7 @@ export class ProductCategoryService {
   }
 
   create(data: Omit<ProductCategory, 'id' | 'createdAt' | 'updatedAt'>): Observable<ApiResponse<ProductCategory>> {
-    return this.api.post<ProductCategory>(this.basePath, data as any);
+    return this.api.post<ProductCategory>(this.basePath, data);
   }
 
   update(id: string, data: Partial<Omit<ProductCategory, 'id' | 'createdAt'>>): Observable<ApiResponse<ProductCategory>> {

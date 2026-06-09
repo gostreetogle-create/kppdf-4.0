@@ -1,4 +1,4 @@
-import { Component, input, output, signal, computed, ChangeDetectionStrategy, inject, effect } from '@angular/core';
+import { Component, input, output, signal, ChangeDetectionStrategy, inject, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { firstValueFrom } from 'rxjs';
 import type { DocBlock, TableTemplate } from '../../../../shared/types/index.js';

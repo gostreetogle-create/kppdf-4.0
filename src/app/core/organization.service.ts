@@ -29,7 +29,7 @@ export class OrganizationService {
 
   /** Создать нового контрагента */
   createOrganization(data: Omit<Organization, 'id' | 'createdAt' | 'updatedAt'>): Observable<ApiResponse<Organization>> {
-    return this.api.post<Organization>(this.basePath, data as any);
+    return this.api.post<Organization>(this.basePath, data);
   }
 
   /** Обновить контрагента */

@@ -18,7 +18,7 @@ export class DocTypeService {
 
   /** Создать тип документа (slug генерирует бэкенд) */
   createDocType(data: Omit<DocTypeDef, 'id' | 'createdAt' | 'updatedAt'>): Observable<ApiResponse<DocTypeDef>> {
-    return this.api.post<DocTypeDef>(this.basePath, data as any);
+    return this.api.post<DocTypeDef>(this.basePath, data);
   }
 
   updateDocType(id: string, data: Partial<Omit<DocTypeDef, 'id' | 'createdAt'>>): Observable<ApiResponse<DocTypeDef>> {

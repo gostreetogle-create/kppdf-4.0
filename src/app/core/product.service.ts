@@ -20,7 +20,7 @@ export class ProductService {
 
   /** Создать товар (артикул генерирует бэкенд) */
   create(data: Omit<Product, 'id' | 'sku' | 'createdAt' | 'updatedAt'>): Observable<ApiResponse<Product>> {
-    return this.api.post<Product>(this.basePath, data as any);
+    return this.api.post<Product>(this.basePath, data);
   }
 
   /** Обновить товар */

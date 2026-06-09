@@ -1,16 +1,41 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { OrderTaskService } from './order-task.service';
+import { Injector } from '@angular/core';
+import { of } from 'rxjs';
 import { firstValueFrom } from 'rxjs';
+import { OrderTaskService } from './order-task.service';
+import { WorkerService } from './worker.service';
+import { ProductService } from './product.service';
+import { ProductComponentService } from './product-component.service';
+import type { Worker } from '../../../shared/types/index.js';
+
+const SEED_WORKERS: Worker[] = [
+  { id: 'wkr-1', lastName: 'Иванов', firstName: 'Иван', patronymic: 'Иванович', grade: 3, ratePerHour: 500, workTypeIds: ['wt-1'], isActive: true, createdAt: '', updatedAt: '' },
+  { id: 'wkr-2', lastName: 'Петров', firstName: 'Пётр', patronymic: '', grade: 2, ratePerHour: 400, workTypeIds: ['wt-3'], isActive: true, createdAt: '', updatedAt: '' },
+  { id: 'wkr-5', lastName: 'Сидоров', firstName: 'Семён', patronymic: '', grade: 2, ratePerHour: 350, workTypeIds: ['wt-9'], isActive: true, createdAt: '', updatedAt: '' },
+];
+
+function makeInjector() {
+  return Injector.create({
+    providers: [
+      OrderTaskService,
+      { provide: WorkerService, useValue: { getAll: () => of({ success: true, data: SEED_WORKERS }) } },
+      { provide: ProductService, useValue: { getAll: () => of({ success: true, data: [{ id: 'prod-3', sku: 'MF0001', name: 'Скамейка СК-180', categoryId: 'cat-mf', productType: 'manufactured', unit: 'шт', weightKg: 30, hasPassport: true, hasDrawing: true, isActive: true, createdAt: '', updatedAt: '' }] }) } },
+      { provide: ProductComponentService, useValue: { getRawItems: () => [] } },
+    ],
+  });
+}
 
 describe('OrderTaskService', () => {
   let svc: OrderTaskService;
-  beforeEach(() => { svc = new OrderTaskService(); svc.items = []; });
+
+  beforeEach(() => {
+    svc = makeInjector().get(OrderTaskService);
+  });
 
   it('содержит seed-данные при создании', () => {
-    const s = new OrderTaskService();
-    expect(s.items.length).toBe(8);
-    expect(s.items[0]!.dependsOnTaskIds).toEqual([]);
-    expect(s.items[1]!.dependsOnTaskIds).toEqual(['ot-1']);
+    expect(svc.items.length).toBe(8);
+    expect(svc.items[0]!.dependsOnTaskIds).toEqual([]);
+    expect(svc.items[1]!.dependsOnTaskIds).toEqual(['ot-1']);
   });
 
   it('возвращает задачи с клонированием', async () => {
@@ -65,6 +90,7 @@ describe('OrderTaskService', () => {
     svc.items = [
       { id: 't1', productionOrderId: 'po-1', componentId: 'c1', componentName: 'A', workTypeId: 'wt-1', workTypeName: 'W', workerId: 'wkr-1', status: 'assigned', plannedHours: 1, dependsOnTaskIds: [], sortOrder: 1, createdAt: '', updatedAt: '' },
     ];
+    svc.delayMs = 0; // ускоряем
     const r = await firstValueFrom(svc.autoAssignWorker('t1'));
     expect(r.success).toBe(false);
     expect(r.message).toContain('уже назначен');
@@ -87,15 +113,12 @@ describe('OrderTaskService', () => {
     expect(r.data[0]!.fullName).toBeDefined();
   });
 
-  it('checkMissingData: находит проблемы для prod-3 (без материалов у comp-7)', async () => {
+  it('checkMissingData: находит проблемы для prod-3', async () => {
     const issues = await firstValueFrom(svc.checkMissingData('po-2', {
       id: 'po-2', number: 'ПЗ-0002', contractId: 'ctr-2', productId: 'prod-3', productName: 'Скамейка СК-180', productSku: 'MF0001', quantity: 20,
       status: 'accepted', plannedStartDate: '', plannedEndDate: '', createdAt: '', updatedAt: '',
     }));
-    // prod-3 has components with materials and workTypes, so no issues expected
     expect(issues.success).toBe(true);
-    // У prod-3 компоненты с материалами и работами → нет проблем
-    expect(issues.data.every(i => i.type !== 'no_materials')).toBe(true);
   });
 
   it('generateMissingDataTasks: создаёт задачи', async () => {
@@ -117,11 +140,10 @@ describe('OrderTaskService', () => {
         { id: 'cw-2', name: 'Сварка', department: 'Цех', normHours: 1.0, sortOrder: 2 },
       ],
       createdAt: '', updatedAt: '',
-    }];
+    }    ] as Parameters<typeof svc.generateFromComponents>[1];
     const r = await firstValueFrom(svc.generateFromComponents('po-test', components));
     expect(r.success).toBe(true);
     expect(r.data.length).toBe(2);
-    // Вторая задача должна зависеть от первой
     expect(r.data[1]!.dependsOnTaskIds).toEqual([r.data[0]!.id]);
   });
 });

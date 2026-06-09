@@ -21,7 +21,7 @@ export class DocumentTemplateService {
 
   /** Создать новый шаблон */
   createTemplate(data: Omit<DocumentTemplate, 'id' | 'createdAt' | 'updatedAt'>): Observable<ApiResponse<DocumentTemplate>> {
-    return this.api.post<DocumentTemplate>(this.basePath, data as any);
+    return this.api.post<DocumentTemplate>(this.basePath, data);
   }
 
   /** Обновить существующий шаблон */

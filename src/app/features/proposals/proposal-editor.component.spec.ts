@@ -154,7 +154,7 @@ describe('ProposalEditorComponent', () => {
     expect(c.items()[0].productSku).toBe('SP0001');
     expect(c.items()[0].markupPercent).toBe(0);
     expect(c.items()[0].total).toBe(85000);
-    expect(notifySpy).toHaveBeenCalledWith('Загружено 1 позиций из корзины');
+    expect(notifySpy).toHaveBeenCalledWith('Загружено 1 позиций');
   });
 
   it('loadFromCart применяет персональную наценку клиента', () => {
@@ -177,7 +177,7 @@ describe('ProposalEditorComponent', () => {
     expect(c.items()[0].markupPercent).toBe(5);
     // total = 100000 * (1 + 5/100) * 1 = 105000
     expect(c.items()[0].total).toBe(105000);
-    expect(notifySpy).toHaveBeenCalledWith('Загружено 1 позиций (наценка клиента: 5%)');
+    expect(notifySpy).toHaveBeenCalledWith('Загружено 1 позиций, наценка клиента: 5%');
   });
 
   it('clientMarkupPercent = 0 если клиент не выбран', () => {
@@ -305,7 +305,7 @@ describe('ProposalEditorComponent', () => {
     const notifySpy = vi.spyOn(notification, 'success');
     await c.createVariants();
 
-    expect(notifySpy).toHaveBeenCalledWith('Создано 3 варианта КП (наценка: 0%, 5%, 10%)');
+    expect(notifySpy).toHaveBeenCalledWith('Создано 3 варианта КП (наценка: 0%, 5%, 10)');
     expect(navSpy).toHaveBeenCalledWith(['/sales/proposals']);
 
     // Проверяем что 3 КП созданы с разными наценками

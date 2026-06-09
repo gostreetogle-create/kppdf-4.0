@@ -34,11 +34,11 @@ describe('ProductPhotoService', () => {
     });
     svc = TestBed.inject(ProductPhotoService);
     prodSvc = TestBed.inject(ProductService);
-    // Очищаем seed-данные
-    const items = (prodSvc as unknown as { items: Product[] }).items;
-    items.length = 0;
-    items.push(makeProduct());
-    items.push(makeProduct({ id: 'pp-test-2', sku: 'SP9998', name: 'Второй товар' }));
+    // Устанавливаем тестовые товары (ProductService — HTTP-сервис без in-memory items)
+    (prodSvc as unknown as { items: Product[] }).items = [
+      makeProduct(),
+      makeProduct({ id: 'pp-test-2', sku: 'SP9998', name: 'Второй товар' }),
+    ];
   });
 
   it('добавляет фото к товару', async () => {

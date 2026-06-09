@@ -17,7 +17,7 @@ export class WorkerService {
   }
 
   create(data: Omit<Worker, 'id' | 'createdAt' | 'updatedAt'>): Observable<ApiResponse<Worker>> {
-    return this.api.post<Worker>(this.basePath, data as any);
+    return this.api.post<Worker>(this.basePath, data);
   }
 
   update(id: string, data: Partial<Omit<Worker, 'id' | 'createdAt'>>): Observable<ApiResponse<Worker>> {

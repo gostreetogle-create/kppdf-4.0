@@ -36,12 +36,13 @@ describe('KpDialogComponent', () => {
   it('visibleChange и dialogHide — output сигналы', () => {
     const c = TestBed.createComponent(KpDialogComponent).componentInstance;
     let hideEmitted = false;
-    let visChanged: boolean | null = null;
     c.dialogHide.subscribe(() => (hideEmitted = true));
-    c.visibleChange.subscribe((v) => (visChanged = v));
     c.dialogHide.emit();
-    c.visibleChange.emit(true);
     expect(hideEmitted).toBe(true);
-    expect(visChanged).toBe(true);
+
+    // model() visible: проверяем что сигнал работает
+    expect(c.visible()).toBe(false);
+    c.visible.set(true);
+    expect(c.visible()).toBe(true);
   });
 });

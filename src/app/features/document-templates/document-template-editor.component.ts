@@ -412,7 +412,7 @@ export class DocumentTemplateEditorComponent implements OnInit {
   /** Обработчик загрузки фонового изображения */
   onBackgroundUpload(event: FileUploadEvent) {
     try {
-      const evt = event as any;
+      const evt = event as unknown as { xhr: XMLHttpRequest };
       const response = JSON.parse(evt.xhr.response);
       if (response.success && response.data?.url) {
         this.backgroundImage.set(response.data.url);

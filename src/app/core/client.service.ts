@@ -21,7 +21,7 @@ export class ClientService {
   }
 
   createClient(data: Omit<Client, 'id' | 'createdAt' | 'updatedAt'>): Observable<ApiResponse<Client>> {
-    return this.api.post<Client>(this.basePath, data as any);
+    return this.api.post<Client>(this.basePath, data);
   }
 
   updateClient(id: string, data: Partial<Omit<Client, 'id' | 'createdAt'>>): Observable<ApiResponse<Client>> {

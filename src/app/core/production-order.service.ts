@@ -17,17 +17,17 @@ export class ProductionOrderService {
   }
 
   create(data: Omit<ProductionOrder, 'id' | 'createdAt' | 'updatedAt'>): Observable<ApiResponse<ProductionOrder>> {
-    return this.api.post<ProductionOrder>(this.basePath, data as any);
+    return this.api.post<ProductionOrder>(this.basePath, data);
   }
 
   /** Создать заказ (номер генерирует бэкенд) */
   createOrder(data: Omit<ProductionOrder, 'id' | 'number' | 'createdAt' | 'updatedAt'>): Observable<ApiResponse<ProductionOrder>> {
-    return this.api.post<ProductionOrder>(this.basePath, data as any);
+    return this.api.post<ProductionOrder>(this.basePath, data);
   }
 
   /** Изменить статус заказа */
   changeStatus(id: string, newStatus: ProductionOrderStatus): Observable<ApiResponse<ProductionOrder>> {
-    return this.api.put<ProductionOrder>(this.basePath, id, { status: newStatus } as any);
+    return this.api.put<ProductionOrder>(this.basePath, id, { status: newStatus });
   }
 
   update(id: string, data: Partial<Omit<ProductionOrder, 'id' | 'createdAt'>>): Observable<ApiResponse<ProductionOrder>> {

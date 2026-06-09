@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable, of } from 'rxjs';
+import { Observable } from 'rxjs';
 import { first } from 'rxjs/operators';
 import type { ApiResponse, CounterpartyRoleDef } from '../../../shared/types/index.js';
 import { ApiService } from './api.service.js';
@@ -22,7 +22,7 @@ export class CounterpartyRoleService {
 
   /** Создать новый вид (slug генерирует бэкенд) */
   createRole(data: Omit<CounterpartyRoleDef, 'id' | 'slug' | 'createdAt' | 'updatedAt'>): Observable<ApiResponse<CounterpartyRoleDef>> {
-    return this.api.post<CounterpartyRoleDef>(this.basePath, data as any);
+    return this.api.post<CounterpartyRoleDef>(this.basePath, data);
   }
 
   updateRole(id: string, data: Partial<Omit<CounterpartyRoleDef, 'id' | 'slug' | 'createdAt'>>): Observable<ApiResponse<CounterpartyRoleDef>> {

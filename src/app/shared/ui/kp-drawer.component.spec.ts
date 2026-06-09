@@ -30,9 +30,9 @@ describe('KpDrawerComponent', () => {
 
   it('visibleChange — output', () => {
     const c = TestBed.createComponent(KpDrawerComponent).componentInstance;
-    let val: boolean | null = null;
-    c.visibleChange.subscribe((v) => (val = v));
-    c.visibleChange.emit(true);
-    expect(val).toBe(true);
+    // model() visible: проверяем что сигнал работает
+    expect(c.visible()).toBe(false);
+    c.visible.set(true);
+    expect(c.visible()).toBe(true);
   });
 });

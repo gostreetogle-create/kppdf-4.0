@@ -62,7 +62,8 @@ export class ProductPhotoService {
 
   /** Загрузить seed-фотографии в товары (вызывается один раз при старте) */
   seedPhotos(): void {
-    const products = (this.productService as unknown as { items: { id: string; photos?: ProductPhoto[] }[] }).items;
+    const products = (this.productService as unknown as { items?: { id: string; photos?: ProductPhoto[] }[] }).items;
+    if (!products) return;
     for (const product of products) {
       if (!product.photos && SEED_PHOTOS[product.id]) {
         product.photos = SEED_PHOTOS[product.id].map(p => ({ ...p }));

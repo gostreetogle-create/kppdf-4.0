@@ -17,7 +17,7 @@ export class WorkCenterService {
   }
 
   create(data: Omit<WorkCenter, 'id' | 'createdAt' | 'updatedAt'>): Observable<ApiResponse<WorkCenter>> {
-    return this.api.post<WorkCenter>(this.basePath, data as any);
+    return this.api.post<WorkCenter>(this.basePath, data);
   }
 
   update(id: string, data: Partial<Omit<WorkCenter, 'id' | 'createdAt'>>): Observable<ApiResponse<WorkCenter>> {

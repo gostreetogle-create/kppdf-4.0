@@ -21,7 +21,7 @@ export class TableTemplateService {
 
   /** Создать новый шаблон */
   createTemplate(data: Omit<TableTemplate, 'id' | 'createdAt' | 'updatedAt'>): Observable<ApiResponse<TableTemplate>> {
-    return this.api.post<TableTemplate>(this.basePath, data as any);
+    return this.api.post<TableTemplate>(this.basePath, data);
   }
 
   /** Обновить существующий шаблон */
