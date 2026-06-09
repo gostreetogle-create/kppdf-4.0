@@ -1,4 +1,4 @@
-import { Component, input, output, OnInit, AfterViewInit, signal, ChangeDetectionStrategy, ElementRef, inject } from '@angular/core';
+import { Component, input, output, OnInit, afterNextRender, signal, ChangeDetectionStrategy, ElementRef, inject } from '@angular/core';
 import { TableModule } from 'primeng/table';
 import { TooltipModule } from 'primeng/tooltip';
 import { CommonModule } from '@angular/common';
@@ -302,7 +302,7 @@ export interface TableExtraAction {
   `],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class KpTableComponent implements OnInit, AfterViewInit {
+export class KpTableComponent implements OnInit {
   private elementRef = inject(ElementRef);
   data = input<unknown[]>([]);
   columns = input<TableColumn[]>([]);
@@ -348,21 +348,22 @@ export class KpTableComponent implements OnInit, AfterViewInit {
     }
   }
 
-  ngAfterViewInit(): void {
-    // Применяем сохранённые ширины ПОСЛЕ того, как PrimeNG инициализировал таблицу
+  constructor() {
+    // Применяем сохранённые ширины после первого рендера
     // (PrimeNG перезаписывает [style.width] при init, поэтому применяем через DOM)
-    const saved = this.savedWidths();
-    const keys = Object.keys(saved);
-    if (keys.length === 0) return;
+    afterNextRender(() => {
+      const saved = this.savedWidths();
+      const keys = Object.keys(saved);
+      if (keys.length === 0) return;
 
-    // Используем requestAnimationFrame чтобы дождаться полной отрисовки PrimeNG
-    requestAnimationFrame(() => {
-      for (const field of keys) {
-        const th = this.elementRef.nativeElement.querySelector(`th[id="${field}"]`) as HTMLElement | null;
-        if (th) {
-          th.style.width = saved[field];
+      requestAnimationFrame(() => {
+        for (const field of keys) {
+          const th = this.elementRef.nativeElement.querySelector(`th[id="${field}"]`) as HTMLElement | null;
+          if (th) {
+            th.style.width = saved[field];
+          }
         }
-      }
+      });
     });
   }
 

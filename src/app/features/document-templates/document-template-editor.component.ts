@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed, viewChild, linkedSignal, OnInit, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, signal, computed, viewChild, linkedSignal, effect, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
@@ -32,6 +32,47 @@ function genId(): string {
   return Math.random().toString(36).slice(2, 10);
 }
 
+/** Ключ localStorage для черновика */
+const DRAFT_KEY_PREFIX = 'kppdf:draft:dt:';
+
+/** Интервал автосохранения (мс) */
+const AUTO_SAVE_DELAY = 2000;
+
+/**
+ * Сохранить черновик шаблона в localStorage.
+ * Ключ: kppdf:draft:dt:<id> для существующих, kppdf:draft:dt:_new для новых.
+ */
+function saveDraftToLS(id: string | null, state: Record<string, unknown>): void {
+  try {
+    const key = DRAFT_KEY_PREFIX + (id || '_new');
+    const data = { ...state, _savedAt: Date.now() };
+    localStorage.setItem(key, JSON.stringify(data));
+  } catch {
+    // localStorage недоступен — игнорируем
+  }
+}
+
+/** Загрузить черновик из localStorage */
+function loadDraftFromLS(id: string | null): Record<string, unknown> | null {
+  try {
+    const key = DRAFT_KEY_PREFIX + (id || '_new');
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Удалить черновик из localStorage */
+function removeDraftFromLS(id: string | null): void {
+  try {
+    const key = DRAFT_KEY_PREFIX + (id || '_new');
+    localStorage.removeItem(key);
+  } catch {
+    // игнорируем
+  }
+}
+
 @Component({
   selector: 'app-document-template-editor',
   standalone: true,
@@ -55,6 +96,23 @@ export class DocumentTemplateEditorComponent implements OnInit {
   canRedo = signal(false);
   undoSteps = signal(0);
   redoSteps = signal(0);
+
+  /** Автосохранение черновика */
+  draftSavedAt = signal<string | null>(null);
+  private autoSaveTimer: ReturnType<typeof setTimeout> | null = null;
+
+  /** Следим за изменениями всех полей формы для автосохранения */
+  private autoSaveWatcher = effect(() => {
+    this.templateName();
+    this.description();
+    this.docType();
+    this.organizationId();
+    this.isDefault();
+    this.backgroundImage();
+    this.blocks();
+    this.scheduleAutoSave();
+  });
+
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private templateService = inject(DocumentTemplateService);
@@ -162,11 +220,69 @@ export class DocumentTemplateEditorComponent implements OnInit {
           this.router.navigate(['/admin/document-templates']);
         }
       }
+      // Проверяем черновик в localStorage
+      this.restoreDraft();
     } finally {
       this.loading.set(false);
     }
     // Инициализируем стек undo начальным состоянием blocks
     this.pushState();
+  }
+
+  /** Проверить и предложить восстановить черновик */
+  private restoreDraft(): void {
+    const draft = loadDraftFromLS(this.templateId());
+    if (!draft) return;
+
+    // Не восстанавливаем если это существующий шаблон с актуальными данными
+    if (!this.isNew()) return;
+
+    const savedAt = draft['_savedAt'] as number | undefined;
+    if (savedAt) {
+      const date = new Date(savedAt);
+      const timeStr = date.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+      this.draftSavedAt.set(timeStr);
+    }
+
+    // Восстанавливаем поля из черновика, если они ещё не заданы (пустые)
+    if (draft['name'] && !this.templateName().trim()) this.templateName.set(draft['name'] as string);
+    if (draft['description']) this.description.set(draft['description'] as string);
+    if (draft['docType']) this.docType.set(draft['docType'] as string);
+    if (draft['blocks'] && Array.isArray(draft['blocks'])) this.blocks.set(draft['blocks'] as DocBlock[]);
+    if (draft['organizationId']) this.organizationId.set(draft['organizationId'] as string);
+    if (draft['backgroundImage']) this.backgroundImage.set(draft['backgroundImage'] as string);
+    if (typeof draft['isDefault'] === 'boolean') this.isDefault.set(draft['isDefault']);
+
+  }
+
+  /** Запланировать автосохранение черновика */
+  private scheduleAutoSave(): void {
+    if (this.autoSaveTimer) clearTimeout(this.autoSaveTimer);
+    this.autoSaveTimer = setTimeout(() => this.autoSave(), AUTO_SAVE_DELAY);
+  }
+
+  /** Сохранить черновик и обновить индикатор */
+  private autoSave(): void {
+    const state: Record<string, unknown> = {
+      name: this.templateName(),
+      description: this.description(),
+      docType: this.docType(),
+      organizationId: this.organizationId(),
+      isDefault: this.isDefault(),
+      backgroundImage: this.backgroundImage(),
+      blocks: this.blocks(),
+    };
+    saveDraftToLS(this.templateId(), state);
+    this.draftSavedAt.set(
+      new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })
+    );
+  }
+
+  /** Удалить черновик */
+  private clearDraft(): void {
+    if (this.autoSaveTimer) clearTimeout(this.autoSaveTimer);
+    this.draftSavedAt.set(null);
+    removeDraftFromLS(this.templateId());
   }
 
   /** Сохранить ТЕКУЩЕЕ состояние blocks() в стек undo (вызывать ПОСЛЕ мутации) */
@@ -226,12 +342,14 @@ export class DocumentTemplateEditorComponent implements OnInit {
     this.blocks.update(b => [...b, block]);
     this.selectedBlockId.set(block.id);
     this.pushState();
+    this.scheduleAutoSave();
   }
 
   removeBlock(blockId: string) {
     this.blocks.update(b => b.filter(bl => bl.id !== blockId));
     if (this.selectedBlockId() === blockId) this.selectedBlockId.set('');
     this.pushState();
+    this.scheduleAutoSave();
   }
 
   /** Drag-and-drop переупорядочивание блоков */
@@ -242,6 +360,7 @@ export class DocumentTemplateEditorComponent implements OnInit {
       return arr;
     });
     this.pushState();
+    this.scheduleAutoSave();
   }
 
   /** Переместить блок вверх */
@@ -254,6 +373,7 @@ export class DocumentTemplateEditorComponent implements OnInit {
       return arr;
     });
     this.pushState();
+    this.scheduleAutoSave();
   }
 
   /** Переместить блок вниз */
@@ -266,6 +386,7 @@ export class DocumentTemplateEditorComponent implements OnInit {
       return arr;
     });
     this.pushState();
+    this.scheduleAutoSave();
   }
 
   /** Двойной клик по блоку — открыть соответствующий редактор */
@@ -358,6 +479,7 @@ export class DocumentTemplateEditorComponent implements OnInit {
     this.editingTableBlock.set(null);
     this.notification.success('Блок таблицы обновлён');
     this.pushState();
+    this.scheduleAutoSave();
   }
 
   /** Закрытие диалога редактирования табличного блока */
@@ -394,6 +516,7 @@ export class DocumentTemplateEditorComponent implements OnInit {
     this.editingSepBlock.set(null);
     this.notification.success('Разделитель обновлён');
     this.pushState();
+    this.scheduleAutoSave();
   }
 
   /** Закрытие диалога редактирования разделителя */
@@ -407,6 +530,7 @@ export class DocumentTemplateEditorComponent implements OnInit {
   onTextBlockSave(updated: DocBlock) {
     this.blocks.update(b => b.map(bl => bl.id === updated.id ? updated : bl));
     this.pushState();
+    this.scheduleAutoSave();
   }
 
   /** Обработчик загрузки фонового изображения */
@@ -469,9 +593,10 @@ export class DocumentTemplateEditorComponent implements OnInit {
         await firstValueFrom(this.templateService.updateTemplate(this.templateId()!, data));
         this.notification.success('Шаблон сохранён');
       }
-      // После сохранения очищаем историю undo — новая «чистая» сессия
+      // После сохранения очищаем историю undo и черновик — новая «чистая» сессия
       this.undoStack.clear();
       this.pushState();
+      this.clearDraft();
       this.router.navigate(['/admin/document-templates']);
     } catch {
       this.notification.error('Ошибка сохранения');

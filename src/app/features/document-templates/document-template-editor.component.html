@@ -262,6 +262,13 @@
           </div>
         </div>
 
+        <!-- Автосохранение / Черновик -->
+        @if (draftSavedAt(); as savedAt) {
+          <div class="dt-editor__draft-info">
+            <span class="dt-editor__draft-label">🔄 Черновик сохранён в {{ savedAt }}</span>
+          </div>
+        }
+
         <!-- Предпросмотр -->
         <div class="dt-editor__preview-btn">
           <kp-button
