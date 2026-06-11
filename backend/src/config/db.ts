@@ -5,7 +5,10 @@ import { logger } from '../utils/logger.js';
 const dbLog = logger.child({ module: 'db' });
 
 export async function connectDB(): Promise<void> {
-  await mongoose.connect(env.MONGODB_URI, { serverSelectionTimeoutMS: 5000, connectTimeoutMS: 5000 });
+  await mongoose.connect(env.MONGODB_URI, {
+    serverSelectionTimeoutMS: 5000,
+    connectTimeoutMS: 5000,
+  });
   dbLog.info('MongoDB connected');
 
   mongoose.connection.on('error', (err) => {
@@ -19,5 +22,5 @@ export async function connectDB(): Promise<void> {
 
 export async function disconnectDB(): Promise<void> {
   await mongoose.disconnect();
-  dbLog.info('MongoDB disconnected (clean)');
+  dbLog.info('MongoDB disconnected');
 }

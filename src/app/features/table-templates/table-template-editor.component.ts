@@ -15,6 +15,7 @@ import { KpCardComponent } from '../../shared/ui/kp-card.component';
 import { KpToastComponent } from '../../shared/ui/kp-toast.component';
 import { KpDialogComponent } from '../../shared/ui/kp-dialog.component';
 import { KpTableComponent, TableColumn } from '../../shared/ui/kp-table.component';
+import { PageTitleService } from '../../core/page-title.service';
 import { NotificationService } from '../../core/notification.service';
 import { TableRegistryService } from '../../core/table-registry.service';
 import { TableTemplateService } from '../../core/table-template.service';
@@ -51,12 +52,14 @@ export class TableTemplateEditorComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private registry = inject(TableRegistryService);
   private templateService = inject(TableTemplateService);
+  private pageTitle = inject(PageTitleService);
   private notification = inject(NotificationService);
 
   isNew = signal(true);
   templateId = signal<string | null>(null);
   templateName = signal('');
   nameError = signal('');
+  returnUrl = signal<string | null>(null);
 
   tables = signal<TableMeta[]>([]);
   selectedTable = signal('');
@@ -117,6 +120,10 @@ export class TableTemplateEditorComponent implements OnInit {
       this.tables.set(tables);
 
       const id = this.route.snapshot.paramMap.get('id');
+      // Сохраняем returnUrl если пришли из другой страницы
+      const ru = this.route.snapshot.queryParamMap.get('returnUrl');
+      if (ru) this.returnUrl.set(decodeURIComponent(ru));
+
       if (id) {
         this.isNew.set(false);
         this.templateId.set(id);
@@ -136,6 +143,9 @@ export class TableTemplateEditorComponent implements OnInit {
       }
     } finally {
       this.loading.set(false);
+    }
+    if (!this.pageTitle.title()) {
+      this.pageTitle.setTitle(this.isNew() ? 'Новый шаблон таблицы' : '');
     }
   }
 
@@ -290,7 +300,7 @@ export class TableTemplateEditorComponent implements OnInit {
         this.notification.success('Шаблон сохранён');
       }
 
-      this.router.navigate(['/admin/table-templates']);
+      this.router.navigateByUrl(this.returnUrl() || '/admin/table-templates');
     } catch {
       this.notification.error('Ошибка сохранения');
     } finally {
@@ -299,6 +309,6 @@ export class TableTemplateEditorComponent implements OnInit {
   }
 
   cancel() {
-    this.router.navigate(['/admin/table-templates']);
+    this.router.navigateByUrl(this.returnUrl() || '/admin/table-templates');
   }
 }

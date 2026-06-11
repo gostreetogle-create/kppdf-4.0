@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
+import { TestBed } from '@angular/core/testing';
 import { CartService } from './cart.service';
 import type { Product } from '../../../shared/types/index.js';
 
@@ -29,7 +30,10 @@ describe('CartService', () => {
   let service: CartService;
 
   beforeEach(() => {
-    service = new CartService();
+    // Очищаем localStorage перед каждым тестом
+    localStorage.clear();
+    TestBed.configureTestingModule({ providers: [CartService] });
+    service = TestBed.inject(CartService);
   });
 
   // ─────── addItem ───────

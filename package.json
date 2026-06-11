@@ -12,6 +12,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "lint": "ng lint",
+    "validate:icons": "node scripts/validate-icons.mjs",
     "prepare": "husky"
   },
   "dependencies": {

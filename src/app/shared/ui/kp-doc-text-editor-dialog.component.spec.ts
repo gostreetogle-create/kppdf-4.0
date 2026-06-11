@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 import { provideNoopAnimations } from '@angular/platform-browser/animations';
 import { KpDocTextEditorDialogComponent } from './kp-doc-text-editor-dialog.component';
 import type { DocBlock } from '../../../../shared/types/index.js';
@@ -20,7 +21,7 @@ describe('KpDocTextEditorDialogComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [KpDocTextEditorDialogComponent],
-      providers: [provideNoopAnimations()],
+      providers: [provideNoopAnimations(), provideRouter([])],
     }).compileComponents();
   });
 

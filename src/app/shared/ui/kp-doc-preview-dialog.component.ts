@@ -33,6 +33,7 @@ export class KpDocPreviewDialogComponent {
   templateName = signal('');
   docType = signal('');
   backgroundImages = signal<string[]>([]);
+  backgroundOpacity = signal(1);
   blocks = signal<DocBlock[]>([]);
   docTypeLabel = signal('');
 
@@ -46,11 +47,12 @@ export class KpDocPreviewDialogComponent {
   /** Коэффициент масштабирования A4-страницы, чтобы полностью помещалась в диалоге */
   pageScale = signal(1);
 
-  open(templateName: string, docType: string, blocks: DocBlock[], backgroundImages: string[] = []) {
+  open(templateName: string, docType: string, blocks: DocBlock[], backgroundImages: string[] = [], backgroundOpacity: number = 1) {
     this.templateName.set(templateName);
     this.docType.set(docType);
     this.docTypeLabel.set(DOC_TYPE_LABELS[docType] ?? docType);
     this.backgroundImages.set(backgroundImages);
+    this.backgroundOpacity.set(backgroundOpacity);
     this.blocks.set(blocks.map(b => ({
       ...b,
       columns: b.columns?.map(c => ({ ...c })),
@@ -80,17 +82,22 @@ export class KpDocPreviewDialogComponent {
         if (!tmplRes.success || !tmplRes.data) continue;
 
         const template = tmplRes.data;
-        const tableName = template.columns[0]?.tableName;
         let rows: Record<string, unknown>[] = [];
 
-        if (tableName) {
-          try {
-            const dataRes = await firstValueFrom(this.api.get<unknown[]>('/' + tableName));
-            if (dataRes.success && Array.isArray(dataRes.data)) {
-              rows = dataRes.data as Record<string, unknown>[];
+        // Приоритет: _inlineRows (из витрины/cart) > API-запрос > пусто
+        if (block._inlineRows && block._inlineRows.length > 0) {
+          rows = block._inlineRows;
+        } else {
+          const tableName = template.columns[0]?.tableName;
+          if (tableName) {
+            try {
+              const dataRes = await firstValueFrom(this.api.get<unknown[]>('/' + tableName));
+              if (dataRes.success && Array.isArray(dataRes.data)) {
+                rows = dataRes.data as Record<string, unknown>[];
+              }
+            } catch {
+              rows = [];
             }
-          } catch {
-            rows = [];
           }
         }
 
@@ -187,7 +194,7 @@ export class KpDocPreviewDialogComponent {
       heightLeft -= pdfHeight;
       pageNum++;
 
-      while (heightLeft > 0) {
+      while (heightLeft > 20) { // 20px threshold to avoid near-empty pages
         position = -(pdfHeight * pageNum);
         pdf.addPage();
         pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);

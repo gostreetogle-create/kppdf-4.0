@@ -15,7 +15,7 @@ import { CommonModule } from '@angular/common';
       [draggable]="draggable()"
       [resizable]="resizable()"
       [style]="{ width: width() }"
-      [contentStyle]="{ 'max-height': maxHeight(), 'overflow-y': 'auto' }"
+      [contentStyle]="{ 'max-height': maxHeight(), 'overflow-y': 'auto', 'padding-top': '10px' }"
       [breakpoints]="{ '600px': '90vw' }"
       (onHide)="dialogHide.emit()"
     >

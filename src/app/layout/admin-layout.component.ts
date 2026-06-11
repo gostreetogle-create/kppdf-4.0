@@ -1,12 +1,14 @@
-import { Component, inject, signal, computed, viewChild, ChangeDetectionStrategy } from '@angular/core';
-import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { Component, inject, signal, computed, viewChild, ChangeDetectionStrategy, OnInit, OnDestroy } from '@angular/core';
+import { RouterLink, RouterLinkActive, RouterOutlet, Router, NavigationEnd } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TooltipModule } from 'primeng/tooltip';
 import { MenuItem } from 'primeng/api';
+import { filter, Subscription } from 'rxjs';
 
 import { AuthService } from '../core/auth.service';
 import { ThemeService } from '../core/theme.service';
+import { PageTitleService } from '../core/page-title.service';
 import { KpToastComponent } from '../shared/ui/kp-toast.component';
 import { KpButtonComponent } from '../shared/ui/kp-button.component';
 import { KpSelectComponent, SelectOption } from '../shared/ui/kp-select.component';
@@ -29,9 +31,25 @@ import { LucideDynamicIcon } from '@lucide/angular';
   styleUrls: ['./admin-layout.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class AdminLayoutComponent {
+export class AdminLayoutComponent implements OnInit, OnDestroy {
   private authService = inject(AuthService);
   private themeService = inject(ThemeService);
+  private pageTitleService = inject(PageTitleService);
+  private router = inject(Router);
+
+  readonly pageTitle = this.pageTitleService.title;
+  private routerSub!: Subscription;
+
+  ngOnInit(): void {
+    // При каждой навигации очищаем заголовок — страницы сами установят свой в ngOnInit
+    this.routerSub = this.router.events
+      .pipe(filter(e => e instanceof NavigationEnd))
+      .subscribe(() => this.pageTitleService.clearTitle());
+  }
+
+  ngOnDestroy(): void {
+    this.routerSub?.unsubscribe();
+  }
 
   readonly userMenuRef = viewChild<KpTieredMenuComponent>('userMenu');
 
@@ -96,7 +114,7 @@ export class AdminLayoutComponent {
   /** Полный список пунктов меню (до фильтрации) */
   private allNavItems: MenuItem[] = [
     { id: 'nav-home', label: 'Главная', icon: 'house', routerLink: '/dashboard' },
-    { id: 'nav-app-guide', label: '🗺️ Карта приложения', routerLink: '/app-guide' },
+    { id: 'nav-app-guide', label: 'Карта приложения', icon: 'map', routerLink: '/app-guide' },
     { id: 'nav-uikit', label: 'UI Kit', icon: 'palette', routerLink: '/ui-kit' },
     { id: 'nav-sep-1', separator: true },
     {
@@ -104,36 +122,34 @@ export class AdminLayoutComponent {
       label: 'Продажи',
       icon: 'shopping-cart',
       items: [
-        { id: 'nav-products', label: '🏪 Товары и услуги', icon: 'box', routerLink: '/sales/products' },
-        { id: 'nav-cart', label: '📋 Оформление КП', icon: 'file-text', routerLink: '/sales/cart' },
-        { id: 'nav-proposals', label: '📄 Коммерческие предложения', icon: 'file', routerLink: '/sales/proposals' },
-        { id: 'nav-markup-analysis', label: '📊 Анализ наценок', icon: 'percent', routerLink: '/sales/markup-analysis' },
-        { id: 'nav-contracts', label: '📑 Договоры', routerLink: '/sales/contracts' },
+        { id: 'nav-products', label: 'Товары и услуги', icon: 'box', routerLink: '/sales/products' },
+        { id: 'nav-cart', label: 'Оформление КП', icon: 'file-text', routerLink: '/sales/cart' },
+        { id: 'nav-proposals', label: 'Коммерческие предложения', icon: 'file', routerLink: '/sales/proposals' },
+        { id: 'nav-markup-analysis', label: 'Анализ наценок', icon: 'percent', routerLink: '/sales/markup-analysis' },
+        { id: 'nav-contracts', label: 'Договоры', icon: 'file-signature', routerLink: '/sales/contracts' },
       ]
     },
     {
       id: 'nav-production', sectionId: 'production',
-      label: '🏭 Производство',
-      icon: 'box',
+      label: 'Производство',
+      icon: 'building',
       items: [
-        { id: 'nav-prod-orders', label: '📋 Заказы', routerLink: '/production/orders' },
-        { id: 'nav-prod-tasks', label: '📝 Задачи', routerLink: '/production/tasks' },
-        { id: 'nav-prod-gantt', label: '📊 Диаграмма Ганта', routerLink: '/production/gantt' },
-        { id: 'nav-prod-wt', label: '🔧 Виды работ', routerLink: '/production/work-types' },
-        { id: 'nav-prod-wc', label: '🖥️ Рабочие центры', routerLink: '/production/work-centers' },
-        { id: 'nav-prod-wkr', label: '👷 Работники', routerLink: '/production/workers' },
+        { id: 'nav-prod-orders', label: 'Заказы', icon: 'clipboard', routerLink: '/production/orders' },
+        { id: 'nav-prod-tasks', label: 'Задачи', icon: 'check-square', routerLink: '/production/tasks' },
+        { id: 'nav-prod-gantt', label: 'Диаграмма Ганта', icon: 'bar-chart', routerLink: '/production/gantt' },
+        { id: 'nav-prod-wt', label: 'Виды работ', icon: 'wrench', routerLink: '/production/work-types' },
+        { id: 'nav-prod-wc', label: 'Рабочие центры', icon: 'monitor', routerLink: '/production/work-centers' },
+        { id: 'nav-prod-wkr', label: 'Работники', icon: 'users', routerLink: '/production/workers' },
       ]
-    },
-    {
-      id: 'nav-warehouse', sectionId: 'warehouse',
-      label: '📦 Склад',
-      icon: 'box',
+    },{ id: 'nav-warehouse', sectionId: 'warehouse',
+      label: 'Склад',
+      icon: 'package',
       items: [
-        { id: 'nav-wh-dash', label: '🏭 Обзор складов', routerLink: '/warehouse' },
-        { id: 'nav-wh-items', label: '📦 Инвентарь', routerLink: '/warehouse/storage-items' },
-        { id: 'nav-wh-pr', label: '📋 Заявки на закупку', routerLink: '/warehouse/purchase-requests' },
-        { id: 'nav-wh-so', label: '🚚 Заказы поставщикам', routerLink: '/warehouse/supplier-orders' },
-        { id: 'nav-wh-inv', label: '🧾 Входящие счета', routerLink: '/warehouse/incoming-invoices' },
+        { id: 'nav-wh-dash', label: 'Обзор складов', icon: 'warehouse', routerLink: '/warehouse' },
+        { id: 'nav-wh-items', label: 'Инвентарь', icon: 'package', routerLink: '/warehouse/storage-items' },
+        { id: 'nav-wh-pr', label: 'Заявки на закупку', icon: 'shopping-cart', routerLink: '/warehouse/purchase-requests' },
+        { id: 'nav-wh-so', label: 'Заказы поставщикам', icon: 'truck', routerLink: '/warehouse/supplier-orders' },
+        { id: 'nav-wh-inv', label: 'Входящие счета', icon: 'file-text', routerLink: '/warehouse/incoming-invoices' },
       ]
     },
     {
@@ -144,21 +160,21 @@ export class AdminLayoutComponent {
         { id: 'nav-orgs', label: 'Контрагенты', icon: 'building', routerLink: '/references/organizations' },
         { id: 'nav-role-types', label: 'Виды контрагентов', icon: 'tag', routerLink: '/references/counterparty-roles' },
         { id: 'nav-doc-types', label: 'Типы документов', icon: 'file', routerLink: '/references/doc-types' },
-        { id: 'nav-clients', label: '👤 Клиенты', routerLink: '/references/clients' },
+        { id: 'nav-clients', label: 'Клиенты', icon: 'user', routerLink: '/references/clients' },
         { id: 'nav-prod-cats', label: 'Категории товаров', icon: 'tag', routerLink: '/references/product-categories' },
-        { id: 'nav-suppliers', label: '— Поставщики', routerLink: '/references/organizations?role=supplier' },
-        { id: 'nav-buyers', label: '— Покупатели', icon: 'shopping-cart', routerLink: '/references/organizations?role=buyer' }
+        { id: 'nav-suppliers', label: 'Поставщики', icon: 'truck', routerLink: '/references/organizations?role=supplier' },
+        { id: 'nav-buyers', label: 'Покупатели', icon: 'shopping-cart', routerLink: '/references/organizations?role=buyer' }
       ]
     },
     {
       id: 'nav-finance', sectionId: 'finance',
-      label: '💰 Бухгалтерия',
+      label: 'Бухгалтерия',
       icon: 'landmark',
       items: [
-        { id: 'nav-fin-dash', label: '📊 Сводка', routerLink: '/finance' },
-        { id: 'nav-fin-oc', label: '📋 Закрытие заказов', routerLink: '/finance/order-closing' },
-        { id: 'nav-fin-ra', label: '📑 Акты сверки', routerLink: '/finance/reconciliation' },
-        { id: 'nav-fin-fr', label: '📊 Финансовые отчёты', routerLink: '/finance/reports' },
+        { id: 'nav-fin-dash', label: 'Сводка', icon: 'pie-chart', routerLink: '/finance' },
+        { id: 'nav-fin-oc', label: 'Закрытие заказов', icon: 'check-square', routerLink: '/finance/order-closing' },
+        { id: 'nav-fin-ra', label: 'Акты сверки', icon: 'file-text', routerLink: '/finance/reconciliation' },
+        { id: 'nav-fin-fr', label: 'Финансовые отчёты', icon: 'bar-chart', routerLink: '/finance/reports' },
       ]
     },
     { id: 'nav-sep-2', separator: true },
@@ -170,7 +186,7 @@ export class AdminLayoutComponent {
         { id: 'nav-table-tpl', label: 'Шаблоны таблиц', icon: 'table', routerLink: '/admin/table-templates' },
         { id: 'nav-doc-tpl', label: 'Шаблоны документов', icon: 'file', routerLink: '/admin/document-templates' },
         { id: 'nav-feature-flags', label: 'Флаги возможностей', icon: 'flag', routerLink: '/admin/feature-flags' },
-        { id: 'nav-users', label: '👥 Пользователи и роли', routerLink: '/admin/users' },
+        { id: 'nav-users', label: 'Пользователи и роли', icon: 'users', routerLink: '/admin/users' },
         { id: 'nav-status-wf', label: '📊 Статусные модели', routerLink: '/admin/status-workflows' },
         { id: 'nav-tenders', label: '📋 Тендеры', routerLink: '/admin/tenders' },
         { id: 'nav-rpp', label: '📋 Реестр РПП', routerLink: '/admin/rpp' },
@@ -202,10 +218,10 @@ export class AdminLayoutComponent {
   });
 
   userMenuItems: MenuItem[] = [
-    { id: 'user-profile', label: 'Профиль', icon: 'pi pi-user', command: () => {} },
-    { id: 'user-settings', label: 'Настройки', icon: 'pi pi-cog', command: () => {} },
+    { id: 'user-profile', label: 'Профиль', icon: 'user', command: () => {} },
+    { id: 'user-settings', label: 'Настройки', icon: 'settings', command: () => {} },
     { id: 'user-sep', separator: true },
-    { id: 'user-logout', label: 'Выйти', icon: 'pi pi-sign-out', command: () => this.authService.logout() }
+    { id: 'user-logout', label: 'Выйти', icon: 'log-out', command: () => this.authService.logout() }
   ];
 
   toggleSidebar() {

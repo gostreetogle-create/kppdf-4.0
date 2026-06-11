@@ -54,6 +54,37 @@ a, button, input, select, textarea {
   box-shadow: 0 0 0 2px var(--color-bg), 0 0 0 4px var(--color-primary) !important;
 }
 
+// === Print styles: hide admin layout when printing from preview dialog ===
+@media print {
+  html, body {
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  body * {
+    visibility: hidden !important;
+  }
+
+  .print-only,
+  .print-only * {
+    visibility: visible !important;
+  }
+
+  .print-only {
+    display: block !important;
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: white;
+    overflow: visible;
+  }
+
+  /* Hide PrimeNG dialog mask that might leak through */
+  .p-dialog-mask {
+    display: none !important;
+  }
+}
+
 // Глобальные улучшения для PrimeNG компонентов
 .p-card {
   border-radius: var(--radius-lg) !important;

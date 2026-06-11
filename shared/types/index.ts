@@ -83,8 +83,8 @@ export interface TemplateColumn {
 // Шаблоны документов (Document Templates)
 // ========================================
 
-/** Тип документа */
-export type DocType = 'quotation' | 'contract' | 'invoice' | 'shipping';
+/** Тип документа — соответствует slug из справочника DocTypeDef */
+export type DocType = string;
 
 /** Тип блока документа */
 export type DocBlockType = 'text' | 'table' | 'separator';
@@ -122,6 +122,18 @@ export interface DocBlock {
   settings?: DocBlockSettings;
   /** Внутренние данные (не сохраняются в шаблон БД). Строки для table-блока в режиме preview. */
   _inlineRows?: Record<string, unknown>[];
+
+  /**
+   * Итоговые суммы по колонкам (key = fieldName, value = сумма).
+   * Заполняется proposal-showcase или cart service перед передачей блоков.
+   */
+  _columnSummaries?: Record<string, number>;
+
+  /**
+   * Дополнительные строки подвала: { label, value } пары.
+   * Например: ["Итого", "125 000 ₽"], ["Скидка", "12 500 ₽"], ["НДС", "20 000 ₽"]
+   */
+  _footerRows?: { label: string; value: string }[];
 }
 
 // ========================================
@@ -194,6 +206,8 @@ export interface DocumentTemplate {
   organizationId?: string;
   /** Флажок «по умолчанию» — автоматически подставлять при создании */
   isDefault?: boolean;
+  /** Прозрачность фоновых изображений (0..1, по умолчанию 1) */
+  backgroundOpacity?: number;
   blocks: DocBlock[];
   createdAt: string;
   updatedAt: string;

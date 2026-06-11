@@ -22,3 +22,4 @@ export { KpDocBlockTableComponent } from './kp-doc-block-table.component';
 export { KpDocBlockSeparatorComponent } from './kp-doc-block-separator.component';
 export { KpDocTextEditorDialogComponent } from './kp-doc-text-editor-dialog.component';
 export { KpDocPreviewDialogComponent } from './kp-doc-preview-dialog.component';
+export { KpIconComponent } from './kp-icon.component';

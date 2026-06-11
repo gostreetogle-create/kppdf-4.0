@@ -17,6 +17,7 @@ import { LucideDynamicIcon } from '@lucide/angular';
           <p-floatlabel variant="on">
             <p-inputnumber
               [inputId]="inputId()"
+              [name]="name() || inputId()"
               [(ngModel)]="value"
               (ngModelChange)="onValueChange($event)"
               [disabled]="disabled()"
@@ -30,6 +31,7 @@ import { LucideDynamicIcon } from '@lucide/angular';
             <p-floatlabel variant="on">
               <input
                 [id]="inputId()"
+                [name]="name() || inputId()"
                 [type]="showPassword() ? 'text' : type()"
                 pInputText
                 [(ngModel)]="value"
@@ -62,6 +64,7 @@ import { LucideDynamicIcon } from '@lucide/angular';
       @if (!label()) {
         @if (type() === 'number') {
           <p-inputnumber
+            [name]="name() || inputId()"
             [(ngModel)]="value"
             (ngModelChange)="onValueChange($event)"
             [disabled]="disabled()"
@@ -71,6 +74,7 @@ import { LucideDynamicIcon } from '@lucide/angular';
         } @else {
           <div class="kp-input__wrapper">
             <input
+              [name]="name() || inputId()"
               [type]="showPassword() ? 'text' : type()"
               pInputText
               [(ngModel)]="value"
@@ -243,6 +247,8 @@ export class KpInputComponent implements ControlValueAccessor {
   error = input('');
   showClear = input(false);
   inputId = input(`kp-input-${Math.random().toString(36).slice(2, 8)}`);
+  /** name для формы (Angular NG01203 требует name при [(ngModel)]) */
+  name = input('');
   showPassword = signal(false);
 
   value: string | number = '';

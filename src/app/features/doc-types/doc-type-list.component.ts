@@ -78,6 +78,7 @@ interface DocTypeRow extends DocTypeDef {
           placeholder="Автоматически из названия"
           [(ngModel)]="editSlug"
         />
+        <small class="dt-list__hint">Английскими буквами, без пробелов. Используется в коде и шаблонах для идентификации типа документа.</small>
         <kp-input
           label="Описание"
           placeholder="Необязательное описание"
@@ -102,6 +103,7 @@ interface DocTypeRow extends DocTypeDef {
     .dt-list__title { font-size: var(--font-size-xl); font-weight: var(--font-weight-bold); color: var(--color-text); margin: 0; }
     .dt-list__form { display: flex; flex-direction: column; gap: var(--space-4); }
     .dt-list__dialog-footer { display: flex; gap: var(--space-3); justify-content: flex-end; margin-top: var(--space-4); }
+    .dt-list__hint { color: var(--color-text-muted); font-size: 0.75rem; margin-top: -8px; }
   `],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

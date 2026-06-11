@@ -6,6 +6,41 @@
 
 ---
 
+## [1.16.0] — 2026-06-11 — UI/UX: Opacity слайдер, kp-field-group, фоновые изображения, PDF _inlineRows
+
+### Added
+- **backgroundOpacity слайдер** — ползунок прозрачности фоновых изображений (0..1, шаг 0.05) в редакторе шаблонов документов
+  - `DocumentTemplate.backgroundOpacity?: number` — новое поле в shared/types
+  - `kp-doc-canvas` — `backgroundOpacity` input, применяется через `[style.opacity]` к watermark
+  - Слайдер в левой панели редактора с отображением текущего % прозрачности
+  - Автосохранение opacity в черновиках localStorage
+- **kp-field-group** — новый UI Kit компонент для группировки полей в рамке
+  - `KpFieldGroupComponent` — простой контейнер с border + padding + flex-колонка
+  - Используется в редакторе шаблонов для группы: название, тип документа, описание, организация
+  - Экспортирован из `shared/ui/index.ts`
+  - Добавлена демо-секция **KP-FGP** на страницу UI Kit
+- **PDF экспорт: поддержка _inlineRows** — табличные блоки в предпросмотре/печати/PDF теперь корректно отображают данные из `_inlineRows`
+  - `kp-doc-preview-dialog.resolveTableData()` — приоритет: `_inlineRows` > API > пусто
+  - `proposal-list.component.ts.fillPlaceholders()` — table-блоки сохраняют тип `'table'`, заполняются `_inlineRows`, `_columnSummaries`, `_footerRows` из `cp.items`
+- **backgroundOpacity прокинут в предпросмотр** — все 4 вызова `kp-doc-preview-dialog.open()` теперь передают opacity
+  - `document-template-editor` → `this.backgroundOpacity()`
+  - `document-template-list` → `tmpl.backgroundOpacity ?? 1`
+  - `proposal-list` → `1` (нет данных шаблона)
+  - `proposal-showcase` → `tmpl?.backgroundOpacity ?? 1`
+
+### Fixed
+- **Фоновые изображения больше не накладываются** — `kp-doc-canvas` показывает только первое изображение (для страницы 1). Остальные хранятся в массиве для следующих страниц.
+- **Drag-to-reorder для миниатюр фонов** — cdkDropList + cdkDrag с горизонтальной ориентацией, бейджи «По умолчанию» / «Стр. 2», ручки перетаскивания
+- **Кнопки «+» на своих местах** — каждая кнопка справа от своего селекта в одной flex-строке (`.dt-editor__field-row`), а не отдельной колонкой
+- **Жёлтая рамка кнопок «+» восстановлена** — border 2px solid var(--color-warn), background hover scale + box-shadow через ::ng-deep
+- **Angular budgets** — `maximumWarning` для `anyComponentStyle` поднят с `6kb` до `15kb` (совпадает с `maximumError`), подавлены варнинги по 4 компонентам
+
+### Changed
+- **Редактор шаблонов** — поля сгруппированы в `<kp-field-group>` (рамка), селекты расширяются (flex: 1), кнопки действий справа
+- **Бюджеты стилей** — angular.json: компоненты со стилями >6KB (app-guide 11.71kB, admin-layout 6.03kB, gantt-chart 7.59kB, product-editor 8.38kB) больше не триггерят варнинги
+
+---
+
 ## [1.15.0] — 2026-06-09 — Все сервисы на HTTP + Ролевые гуарды + Бэкенд OrderTask
 
 ### Added

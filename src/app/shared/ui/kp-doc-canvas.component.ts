@@ -31,7 +31,12 @@ const BLOCK_TYPE_LABELS: Record<string, string> = {
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="canvas__workspace">
-      <div class="canvas__page" [style.background-image]="(backgroundImages()[0]) ? 'url(' + backgroundImages()[0] + ')' : 'none'">
+      <div class="canvas__page" (click)="onPageClick($event)">
+        <!-- Фоновое изображение для страницы 1 (первое изображение = страница 1, остальные для следующих страниц) -->
+        @let bg = backgroundImages();
+        @if (bg.length > 0) {
+          <div class="canvas__watermark" [style.background-image]="'url(' + bg[0] + ')'" [style.opacity]="backgroundOpacity()" aria-hidden="true"></div>
+        }
         @if (blocks().length === 0) {
           <div class="canvas__empty">
             Добавьте блоки с помощью панели инструментов слева
@@ -144,10 +149,21 @@ const BLOCK_TYPE_LABELS: Record<string, string> = {
       box-shadow: 0 4px 24px rgba(0,0,0,0.12);
       border-radius: 2px;
       position: relative;
-      background-size: cover;
+    }
+    /* Водяной знак — фоновое изображение как бланк */
+    .canvas__watermark {
+      position: absolute;
+      inset: 0;
+      background-size: contain;
+      background-repeat: no-repeat;
       background-position: center;
+      opacity: 1;
+      pointer-events: none;
+      z-index: 0;
     }
     .canvas__blocks-list {
+      position: relative;
+      z-index: 1;
       min-height: 100px;
     }
 
@@ -300,6 +316,7 @@ export class KpDocCanvasComponent {
   mode = input<'template' | 'instance'>('template');
   editable = input(true);
   backgroundImages = input<string[]>([]);
+  backgroundOpacity = input(1);
   selectedBlockId = input<string>('');
 
   blockSelect = output<string>();
@@ -309,6 +326,7 @@ export class KpDocCanvasComponent {
   blockMoveDown = output<string>();
   blockDblClick = output<DocBlock>();
   blocksReorder = output<{ previousIndex: number; currentIndex: number }>();
+  canvasClick = output<void>();
 
   private fallbackIcon = 'box';
 
@@ -319,6 +337,14 @@ export class KpDocCanvasComponent {
   getBlockLabel(block: DocBlock): string {
     const typeLabel = BLOCK_TYPE_LABELS[block.type] || block.type;
     return block.title ? `${typeLabel}: ${block.title}` : typeLabel;
+  }
+
+  /** Клик по пустому месту канваса — сбросить выделение */
+  onPageClick(event: MouseEvent): void {
+    const target = event.target as HTMLElement;
+    if (!target.closest('.canvas__block')) {
+      this.canvasClick.emit();
+    }
   }
 
   onBlockDrop(event: CdkDragDrop<DocBlock[]>) {

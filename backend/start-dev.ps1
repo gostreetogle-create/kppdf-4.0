@@ -120,8 +120,8 @@ if ($port3000) {
     Write-Host "  Port 3000 is free" -ForegroundColor Green
 }
 
-# ─── 4. Бэкенд ──────────────────────────────────────────────────────
-Write-Host "[4/4] Starting backend..." -ForegroundColor Yellow
+# ─── 4. Start backend ────────────────────────────────────────────────
+Write-Host "[4/5] Starting backend..." -ForegroundColor Yellow
 
 Set-Location $PSScriptRoot
 
@@ -131,9 +131,92 @@ if ($LASTEXITCODE -ne 0) {
     Write-Host "  WARN: npm install had errors (exit code $LASTEXITCODE)" -ForegroundColor Yellow
 }
 
-Write-Host "  Starting tsx watch..." -ForegroundColor Green
+Write-Host "  Launching backend in separate window..." -ForegroundColor Green
+
+# Start backend in a dedicated PowerShell window (user sees live logs)
+Start-Process powershell -ArgumentList @(
+    "-NoExit",
+    "-Command",
+    "Write-Host '=== BACKEND (kppdf-4.0) ===' -ForegroundColor Cyan; cd '$PSScriptRoot'; Write-Host 'Starting backend...' -ForegroundColor Yellow; npx tsx watch src/index.ts"
+)
+
+Write-Host "  Backend window opened" -ForegroundColor Green
 Write-Host "  Backend: http://localhost:3000" -ForegroundColor Cyan
 Write-Host "  Health:  http://localhost:3000/api/health" -ForegroundColor Cyan
-Write-Host "==========================================" -ForegroundColor Cyan
 
-npx tsx watch src/index.ts
+# ─── 5. Connection checks ───────────────────────────────────────────
+Write-Host ""
+Write-Host "[5/5] Checking connections..." -ForegroundColor Yellow
+
+# --- MongoDB ---
+$mongoOk = $false
+if ($dockerOk) {
+    Write-Host "  Verifying MongoDB..." -ForegroundColor Gray
+    try {
+        $ping = docker exec kppdf-mongodb mongosh --quiet --eval "db.runCommand({ping:1})" 2>&1
+        if ($LASTEXITCODE -eq 0 -and $ping -match '"ok"\s*:\s*1') {
+            Write-Host "  MongoDB: ping OK" -ForegroundColor Green
+            $mongoOk = $true
+        } else {
+            Write-Host "  MongoDB: ping FAILED — $ping" -ForegroundColor Red
+        }
+    } catch {
+        Write-Host "  MongoDB: not reachable — $($_.Exception.Message)" -ForegroundColor Red
+    }
+} else {
+    Write-Host "  MongoDB: skipped (Docker not available)" -ForegroundColor Yellow
+}
+
+# --- Backend API (health check) ---
+$backendOk = $false
+$apiWait = 0
+$apiTimeout = 30
+Write-Host "  Waiting for backend health endpoint..." -ForegroundColor Gray
+while ($apiWait -lt $apiTimeout) {
+    try {
+        $apiResp = Invoke-WebRequest -Uri "http://localhost:3000/api/health" -UseBasicParsing -TimeoutSec 2 -ErrorAction Stop
+        if ($apiResp.StatusCode -eq 200) {
+            Write-Host "  Backend: health OK" -ForegroundColor Green
+            $backendOk = $true
+            break
+        }
+    } catch {
+        Start-Sleep -Seconds 2
+        $apiWait += 2
+        if ($apiWait % 6 -eq 0) {
+            Write-Host "  Waiting... (${apiWait}s)" -ForegroundColor Gray
+        }
+    }
+}
+if (-not $backendOk) {
+    Write-Host "  Backend: not responding (waited ${apiTimeout}s)" -ForegroundColor Red
+}
+
+# ─── Summary ────────────────────────────────────────────────────────
+Write-Host ""
+Write-Host "==========================================" -ForegroundColor Cyan
+if ($backendOk) {
+    Write-Host "  Backend dev server started!" -ForegroundColor Green
+} else {
+    Write-Host "  Backend may still be starting..." -ForegroundColor Yellow
+}
+Write-Host "  URL:     http://localhost:3000" -ForegroundColor Cyan
+Write-Host "  Health:  http://localhost:3000/api/health" -ForegroundColor Cyan
+Write-Host "  Swagger: http://localhost:3000/api/docs" -ForegroundColor Cyan
+Write-Host ""
+Write-Host "  Connection status:" -ForegroundColor Gray
+if ($mongoOk) {
+    Write-Host "    [OK] MongoDB — connected (kppdf-mongodb)" -ForegroundColor Green
+} elseif ($dockerOk) {
+    Write-Host "    [!!] MongoDB — not connected" -ForegroundColor Red
+} else {
+    Write-Host "    [--] MongoDB — skipped (no Docker)" -ForegroundColor Yellow
+}
+if ($backendOk) {
+    Write-Host "    [OK] Backend  — connected" -ForegroundColor Green
+} else {
+    Write-Host "    [!!] Backend  — not connected" -ForegroundColor Red
+}
+Write-Host ""
+Write-Host "  Close the BACKEND window to stop the server" -ForegroundColor Gray
+Write-Host "==========================================" -ForegroundColor Cyan

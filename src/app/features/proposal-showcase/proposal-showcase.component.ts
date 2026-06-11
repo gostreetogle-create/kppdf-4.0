@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, signal, computed, viewChild, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -10,6 +10,8 @@ import { KpSelectComponent, SelectOption } from '../../shared/ui/kp-select.compo
 import { KpBreadcrumbComponent } from '../../shared/ui/kp-breadcrumb.component';
 import { KpToastComponent } from '../../shared/ui/kp-toast.component';
 import { KpDocCanvasComponent } from '../../shared/ui/kp-doc-canvas.component';
+import { KpDocPreviewDialogComponent } from '../../shared/ui/kp-doc-preview-dialog.component';
+import { KpDialogComponent } from '../../shared/ui/kp-dialog.component';
 import { LucideDynamicIcon } from '@lucide/angular';
 import { NotificationService } from '../../core/notification.service';
 import { ProductService } from '../../core/product.service';
@@ -29,7 +31,8 @@ import { generateId } from '../../core/crud-factory.js';
     CommonModule, FormsModule,
     KpButtonComponent, KpInputComponent, KpSelectComponent,
     KpBreadcrumbComponent, KpToastComponent,
-    KpDocCanvasComponent, LucideDynamicIcon,
+    KpDocCanvasComponent, KpDocPreviewDialogComponent,
+    KpDialogComponent, LucideDynamicIcon,
   ],
   template: `
     <kp-toast />
@@ -41,6 +44,13 @@ import { generateId } from '../../core/crud-factory.js';
       <div class="showcase__header">
         <h1 class="showcase__title">📋 Оформление КП</h1>
         <div class="showcase__header-actions">
+          <kp-button
+            label="Скачать PDF"
+            lucideIcon="download"
+            severity="success"
+            [disabled]="docBlocks().length === 0"
+            (buttonClick)="openPdfPreview()"
+          />
           <kp-button
             label="Создать КП"
             lucideIcon="file-text"
@@ -112,20 +122,21 @@ import { generateId } from '../../core/crud-factory.js';
 
         <!-- ===== RIGHT: Document preview ===== -->
         <div class="showcase__right">
-          <!-- Document controls -->
+          <!-- Document controls: сначала организация, потом шаблон (фильтруется по org), потом клиент -->
           <div class="showcase__doc-controls">
-            <kp-select
-              label="Шаблон"
-              placeholder="Выберите шаблон"
-              [options]="templateOptions()"
-              [(ngModel)]="selectedTemplateId"
-              styleClass="showcase__doc-select"
-            />
             <kp-select
               label="Организация"
               placeholder="Кто выставляет"
               [options]="orgOptions()"
               [(ngModel)]="selectedOrgId"
+              styleClass="showcase__doc-select"
+              (ngModelChange)="onOrgChange()"
+            />
+            <kp-select
+              label="Шаблон"
+              placeholder="Выберите шаблон"
+              [options]="templateOptions()"
+              [(ngModel)]="selectedTemplateId"
               styleClass="showcase__doc-select"
             />
             <kp-select
@@ -175,7 +186,7 @@ import { generateId } from '../../core/crud-factory.js';
                   <span class="showcase__detail-th showcase__detail-th--num">Сумма</span>
                 </div>
                 @for (item of items; track item.id) {
-                  <div class="showcase__detail-row">
+                  <div class="showcase__detail-row" (click)="openEditItem(item)">
                     <div class="showcase__detail-name">
                       <span>{{ item.name }}</span>
                       <span class="showcase__detail-sku">{{ item.sku }}</span>
@@ -188,6 +199,7 @@ import { generateId } from '../../core/crud-factory.js';
                         type="number"
                         [ngModel]="effectiveMarkup(item)"
                         (ngModelChange)="onItemMarkupChange(item.id, $event)"
+                        (click)="$event.stopPropagation()"
                         min="0"
                       />%
                     </div>
@@ -200,6 +212,51 @@ import { generateId } from '../../core/crud-factory.js';
             </details>
           }
 
+          <!-- Диалог редактирования строки -->
+          <kp-dialog
+            header="Редактирование позиции"
+            [(visible)]="editDialogVisible"
+            width="400px"
+          >
+            @if (editItem(); as ei) {
+              <div class="showcase__edit-form">
+                <div class="showcase__edit-name">{{ ei.name }}</div>
+                <div class="showcase__edit-sku">{{ ei.sku }}</div>
+                <kp-input
+                  label="Количество"
+                  type="number"
+                  [(ngModel)]="editQuantity"
+                />
+                <kp-input
+                  label="Цена за ед."
+                  type="number"
+                  [(ngModel)]="editPrice"
+                />
+                <kp-input
+                  label="Наценка, %"
+                  type="number"
+                  [(ngModel)]="editMarkup"
+                />
+                <div class="showcase__edit-total">
+                  Итого: <strong>{{ (editPrice() * editQuantity() * (1 + editMarkup() / 100)).toLocaleString('ru-RU') }} ₽</strong>
+                </div>
+              </div>
+              <div class="showcase__dialog-footer">
+                <kp-button
+                  label="Сохранить"
+                  lucideIcon="check"
+                  (buttonClick)="saveEditItem()"
+                />
+                <kp-button
+                  label="Отмена"
+                  lucideIcon="x"
+                  severity="secondary"
+                  (buttonClick)="editDialogVisible.set(false)"
+                />
+              </div>
+            }
+          </kp-dialog>
+
           <!-- A4 Canvas -->
           <div class="showcase__canvas">
             <kp-doc-canvas
@@ -211,6 +268,9 @@ import { generateId } from '../../core/crud-factory.js';
         </div>
       </div>
     </div>
+
+    <!-- PDF preview dialog -->
+    <kp-doc-preview-dialog />
   `,
   styles: [`
     :host { display: block; }
@@ -495,6 +555,42 @@ import { generateId } from '../../core/crud-factory.js';
       border-color: var(--color-primary);
     }
 
+    /* Row editing dialog */
+    .showcase__edit-form {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-4);
+    }
+    .showcase__edit-name {
+      font-size: var(--font-size-lg);
+      font-weight: 700;
+      color: var(--color-text);
+    }
+    .showcase__edit-sku {
+      font-family: 'Courier New', monospace;
+      font-size: var(--font-size-sm);
+      color: var(--color-text-muted);
+      margin-top: -12px;
+      margin-bottom: 8px;
+    }
+    .showcase__edit-total {
+      padding: var(--space-3);
+      background: var(--color-primary-subtle);
+      border-radius: var(--radius-md);
+      text-align: center;
+      font-size: var(--font-size-lg);
+      color: var(--color-text);
+    }
+    .showcase__edit-total strong {
+      color: var(--color-primary);
+    }
+    .showcase__dialog-footer {
+      display: flex;
+      gap: var(--space-3);
+      justify-content: flex-end;
+      margin-top: var(--space-4);
+    }
+
     /* ── Responsive ── */
     @media (max-width: 1100px) {
       .showcase__layout {
@@ -518,6 +614,8 @@ export class ProposalShowcaseComponent {
   private proposalService = inject(CommercialProposalService);
   private notification = inject(NotificationService);
 
+  previewDialog = viewChild(KpDocPreviewDialogComponent);
+
   searchQuery = signal('');
   filterCategory = signal('');
   filterType = signal('');
@@ -526,11 +624,19 @@ export class ProposalShowcaseComponent {
   selectedClientId = signal('');
   saving = signal(false);
 
+  // Row editing dialog
+  editDialogVisible = signal(false);
+  editItem = signal<CartItem | null>(null);
+  editQuantity = signal(1);
+  editPrice = signal(0);
+  editMarkup = signal(0);
+
   allProducts = signal<Product[]>([]);
   categories = signal<{ id: string; name: string }[]>([]);
   organizations = signal<Organization[]>([]);
   clients = signal<Client[]>([]);
   templates = signal<DocumentTemplate[]>([]);
+
 
   typeOptions: SelectOption[] = [
     { value: '', label: 'Все типы' },
@@ -548,12 +654,17 @@ export class ProposalShowcaseComponent {
     ...this.categories().map(c => ({ value: c.id, label: c.name })),
   ]);
 
-  templateOptions = computed<SelectOption[]>(() => [
-    { value: '', label: 'Без шаблона' },
-    ...this.templates()
-      .filter(t => t.docType === 'quotation')
-      .map(t => ({ value: t.id, label: t.name })),
-  ]);
+  /** Шаблоны, отфильтрованные по выбранной организации (если организация выбрана) */
+  templateOptions = computed<SelectOption[]>(() => {
+    const orgId = this.selectedOrgId();
+    return [
+      { value: '', label: 'Без шаблона' },
+      ...this.templates()
+        .filter(t => t.docType === 'quotation')
+        .filter(t => !orgId || t.organizationId === orgId)
+        .map(t => ({ value: t.id, label: t.name + (t.organizationId ? '' : ' (без организации)') })),
+    ];
+  });
 
   orgOptions = computed<SelectOption[]>(() => [
     { value: '', label: 'Не выбрана' },
@@ -640,17 +751,72 @@ export class ProposalShowcaseComponent {
     const tmpl = this.templates().find(t => t.id === tmplId);
     if (!tmpl) return blocks;
 
-    // Deep clone all template blocks
+    // Resolve placeholder data
+    const orgId = this.selectedOrgId();
+    const org = orgId ? this.organizations().find(o => o.id === orgId) : null;
+    const clientId = this.selectedClientId();
+    const client = clientId ? this.clients().find(c => c.id === clientId) : null;
+    const clientName = client ? [client.lastName, client.firstName, client.patronymic].filter(Boolean).join(' ') : 'Клиент';
+    const orgName = org ? (org.shortName || org.name) : 'Организация';
+    const total = this.totalWithMarkup();
+
+    const placeholders: Record<string, string> = {
+      '{{client.name}}': clientName,
+      '{{org.shortName}}': orgName,
+      '{{org.name}}': org ? org.name : 'Организация',
+      '{{total}}': total.toLocaleString('ru-RU') + ' ₽',
+      '{{date}}': new Date().toLocaleDateString('ru-RU'),
+      '{{items.count}}': String(items.length),
+    };
+
+    const replace = (text?: string) => {
+      if (!text) return text;
+      let result = text;
+      for (const [key, value] of Object.entries(placeholders)) {
+        result = result.replaceAll(key, value);
+      }
+      return result;
+    };
+
+    // Deep clone all template blocks with placeholder replacement
     for (const b of tmpl.blocks) {
-      blocks.push({ ...b, id: b.id + '-inst' });
+      const cloned: DocBlock = {
+        ...b,
+        id: b.id + '-inst',
+        content: replace(b.content),
+        columns: b.columns?.map(c => ({ ...c, content: replace(c.content) || c.content })),
+      };
+      blocks.push(cloned);
     }
 
     // If there are selected items, populate the FIRST table block with product data
     if (items.length > 0) {
+      const clientMarkup = this.clientMarkupPercent();
+      const grandTotal = this.totalWithMarkup();
+      const baseTotal = this.totalSum();
+
       const tableBlock = blocks.find(b => b.type === 'table' && b.tableTemplateId);
       if (tableBlock) {
         // Заполняем table-блок инлайн-данными из корзины
         tableBlock._inlineRows = items.map(item => this.cartItemToRow(item));
+
+        // Итоги по колонкам
+        const summaries: Record<string, number> = {
+          quantity: items.reduce((s, i) => s + i.quantity, 0),
+          total: grandTotal,
+          totalAmount: grandTotal,
+          price: items.reduce((s, i) => s + i.price, 0) / items.length, // средняя цена
+        };
+        tableBlock._columnSummaries = summaries;
+
+        // Footer строки
+        const footerRows: { label: string; value: string }[] = [];
+        footerRows.push({ label: 'Итого:', value: grandTotal.toLocaleString('ru-RU') + ' ₽' });
+        if (clientMarkup > 0) {
+          const markupAmount = grandTotal - baseTotal;
+          footerRows.push({ label: 'Наценка (' + clientMarkup + '%):', value: '+' + markupAmount.toLocaleString('ru-RU') + ' ₽' });
+        }
+        tableBlock._footerRows = footerRows;
       } else {
         // Fallback: нет table-блоков в шаблоне → добавляем текстовый блок
         const itemLines = items.map(i =>
@@ -660,7 +826,7 @@ export class ProposalShowcaseComponent {
           id: 'sel-items',
           type: 'text',
           order: blocks.length,
-          title: `Выбрано товаров: ${items.length} на сумму ${this.totalWithMarkup().toLocaleString('ru-RU')} ₽`,
+          title: `Выбрано товаров: ${items.length} на сумму ${total.toLocaleString('ru-RU')} ₽`,
           content: itemLines.join('\n'),
         });
       }
@@ -733,6 +899,45 @@ export class ProposalShowcaseComponent {
     }
   }
 
+  /** При смене организации — сбрасываем шаблон, если он не принадлежит этой организации */
+  onOrgChange() {
+    const orgId = this.selectedOrgId();
+    const currentTmpl = this.selectedTemplateId();
+    if (currentTmpl) {
+      const tmpl = this.templates().find(t => t.id === currentTmpl);
+      if (tmpl && tmpl.organizationId && tmpl.organizationId !== orgId) {
+        this.selectedTemplateId.set('');
+      }
+    }
+  }
+
+  /** Открыть диалог редактирования строки */
+  openEditItem(item: CartItem) {
+    this.editItem.set(item);
+    this.editQuantity.set(item.quantity);
+    this.editPrice.set(item.price);
+    this.editMarkup.set(this.effectiveMarkup(item));
+    this.editDialogVisible.set(true);
+  }
+
+  /** Сохранить изменения в отредактированной строке */
+  saveEditItem() {
+    const item = this.editItem();
+    if (!item) return;
+
+    const qty = Math.max(1, Math.round(this.editQuantity()));
+    const price = Math.max(0, this.editPrice());
+    const markup = Math.max(0, this.editMarkup());
+
+    this.cartService.updateQuantity(item.id, qty);
+    // Price update - since CartService doesn't have updatePrice, we do it here
+    this.cartService.updatePrice(item.id, price);
+    this.cartService.updateMarkup(item.id, markup);
+
+    this.editDialogVisible.set(false);
+    this.notification.success('Позиция обновлена');
+  }
+
   /** Изменить наценку для позиции */
   onItemMarkupChange(itemId: string, value: string | number) {
     const num = parseFloat(String(value));
@@ -751,6 +956,24 @@ export class ProposalShowcaseComponent {
   itemTotal(item: CartItem): number {
     const markup = this.effectiveMarkup(item);
     return Math.round(item.price * (1 + markup / 100) * item.quantity * 100) / 100;
+  }
+
+  /** Открыть диалог предпросмотра с PDF экспортом */
+  openPdfPreview() {
+    const blocks = this.docBlocks();
+    if (blocks.length === 0) {
+      this.notification.warn('Нет данных для экспорта. Добавьте товары и выберите шаблон.');
+      return;
+    }
+    const tmplId = this.selectedTemplateId();
+    const tmpl = tmplId ? this.templates().find(t => t.id === tmplId) : null;
+    this.previewDialog()?.open(
+      tmpl?.name || 'Коммерческое предложение',
+      'quotation',
+      blocks,
+      tmpl?.backgroundImages || [],
+      tmpl?.backgroundOpacity ?? 1,
+    );
   }
 
   /** Add product to the document (via cart service) */

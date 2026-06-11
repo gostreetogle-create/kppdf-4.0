@@ -17,7 +17,8 @@
 }
 
 .preview__canvas-wrap {
-  height: 75vh;
+  height: 85vh;
+  max-height: 1123px; /* A4 height */
   overflow: hidden;
   border-radius: 8px;
   display: flex;

@@ -208,11 +208,15 @@ export interface TableExtraAction {
 
     /* Кнопки действий — всегда видимый фон + чёткая рамка */
     .kp-table__actions ::ng-deep .p-button.p-button-text {
-      width: 32px;
-      height: 32px;
+      width: 36px;
+      height: 36px;
       border-radius: var(--radius-md);
       transition: background var(--transition-spring), box-shadow var(--transition-spring), transform var(--transition-spring), border-color var(--transition-spring);
       border: 1.5px solid var(--color-border);
+    }
+    .kp-table__actions ::ng-deep .kp-btn__lucide {
+      width: 1.25rem;
+      height: 1.25rem;
     }
 
     /* secondary (редактировать, ▲▼) */

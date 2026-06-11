@@ -124,6 +124,8 @@ export class DocumentTemplateListComponent implements OnInit {
       tmpl.name,
       tmpl.docType,
       tmpl.blocks,
+      tmpl.backgroundImages,
+      tmpl.backgroundOpacity ?? 1,
     );
   }
 }

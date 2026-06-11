@@ -11,6 +11,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { env } from './config/env.js';
 import { connectDB, disconnectDB } from './config/db.js';
+import { ChromaClient } from 'chromadb';
 import { errorHandler, notFoundHandler } from './middleware/error-handler.js';
 import { logger } from './utils/logger.js';
 import { setupSwagger } from './docs/swagger.js';
@@ -57,16 +58,16 @@ const app = express();
 const log = logger.child({ module: 'server' });
 
 // Security middleware
-app.set('trust proxy', 1); // доверять Nginx (X-Forwarded-For для rate-limit)
+app.set('trust proxy', 1);
 app.use(helmet());
 app.use(cors({ origin: env.CORS_ORIGIN, credentials: true }));
 app.use(cookieParser());
 app.use(express.json({ limit: '1mb' }));
 
-// Rate limiting for auth routes (5 попыток за 15 минут)
+// Rate limiting for auth routes
 const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 минут
-  max: 5,                   // не больше 5 запросов за окно
+  windowMs: 15 * 60 * 1000,
+  max: 5,
   standardHeaders: true,
   legacyHeaders: false,
   message: { success: false, data: null, message: 'Слишком много запросов. Попробуйте позже.' },
@@ -75,7 +76,7 @@ const authLimiter = rateLimit({
 // Static files (uploads)
 app.use('/uploads', express.static(path.resolve(__dirname, '../uploads')));
 
-// Routes — rate-limit только на логин
+// Routes
 app.use('/api/v1/auth/login', authLimiter);
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/organizations', organizationRoutes);
@@ -89,8 +90,6 @@ app.use('/api/v1/work-centers', workCenterRoutes);
 app.use('/api/v1/workers', workerRoutes);
 app.use('/api/v1/production-orders', productionOrderRoutes);
 app.use('/api/v1/table-templates', tableTemplateRoutes);
-
-// New CRUD routes
 app.use('/api/v1/certificates', certificateRoutes);
 app.use('/api/v1/contracts', contractRoutes);
 app.use('/api/v1/commercial-proposals', commercialProposalRoutes);
@@ -112,8 +111,6 @@ app.use('/api/v1/warehouses', warehouseRoutes);
 app.use('/api/v1/work-types', workTypeRoutes);
 app.use('/api/v1/order-tasks', orderTaskRoutes);
 app.use('/api/v1/inventory', inventoryRoutes);
-
-// File upload
 app.use('/api/v1/upload', uploadRoutes);
 
 // Swagger docs
@@ -130,30 +127,35 @@ app.use(notFoundHandler);
 // Error handler
 app.use(errorHandler);
 
-// Start
-let dbConnected = false;
+// Shared ChromaDB client
+let sharedChromaClient: ChromaClient | null = null;
+export function getChromaClient(): ChromaClient | null {
+  return sharedChromaClient;
+}
 
 async function start() {
-  // Пробуем подключиться к MongoDB, но не падаем если недоступна
+  let dbConnected = false;
+
+  // Connect to MongoDB
   try {
     await connectDB();
     dbConnected = true;
 
-    // Создаём admin по умолчанию, если нет пользователей
+    // Seed admin user if no users exist
     const userCount = await User.countDocuments();
     if (userCount === 0) {
       await User.create({
         username: 'admin',
         password: 'admin123',
         displayName: 'Администратор',
-        email: 'admin@project-core.local',
+        email: 'admin@kppdf-4.local',
         role: 'admin',
         permissions: ['*']
       });
       logger.child({ module: 'seed' }).info('Admin user created (admin / admin123)');
     }
   } catch (err) {
-    log.warn(err, 'MongoDB unavailable — running without database. Auth and CRUD endpoints will return 503.');
+    log.error(err, 'MongoDB unavailable — running without database. Auth and CRUD endpoints will return 503.');
   }
 
   const server = app.listen(env.PORT, () => {
@@ -161,6 +163,16 @@ async function start() {
     log.info(`Environment: ${env.NODE_ENV}`);
     if (!dbConnected) log.warn('MongoDB: DISCONNECTED');
   });
+
+  // Connect to ChromaDB (external — Docker required)
+  try {
+    const chromaClient = new ChromaClient({ path: env.CHROMADB_URL });
+    await chromaClient.listCollections();
+    sharedChromaClient = chromaClient;
+    log.info('ChromaDB connected');
+  } catch {
+    log.warn('ChromaDB unavailable — vector search disabled. Start ChromaDB via Docker (docker compose up -d chromadb).');
+  }
 
   // Graceful shutdown
   const shutdown = async (signal: string) => {

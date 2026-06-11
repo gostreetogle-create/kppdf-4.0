@@ -11,8 +11,7 @@ import {
   LucideChevronUp, LucideChevronDown, LucideAlignLeft, LucideTable, LucideMinus,
   LucideArrowUpDown, LucideBox, LucideCheck, LucideSearch,
   LucideExternalLink, LucideTriangleAlert,
-  LucideChevronLeft, LucideChevronRight, LucideSun, LucideMoon, LucideMenu, LucideBell,
-  LucideHome, LucidePalette, LucideBook, LucideBuilding, LucideCog, LucideFile,
+  LucideChevronLeft, LucideChevronRight, LucideSun, LucideMoon, LucideMenu, LucideBell,      LucidePalette, LucideBook, LucideBuilding, LucideCog, LucideFile,
   LucideEyeOff, LucideX, LucidePlus,
   LucideFlag, LucideRotateCcw,
   LucideSend,
@@ -23,6 +22,12 @@ import {
   LucideTrash, LucideFileText, LucideUserPlus,
   LucideListTodo, LucideBraces, LucideRotateCw,
   LucidePercent,
+  LucideHouse, LucideMap, LucideFileSignature,
+  LucideClipboard, LucideCheckSquare, LucideBarChart,
+  LucideWrench, LucideMonitor, LucideUsers,
+  LucideWarehouse, LucidePackage, LucideTruck,
+  LucideUser, LucidePieChart, LucideLogOut, LucideSettings,
+  LucidePackageCheck, LucideThumbsUp, LucideThumbsDown,
 } from '@lucide/angular';
 import Aura from '@primeuix/themes/aura';
 
@@ -53,7 +58,7 @@ export const appConfig: ApplicationConfig = {
       LucideArrowUpDown, LucideBox, LucideCheck, LucideSearch,
       LucideExternalLink, LucideTriangleAlert,
       LucideChevronLeft, LucideChevronRight, LucideSun, LucideMoon, LucideMenu, LucideBell,
-      LucideHome, LucidePalette, LucideBook, LucideBuilding, LucideCog, LucideFile,
+      LucidePalette, LucideBook, LucideBuilding, LucideCog, LucideFile,
       LucideEyeOff, LucideX, LucidePlus,
       LucideDownload, LucidePrinter, LucideShoppingCart, LucideTag,
       LucideFlag, LucideRotateCcw,
@@ -66,6 +71,12 @@ export const appConfig: ApplicationConfig = {
       LucideListTodo, LucideBraces,
       LucideRotateCw,
       LucidePercent,
+      LucideHouse, LucideMap, LucideFileSignature,
+      LucideClipboard, LucideCheckSquare, LucideBarChart,
+      LucideWrench, LucideMonitor, LucideUsers,
+      LucideWarehouse, LucidePackage, LucideTruck,
+      LucideUser, LucidePieChart, LucideLogOut, LucideSettings,
+      LucidePackageCheck, LucideThumbsUp, LucideThumbsDown,
     ),
   ]
 };

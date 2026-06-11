@@ -39,6 +39,39 @@
   margin-top: var(--space-1);
 }
 
+/* === Строка с селектом и кнопкой === */
+.dt-editor__field-row {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-2);
+}
+.dt-editor__field-row-grow {
+  flex: 1;
+  min-width: 0;
+}
+/* Кнопки «+» — жёлтые, с рамкой, заметные */
+.dt-editor__field-row ::ng-deep .p-button.p-button-text.p-button-secondary {
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  min-height: 36px;
+  border: 2px solid var(--color-warn, #f59e0b);
+  background: color-mix(in srgb, var(--color-warn, #f59e0b) 12%, transparent);
+  border-radius: var(--radius-md);
+  color: var(--color-warn, #f59e0b);
+  transition: all var(--transition-spring);
+}
+.dt-editor__field-row ::ng-deep .p-button.p-button-text.p-button-secondary:hover {
+  background: color-mix(in srgb, var(--color-warn, #f59e0b) 25%, transparent);
+  border-color: var(--color-warn, #f59e0b);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-warn, #f59e0b) 20%, transparent);
+  transform: scale(1.08);
+}
+.dt-editor__field-row ::ng-deep .kp-btn__lucide {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
 .dt-editor__toolbar {
   padding: var(--space-3);
   background: var(--color-surface-alt);
@@ -143,6 +176,163 @@
   padding: var(--space-2);
   justify-content: center;
   border-top: 1px solid var(--color-border-light);
+}
+
+/* === Миниатюры фоновых изображений === */
+.dt-editor__bg-gallery {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
+  min-height: 70px;
+}
+.dt-editor__bg-thumb {
+  position: relative;
+  width: 100px;
+  height: 70px;
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--color-surface-alt);
+  flex-shrink: 0;
+  cursor: default;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.dt-editor__bg-thumb:hover {
+  border-color: var(--color-primary);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+}
+/* Первая миниатюра (по умолчанию) — выделенная рамка */
+.dt-editor__bg-thumb:first-child {
+  border-color: var(--color-primary);
+}
+.dt-editor__bg-thumb.cdk-drag-preview {
+  opacity: 0.9;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+  transform: scale(1.05);
+}
+.dt-editor__bg-thumb.cdk-drag-placeholder {
+  opacity: 0.3;
+  border: 2px dashed var(--color-primary);
+}
+.dt-editor__bg-thumb.cdk-drop-list-dragging .dt-editor__bg-thumb:not(.cdk-drag-placeholder) {
+  transition: transform 180ms cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+.dt-editor__bg-thumb-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.dt-editor__bg-thumb-badge {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(0,0,0,0.6);
+  color: #fff;
+  font-size: 10px;
+  text-align: center;
+  padding: 2px 0;
+  line-height: 1.2;
+}
+.dt-editor__bg-thumb-remove {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.5);
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.dt-editor__bg-thumb:hover .dt-editor__bg-thumb-remove {
+  opacity: 1;
+}
+.dt-editor__bg-thumb-remove:hover {
+  background: rgba(220, 38, 38, 0.8);
+}
+.dt-editor__bg-thumb-drag {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  background: rgba(0,0,0,0.4);
+  border: none;
+  color: #fff;
+  cursor: grab;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.dt-editor__bg-thumb:hover .dt-editor__bg-thumb-drag {
+  opacity: 1;
+}
+.dt-editor__bg-thumb-drag:hover {
+  background: rgba(0,0,0,0.6);
+}
+.dt-editor__bg-add-more {
+  margin-top: 4px;
+}
+
+/* === Slider прозрачности фона === */
+.dt-editor__bg-opacity {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: 6px;
+}
+.dt-editor__bg-opacity-label {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+  min-width: 100px;
+}
+.dt-editor__bg-opacity-slider {
+  flex: 1;
+  height: 6px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: var(--color-border-light);
+  border-radius: 3px;
+  outline: none;
+  cursor: pointer;
+}
+.dt-editor__bg-opacity-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  border: 2px solid #fff;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  cursor: pointer;
+  transition: transform 0.15s;
+}
+.dt-editor__bg-opacity-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+}
+.dt-editor__bg-opacity-slider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  border: 2px solid #fff;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  cursor: pointer;
 }
 
 @media (max-width: 900px) {

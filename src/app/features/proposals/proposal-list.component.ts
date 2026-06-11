@@ -223,23 +223,18 @@ export class ProposalListComponent {
       `${templateName} — ${p.number}`,
       'quotation',
       blocks,
+      [],
+      1,
     );
   }
 
-  /** Заменяет плейсхолдеры {{...}} в блоках на реальные данные КП */
+  /** Заменяет плейсхолдеры {{...}} в блоках и заполняет табличные блоки данными позиций КП */
   private fillPlaceholders(blocks: DocBlock[], cp: CommercialProposal, clientName: string, orgName: string): DocBlock[] {
     const date = new Date(cp.createdAt).toLocaleDateString('ru-RU');
     const total = cp.totalAmount.toLocaleString('ru-RU') + ' ₽';
     const itemsText = cp.items.map((it, i) =>
       `${i + 1}. ${it.productName} (${it.productSku}) — ${it.quantity} ${it.productUnit} × ${it.unitPrice.toLocaleString('ru-RU')} ₽ = ${it.total.toLocaleString('ru-RU')} ₽`
     ).join('\n');
-
-    // Формируем таблицу товаров как набор колонок для блока
-    const tableHeader = `№\tНаименование\tАртикул\tКол-во\tЦена\tСумма`;
-    const tableRows = cp.items.map((it, i) =>
-      `${i + 1}\t${it.productName}\t${it.productSku}\t${it.quantity}\t${it.unitPrice.toLocaleString('ru-RU')} ₽\t${it.total.toLocaleString('ru-RU')} ₽`
-    ).join('\n');
-    const tableContent = `${tableHeader}\n${tableRows}\n\nИтого: ${total}`;
 
     const map: Record<string, string> = {
       '{{number}}': cp.number,
@@ -260,14 +255,48 @@ export class ProposalListComponent {
       return result;
     };
 
+    // Формируем инлайн-строки из позиций КП (для табличных блоков)
+    const inlineRows: Record<string, unknown>[] = cp.items.map(it => ({
+      name: it.productName,
+      productName: it.productName,
+      sku: it.productSku,
+      productSku: it.productSku,
+      price: it.unitPrice,
+      unitPrice: it.unitPrice,
+      quantity: it.quantity,
+      unit: it.productUnit,
+      productUnit: it.productUnit,
+      total: it.total,
+      totalAmount: it.total,
+      markupPercent: it.markupPercent,
+    }));
+
+    const totalQty = cp.items.reduce((s, it) => s + it.quantity, 0);
+    const avgPrice = cp.items.length > 0
+      ? Math.round((cp.items.reduce((s, it) => s + it.unitPrice, 0) / cp.items.length) * 100) / 100
+      : 0;
+
+    // Итоги по колонкам
+    const summaries: Record<string, number> = {
+      quantity: totalQty,
+      total: cp.totalAmount,
+      totalAmount: cp.totalAmount,
+      price: avgPrice,
+    };
+
+    // Footer-строки
+    const footerRows: { label: string; value: string }[] = [
+      { label: 'Итого:', value: total },
+    ];
+
     return blocks.map(b => {
-      // Табличный блок — заменяем на текстовый блок с данными товаров
+      // Табличный блок — заполняем инлайн-данными из позиций КП
       if (b.type === 'table') {
         return {
           ...b,
-          type: 'text' as const,
-          title: b.title || 'Товары',
-          content: tableContent,
+          _inlineRows: inlineRows,
+          _columnSummaries: summaries,
+          _footerRows: footerRows,
         };
       }
       return {

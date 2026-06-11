@@ -29,7 +29,7 @@
     <div class="dt-editor__field">
       <kp-toggle
         label="Показывать линию"
-        [(ngModel)]="editingSepShowLine"
+        [(checked)]="editingSepShowLine"
       />
     </div>
     <div class="dt-editor__table-edit-footer">
@@ -78,7 +78,6 @@
           <kp-button
             label="Создать шаблон таблицы"
             lucideIcon="plus"
-            size="small"
             severity="info"
             (buttonClick)="createNewTableTemplate()"
           />
@@ -114,69 +113,93 @@
   <kp-breadcrumb [items]="breadcrumbs" />
 
   @let isCreating = isNew();
-  <h2 class="dt-editor__title">
-    {{ isCreating ? 'Новый шаблон документа' : 'Редактирование шаблона' }}
-  </h2>
 
   @if (loading()) {
     <div class="dt-editor__loading">Загрузка...</div>
   } @else {
     <!-- Layout: левая панель + правый холст A4 -->
-    <div class="dt-editor__layout" tabindex="-1" (keydown)="onKeyDown($event)">
+    <div class="dt-editor__layout">
       <!-- Левая панель -->
       <div class="dt-editor__sidebar">
-        <div class="dt-editor__field">
+        <!-- Группа полей в рамке, у селектов кнопки + справа в той же строке -->
+        <kp-field-group>
           <kp-input
             label="Название шаблона"
             placeholder="Например: Коммерческое предложение"
             [(ngModel)]="templateName"
             [error]="nameError()"
           />
-        </div>
-
-        <div class="dt-editor__field">
-          <kp-select
-            label="Тип документа"
-            [options]="docTypeOptions()"
-            [ngModel]="docType()"
-            (ngModelChange)="docType.set($event)"
-          />
-        </div>
-
-        <div class="dt-editor__field">
+          <div class="dt-editor__field-row">
+            <kp-select
+              class="dt-editor__field-row-grow"
+              label="Тип документа"
+              [options]="docTypeOptions()"
+              [ngModel]="docType()"
+              (ngModelChange)="docType.set($event)"
+            />
+            <kp-button
+              lucideIcon="plus"
+              size="small"
+              severity="secondary"
+              [text]="true"
+              [rounded]="true"
+              pTooltip="Добавить тип документа"
+              tooltipPosition="left"
+              routerLink="/references/doc-types"
+            />
+          </div>
           <kp-input
             label="Описание"
             placeholder="Необязательное описание шаблона"
             [(ngModel)]="description"
           />
-        </div>
-
-        <div class="dt-editor__field">
-          <kp-select
-            label="Организация"
-            placeholder="Кто выставляет документ"
-            [options]="organizationOptions()"
-            [ngModel]="organizationId()"
-            (ngModelChange)="organizationId.set($event)"
-          />
-        </div>
+          <div class="dt-editor__field-row">
+            <kp-select
+              class="dt-editor__field-row-grow"
+              label="Организация"
+              placeholder="Кто выставляет документ"
+              [options]="organizationOptions()"
+              [ngModel]="organizationId()"
+              (ngModelChange)="organizationId.set($event)"
+            />
+            <kp-button
+              lucideIcon="plus"
+              size="small"
+              severity="secondary"
+              [text]="true"
+              [rounded]="true"
+              pTooltip="Добавить организацию"
+              tooltipPosition="left"
+              routerLink="/references/organizations/new"
+            />
+          </div>
+        </kp-field-group>
 
         <div class="dt-editor__field">
           <label class="kp-field__label">Фоновые изображения (для разных страниц)</label>
 
           @if (backgroundImages().length > 0) {
-            <div class="dt-editor__bg-gallery">
+            <div
+              class="dt-editor__bg-gallery"
+              cdkDropList
+              (cdkDropListDropped)="onBgReorder($event)"
+              cdkDropListOrientation="horizontal"
+            >
               @for (img of backgroundImages(); track $index) {
-                <div class="dt-editor__bg-thumb">
+                <div
+                  class="dt-editor__bg-thumb"
+                  cdkDrag
+                  [cdkDragDisabled]="backgroundImages().length < 2"
+                >
                   <img
                     [src]="img"
                     alt="Фон страницы {{$index + 1}}"
                     class="dt-editor__bg-thumb-img"
                     (error)="removeBackground($index)"
                   />
-                  @if ($index === 0) {
-                    <span class="dt-editor__bg-thumb-badge">Стр. 1</span>
-                  }
+                  <span class="dt-editor__bg-thumb-badge">
+                    {{ $index === 0 ? 'По умолчанию' : 'Стр. ' + ($index + 1) }}
+                  </span>
                   <button
                     class="dt-editor__bg-thumb-remove"
                     title="Удалить фон"
@@ -184,8 +207,27 @@
                   >
                     <svg lucideIcon="x" width="14" height="14"></svg>
                   </button>
+                  @if (backgroundImages().length >= 2) {
+                    <div class="dt-editor__bg-thumb-drag" title="Перетащить для изменения порядка">
+                      <svg lucideIcon="grip-vertical" width="12" height="12"></svg>
+                    </div>
+                  }
                 </div>
               }
+            </div>
+            <div class="dt-editor__bg-opacity">
+              <label class="dt-editor__bg-opacity-label">
+                Прозрачность: {{ backgroundOpacity() * 100 }}%
+              </label>
+              <input
+                type="range"
+                class="dt-editor__bg-opacity-slider"
+                min="0"
+                max="1"
+                step="0.05"
+                [ngModel]="backgroundOpacity()"
+                (ngModelChange)="backgroundOpacity.set($event)"
+              />
             </div>
             <div class="dt-editor__bg-add-more">
               <kp-file-upload
@@ -211,7 +253,7 @@
         <div class="dt-editor__field">
           <kp-toggle
             label="Шаблон по умолчанию"
-            [(ngModel)]="isDefault"
+            [(checked)]="isDefault"
           />
         </div>
 
@@ -219,24 +261,21 @@
         <div class="dt-editor__toolbar">
           <span class="dt-editor__toolbar-label">Блоки:</span>
           <div class="dt-editor__toolbar-buttons">
-            <kp-button
-              label="+ Текст"
-              lucideIcon="align-left"
-              size="small"
+          <kp-button
+            label="+ Текст"
+            lucideIcon="align-left"
               severity="secondary"
               (buttonClick)="addBlock('text')"
             />
-            <kp-button
-              label="+ Таблица"
-              lucideIcon="table"
-              size="small"
+          <kp-button
+            label="+ Таблица"
+            lucideIcon="table"
               severity="secondary"
               (buttonClick)="addBlock('table')"
             />
-            <kp-button
-              label="+ Разделитель"
-              lucideIcon="minus"
-              size="small"
+          <kp-button
+            label="+ Разделитель"
+            lucideIcon="minus"
               severity="secondary"
               (buttonClick)="addBlock('separator')"
             />
@@ -249,7 +288,6 @@
           <div class="dt-editor__toolbar-buttons dt-editor__toolbar-row">
             <kp-button
               lucideIcon="rotate-ccw"
-              size="small"
               severity="secondary"
               [disabled]="!canUndo()"
               pTooltip="Отменить (Ctrl+Z)"
@@ -258,7 +296,6 @@
             />
             <kp-button
               lucideIcon="rotate-cw"
-              size="small"
               severity="secondary"
               [disabled]="!canRedo()"
               pTooltip="Повторить (Ctrl+Shift+Z)"
@@ -294,7 +331,9 @@
           [blocks]="blocks()"
           [selectedBlockId]="selectedBlockId()"
           [backgroundImages]="backgroundImages()"
+          [backgroundOpacity]="backgroundOpacity()"
           (blockSelect)="selectedBlockId.set($event)"
+          (canvasClick)="selectedBlockId.set('')"
           (blockEdit)="onBlockEdit($event)"
           (blockDblClick)="onBlockDblClick($event)"
           (blockRemove)="removeBlock($event)"

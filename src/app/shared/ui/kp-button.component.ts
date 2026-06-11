@@ -1,6 +1,6 @@
 import { Component, input, output, ChangeDetectionStrategy } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
-import { TooltipModule } from 'primeng/tooltip';
 import { LucideDynamicIcon } from '@lucide/angular';
 
 type ButtonSeverity = 'primary' | 'secondary' | 'success' | 'danger' | 'warn' | 'info' | 'contrast';
@@ -9,7 +9,7 @@ type ButtonSize = 'small' | 'large';
 @Component({
   selector: 'kp-button',
   standalone: true,
-  imports: [ButtonModule, TooltipModule, LucideDynamicIcon],
+  imports: [ButtonModule, LucideDynamicIcon, RouterLink],
   template: `
     <p-button
       [label]="label()"
@@ -25,9 +25,9 @@ type ButtonSize = 'small' | 'large';
       [loading]="loading()"
       [disabled]="disabled()"
       [styleClass]="styleClass()"
-      [pTooltip]="pTooltip()"
-      [tooltipPosition]="tooltipPosition()"
-      [attr.aria-label]="label() || pTooltip() || 'Кнопка'"
+      [routerLink]="routerLink()"
+      [queryParams]="queryParams()"
+      [attr.aria-label]="label() || 'Кнопка'"
       (onClick)="buttonClick.emit($event)"
     >
       @if (lucideIcon()) {
@@ -51,7 +51,7 @@ export class KpButtonComponent {
   lucideIcon = input('');
   iconPos = input<'left' | 'right' | 'top' | 'bottom'>('left');
   severity = input<ButtonSeverity>('primary');
-  size = input<ButtonSize>('small');
+  size = input<ButtonSize>('large');
   outlined = input(false);
   raised = input(false);
   rounded = input(false);
@@ -60,8 +60,8 @@ export class KpButtonComponent {
   loading = input(false);
   disabled = input(false);
   styleClass = input('');
-  pTooltip = input('');
-  tooltipPosition = input<'top' | 'bottom' | 'left' | 'right'>('top');
+  routerLink = input<string | string[] | undefined>(undefined);
+  queryParams = input<Record<string, string | number | boolean>>({});
 
   readonly buttonClick = output<MouseEvent>();
 }

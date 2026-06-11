@@ -1,6 +1,6 @@
 import { Component, input, forwardRef, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule, NG_VALUE_ACCESSOR, ControlValueAccessor } from '@angular/forms';
-import { SelectModule } from 'primeng/select';
+import { Select } from 'primeng/select';
 import { CommonModule } from '@angular/common';
 
 export interface SelectOption {
@@ -11,7 +11,7 @@ export interface SelectOption {
 @Component({
   selector: 'kp-select',
   standalone: true,
-  imports: [CommonModule, FormsModule, SelectModule],
+  imports: [CommonModule, FormsModule, Select],
   template: `
     <div class="kp-select-field" [class.kp-select-field--error]="!!error()">
       @if (label()) {

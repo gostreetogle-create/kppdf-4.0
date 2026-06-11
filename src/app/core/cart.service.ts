@@ -1,11 +1,14 @@
-import { Injectable, signal, computed } from '@angular/core';
+import { Injectable, signal, computed, effect } from '@angular/core';
 import { generateId } from './crud-factory.js';
 import type { CartItem, Product } from '../../../shared/types/index.js';
 
+/** Ключ localStorage для сохранения корзины между сессиями */
+const CART_STORAGE_KEY = 'kppdf_cart_items';
+
 /**
  * Сервис корзины — временное хранение товаров перед созданием КП.
- * Состояние хранится в памяти (signals), не сохраняется между сессиями.
- * Позже может быть расширен localStorage для сохранения между перезагрузками.
+ * Состояние автоматически сохраняется в localStorage при каждом изменении
+ * и восстанавливается при загрузке страницы.
  */
 @Injectable({ providedIn: 'root' })
 export class CartService {
@@ -27,6 +30,53 @@ export class CartService {
 
   /** Корзина пуста */
   readonly isEmpty = computed(() => this.items().length === 0);
+
+  constructor() {
+    // Восстанавливаем корзину из localStorage
+    this.loadFromStorage();
+
+    // Автосохранение при каждом изменении
+    effect(() => {
+      const currentItems = this.items();
+      this.saveToStorage(currentItems);
+    });
+  }
+
+  /** Загрузить корзину из localStorage */
+  private loadFromStorage(): void {
+    try {
+      const raw = localStorage.getItem(CART_STORAGE_KEY);
+      if (!raw) return;
+      const parsed: CartItem[] = JSON.parse(raw);
+      if (!Array.isArray(parsed)) return;
+      // Проверяем, что это массив CartItem (базовая валидация)
+      const valid = parsed.filter(
+        (item): item is CartItem =>
+          typeof item.id === 'string' &&
+          typeof item.productId === 'string' &&
+          typeof item.quantity === 'number' &&
+          typeof item.price === 'number'
+      );
+      if (valid.length > 0) {
+        this.items.set(valid);
+      }
+    } catch {
+      // Игнорируем битые данные — корзина останется пустой
+    }
+  }
+
+  /** Сохранить корзину в localStorage */
+  private saveToStorage(items: CartItem[]): void {
+    try {
+      if (items.length === 0) {
+        localStorage.removeItem(CART_STORAGE_KEY);
+      } else {
+        localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
+      }
+    } catch {
+      // localStorage может быть недоступен (квота, приватный режим)
+    }
+  }
 
   /** Добавить товар в корзину (или увеличить количество, если уже есть) */
   addItem(product: Product, quantity: number = 1): void {
@@ -63,6 +113,13 @@ export class CartService {
   /** Удалить позицию из корзины */
   removeItem(itemId: string): void {
     this.items.update(list => list.filter(i => i.id !== itemId));
+  }
+
+  /** Изменить цену позиции */
+  updatePrice(itemId: string, price: number): void {
+    this.items.update(list =>
+      list.map(i => i.id === itemId ? { ...i, price } : i)
+    );
   }
 
   /** Изменить наценку позиции */

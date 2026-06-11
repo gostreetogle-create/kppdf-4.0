@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed, viewChild, linkedSignal, effect, OnInit, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, signal, computed, viewChild, linkedSignal, effect, OnInit, HostListener, ChangeDetectionStrategy } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
@@ -19,7 +19,9 @@ import { KpToggleComponent } from '../../shared/ui/kp-toggle.component';
 import { KpDocCanvasComponent } from '../../shared/ui/kp-doc-canvas.component';
 import { KpDocTextEditorDialogComponent } from '../../shared/ui/kp-doc-text-editor-dialog.component';
 import { KpDocPreviewDialogComponent } from '../../shared/ui/kp-doc-preview-dialog.component';
+import { KpFieldGroupComponent } from '../../shared/ui/kp-field-group.component';
 import { KpFileUploadComponent } from '../../shared/ui/kp-file-upload.component';
+import { PageTitleService } from '../../core/page-title.service';
 import type { FileUploadEvent } from 'primeng/fileupload';
 import { NotificationService } from '../../core/notification.service';
 import { DocumentTemplateService } from '../../core/document-template.service';
@@ -81,7 +83,8 @@ function removeDraftFromLS(id: string | null): void {
     CommonModule, FormsModule, DragDropModule,
     KpInputComponent, KpSelectComponent, KpButtonComponent, KpToggleComponent,
     KpBreadcrumbComponent, KpCardComponent, KpToastComponent, KpDialogComponent,
-    KpDocCanvasComponent, KpDocTextEditorDialogComponent, KpDocPreviewDialogComponent, KpFileUploadComponent,
+    KpDocCanvasComponent, KpDocTextEditorDialogComponent, KpDocPreviewDialogComponent,
+    KpFieldGroupComponent, KpFileUploadComponent,
     TooltipModule, LucideDynamicIcon,
   ],
   templateUrl: './document-template-editor.component.html',
@@ -110,6 +113,7 @@ export class DocumentTemplateEditorComponent implements OnInit {
     this.organizationId();
     this.isDefault();
     this.backgroundImages();
+    this.backgroundOpacity();
     this.blocks();
     this.scheduleAutoSave();
   });
@@ -120,6 +124,7 @@ export class DocumentTemplateEditorComponent implements OnInit {
   private tableTemplateService = inject(TableTemplateService);
   private docTypeService = inject(DocTypeService);
   private organizationService = inject(OrganizationService);
+  private pageTitle = inject(PageTitleService);
   private notification = inject(NotificationService);
 
   isNew = signal(true);
@@ -131,6 +136,7 @@ export class DocumentTemplateEditorComponent implements OnInit {
   organizationId = signal<string>('');
   isDefault = signal(false);
   backgroundImages = signal<string[]>([]);
+  backgroundOpacity = signal(1);
   blocks = signal<DocBlock[]>([]);
   selectedBlockId = signal('');
   loading = signal(false);
@@ -208,6 +214,7 @@ export class DocumentTemplateEditorComponent implements OnInit {
         const result = await firstValueFrom(this.templateService.getTemplate(id));
         if (result.success && result.data) {
           const t = result.data;
+          this.pageTitle.setTitle(t.name);
           this.templateName.set(t.name);
           this.description.set(t.description ?? '');
           this.docType.set(t.docType);
@@ -216,6 +223,7 @@ export class DocumentTemplateEditorComponent implements OnInit {
           // Поддержка старого формата (single backgroundImage) через bracket notation
           const tmpl = t as unknown as Record<string, unknown>;
           this.backgroundImages.set(t.backgroundImages ?? (tmpl['backgroundImage'] ? [tmpl['backgroundImage'] as string] : []));
+          this.backgroundOpacity.set(t.backgroundOpacity ?? 1);
           this.blocks.set(t.blocks.map(b => ({ ...b, columns: b.columns?.map(c => ({ ...c })) })));
           this.breadcrumbs[2] = { label: t.name };
         } else {
@@ -228,7 +236,10 @@ export class DocumentTemplateEditorComponent implements OnInit {
     } finally {
       this.loading.set(false);
     }
-    // Инициализируем стек undo начальным состоянием blocks
+    // Устанавливаем заголовок страницы
+    if (!this.pageTitle.title()) {
+      this.pageTitle.setTitle(this.isNew() ? 'Новый шаблон документа' : this.templateName());
+    }
     this.pushState();
   }
 
@@ -254,6 +265,7 @@ export class DocumentTemplateEditorComponent implements OnInit {
     if (draft['blocks'] && Array.isArray(draft['blocks'])) this.blocks.set(draft['blocks'] as DocBlock[]);
     if (draft['organizationId']) this.organizationId.set(draft['organizationId'] as string);
     if (draft['backgroundImages']) this.backgroundImages.set(draft['backgroundImages'] as string[]);
+    if (typeof draft['backgroundOpacity'] === 'number') this.backgroundOpacity.set(draft['backgroundOpacity'] as number);
     if (typeof draft['isDefault'] === 'boolean') this.isDefault.set(draft['isDefault']);
 
   }
@@ -273,6 +285,7 @@ export class DocumentTemplateEditorComponent implements OnInit {
       organizationId: this.organizationId(),
       isDefault: this.isDefault(),
       backgroundImages: this.backgroundImages(),
+      backgroundOpacity: this.backgroundOpacity(),
       blocks: this.blocks(),
     };
     saveDraftToLS(this.templateId(), state);
@@ -320,8 +333,13 @@ export class DocumentTemplateEditorComponent implements OnInit {
     }
   }
 
-  /** Обработчик клавиатуры для Ctrl+Z / Ctrl+Shift+Z */
+  /** Глобальный обработчик клавиатуры для Ctrl+Z / Ctrl+Shift+Z / Ctrl+Y */
+  @HostListener('window:keydown', ['$event'])
   onKeyDown(event: KeyboardEvent): void {
+    // Не перехватываем если фокус в input/textarea (пусть работает стандартный undo)
+    const tag = (event.target as HTMLElement)?.tagName;
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+
     if (event.ctrlKey && event.key === 'z' && !event.shiftKey) {
       event.preventDefault();
       this.undo();
@@ -352,6 +370,16 @@ export class DocumentTemplateEditorComponent implements OnInit {
     this.blocks.update(b => b.filter(bl => bl.id !== blockId));
     if (this.selectedBlockId() === blockId) this.selectedBlockId.set('');
     this.pushState();
+    this.scheduleAutoSave();
+  }
+
+  /** Drag-and-drop переупорядочивание фоновых изображений */
+  onBgReorder(event: { previousIndex: number; currentIndex: number }) {
+    this.backgroundImages.update(imgs => {
+      const arr = [...imgs];
+      moveItemInArray(arr, event.previousIndex, event.currentIndex);
+      return arr;
+    });
     this.scheduleAutoSave();
   }
 
@@ -460,7 +488,8 @@ export class DocumentTemplateEditorComponent implements OnInit {
   createNewTableTemplate() {
     this.tableEditVisible.set(false);
     this.editingTableBlock.set(null);
-    this.router.navigate(['/admin/table-templates/new']);
+    const returnUrl = encodeURIComponent(this.router.url);
+    this.router.navigate(['/admin/table-templates/new'], { queryParams: { returnUrl } });
   }
 
   /** Сохранить изменения табличного блока */
@@ -539,13 +568,21 @@ export class DocumentTemplateEditorComponent implements OnInit {
   /** Обработчик загрузки фонового изображения */
   onBackgroundUpload(event: FileUploadEvent) {
     try {
-      const evt = event as unknown as { xhr: XMLHttpRequest };
-      const response = JSON.parse(evt.xhr.response);
-      if (response.success && response.data?.url) {
-        this.backgroundImages.update(imgs => [...imgs, response.data.url]);
+      // PrimeNG v21 FileUploadEvent: тело ответа может быть в xhr.response или originalEvent.body
+      const evt = event as unknown as { xhr?: { response?: string; status?: number }; originalEvent?: { body?: { success?: boolean; data?: { url?: string }; message?: string } } };
+      let response: { success?: boolean; data?: { url?: string }; message?: string } | null = null;
+
+      if (evt.originalEvent?.body) {
+        response = evt.originalEvent.body;
+      } else if (evt.xhr?.response) {
+        response = JSON.parse(evt.xhr.response);
+      }
+
+      if (response?.success && response?.data?.url) {
+        this.backgroundImages.update(imgs => [...imgs, response!.data!.url!]);
         this.notification.success('Фоновое изображение загружено');
       } else {
-        this.notification.error(response.message || 'Ошибка загрузки файла');
+        this.notification.error(response?.message || 'Ошибка загрузки файла');
       }
     } catch {
       this.notification.error('Ошибка обработки ответа сервера');
@@ -586,6 +623,7 @@ export class DocumentTemplateEditorComponent implements OnInit {
         pageSize: 'A4' as const,
         organizationId: this.organizationId() || undefined,
         isDefault: this.isDefault(),
+        backgroundOpacity: this.backgroundOpacity(),
         backgroundImages: this.backgroundImages().length > 0 ? this.backgroundImages() : undefined,
         blocks: this.blocks(),
       };
@@ -614,6 +652,7 @@ export class DocumentTemplateEditorComponent implements OnInit {
       this.docType(),
       this.blocks(),
       this.backgroundImages(),
+      this.backgroundOpacity(),
     );
   }
 

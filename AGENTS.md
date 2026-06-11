@@ -69,6 +69,7 @@ core → shared → features → layout
 | Выбор даты | `KpDatepickerComponent` | `<kp-datepicker>` |
 | Загрузка файлов | `KpFileUploadComponent` | `<kp-file-upload>` |
 | Переключатель | `KpToggleComponent` | `<kp-toggle>` |
+| Группа полей | `KpFieldGroupComponent` | `<kp-field-group>` |
 
 ---
 

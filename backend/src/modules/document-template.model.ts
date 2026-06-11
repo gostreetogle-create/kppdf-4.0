@@ -83,7 +83,7 @@ export interface IDocumentTemplate extends Document {
 const documentTemplateSchema = new Schema<IDocumentTemplate>({
   name: { type: String, required: true, trim: true },
   description: { type: String, trim: true, default: '' },
-  docType: { type: String, required: true, trim: true, enum: ['quotation', 'contract', 'invoice', 'shipping'] },
+  docType: { type: String, required: true, trim: true },
   pageSize: { type: String, enum: ['A4', 'A5', 'letter'], default: 'A4' },
   backgroundImages: { type: [String], default: [] },
   organizationId: { type: String, default: '' },

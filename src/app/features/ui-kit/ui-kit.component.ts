@@ -13,6 +13,7 @@ import { KpToastComponent } from '../../shared/ui/kp-toast.component';
 import { KpConfirmDialogComponent } from '../../shared/ui/kp-confirm-dialog.component';
 import { KpAvatarComponent } from '../../shared/ui/kp-avatar.component';
 import { KpToggleComponent } from '../../shared/ui/kp-toggle.component';
+import { KpFieldGroupComponent } from '../../shared/ui/kp-field-group.component';
 import { KpFileUploadComponent } from '../../shared/ui/kp-file-upload.component';
 import { KpDatepickerComponent } from '../../shared/ui/kp-datepicker.component';
 import { LucideDynamicIcon } from '@lucide/angular';
@@ -31,6 +32,7 @@ import { inject } from '@angular/core';
     KpBadgeComponent, KpBreadcrumbComponent,
     KpToastComponent, KpConfirmDialogComponent,
     KpAvatarComponent, KpToggleComponent,
+    KpFieldGroupComponent,
     KpFileUploadComponent, KpDatepickerComponent,
     LucideDynamicIcon
   ],
@@ -269,7 +271,31 @@ import { inject } from '@angular/core';
       </section>
 
       <!-- ============================================ -->
-      <!-- KP-UPL: Загрузка файлов -->
+      <!-- KP-FGP: Группа полей -->
+      <!-- ============================================ -->
+      <section class="uikit__section" id="kp-field-group">
+        <h2 class="uikit__section-title">
+          <span class="uikit__code">KP-FGP</span>
+          Группа полей &middot; <code>&lt;kp-field-group&gt;</code>
+        </h2>
+        <p class="uikit__section-desc">Группа полей (inputs, selects) в аккуратной рамке. Строки с селектом и кнопкой действия справа.</p>
+        <div class="uikit__demo">
+          <kp-field-group>
+            <kp-input label="Название" placeholder="Введите название" />
+            <div style="display:flex;align-items:flex-end;gap:8px">
+              <kp-select style="flex:1;min-width:0" label="Тип" [options]="statusOptions" placeholder="Выберите тип" />
+              <kp-button lucideIcon="plus" size="small" severity="secondary" [text]="true" [rounded]="true" style="width:36px;height:36px;min-width:36px;border:2px solid #f59e0b;border-radius:6px;color:#f59e0b" />
+            </div>
+            <kp-input label="Описание" placeholder="Необязательное описание" />
+            <div style="display:flex;align-items:flex-end;gap:8px">
+              <kp-select style="flex:1;min-width:0" label="Организация" [options]="cityOptions" placeholder="Выберите организацию" />
+              <kp-button lucideIcon="plus" size="small" severity="secondary" [text]="true" [rounded]="true" style="width:36px;height:36px;min-width:36px;border:2px solid #f59e0b;border-radius:6px;color:#f59e0b" />
+            </div>
+          </kp-field-group>
+        </div>
+      </section>
+
+      <!-- ============================================ -->
       <!-- ============================================ -->
       <section class="uikit__section" id="kp-file-upload">
         <h2 class="uikit__section-title">
@@ -493,8 +519,8 @@ import { inject } from '@angular/core';
       box-shadow: 0 0 0 2px var(--color-primary-subtle);
     }
     .uikit__icon-svg {
-      width: 1.5rem;
-      height: 1.5rem;
+      width: 2rem;
+      height: 2rem;
       color: var(--color-text);
     }
     .uikit__icon-label {

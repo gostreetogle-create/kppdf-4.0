@@ -12,6 +12,7 @@ import { KpBreadcrumbComponent } from '../../shared/ui/kp-breadcrumb.component';
 import { KpCardComponent } from '../../shared/ui/kp-card.component';
 import { KpToastComponent } from '../../shared/ui/kp-toast.component';
 import { KpToggleComponent } from '../../shared/ui/kp-toggle.component';
+import { PageTitleService } from '../../core/page-title.service';
 import { NotificationService } from '../../core/notification.service';
 import { OrganizationService } from '../../core/organization.service';
 import { CounterpartyRoleService } from '../../core/counterparty-role.service';
@@ -44,6 +45,7 @@ export class OrganizationEditorComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private orgService = inject(OrganizationService);
   private roleService = inject(CounterpartyRoleService);
+  private pageTitle = inject(PageTitleService);
   private notification = inject(NotificationService);
 
   isNew = signal(true);
@@ -108,9 +110,13 @@ export class OrganizationEditorComponent implements OnInit {
           this.notification.error('Контрагент не найден');
           this.router.navigate(['/references/organizations']);
         }
-      } finally {
-        this.loading.set(false);
-      }
+    } finally {
+      this.loading.set(false);
+    }
+    }
+
+    if (!this.pageTitle.title()) {
+      this.pageTitle.setTitle(this.isNew() ? 'Новый контрагент' : '');
     }
   }
 

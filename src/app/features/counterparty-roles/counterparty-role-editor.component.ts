@@ -58,6 +58,7 @@ import { CounterpartyRoleService } from '../../core/counterparty-role.service';
                 placeholder="Заполняется автоматически из названия"
                 [(ngModel)]="slug"
               />
+              <small class="org-editor__hint">Английскими буквами, без пробелов. Используется в коде и шаблонах для идентификации роли.</small>
             </div>
           </div>
 
@@ -147,6 +148,7 @@ import { CounterpartyRoleService } from '../../core/counterparty-role.service';
       padding-top: var(--space-4);
       border-top: 1px solid var(--color-border-light);
     }
+    .org-editor__hint { color: var(--color-text-muted); font-size: 0.75rem; margin-top: 2px; display: block; }
   `]
 })
 export class CounterpartyRoleEditorComponent implements OnInit {

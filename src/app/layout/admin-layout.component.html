@@ -125,6 +125,10 @@
       />
       </div>
 
+      @if (pageTitle()) {
+        <span class="topbar__title">{{ pageTitle() }}</span>
+      }
+
       <div class="topbar__right">
         <kp-select
           [options]="roleOptions"

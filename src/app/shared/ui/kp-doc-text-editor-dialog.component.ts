@@ -1,4 +1,4 @@
-import { Component, output, signal, ChangeDetectionStrategy } from '@angular/core';
+import { Component, output, signal, computed, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { KpDialogComponent } from './kp-dialog.component.js';
@@ -66,7 +66,7 @@ const PLACEHOLDER_CATEGORIES = [...new Set(PLACEHOLDER_GROUPS.map(p => p.categor
     <kp-dialog
       header="Редактирование текстового блока"
       [(visible)]="visible"
-      width="900px"
+      [width]="dialogWidth()"
     >
       <div class="editor">
         <kp-input label="Заголовок блока" [(ngModel)]="title" placeholder="Необязательный заголовок" />
@@ -93,6 +93,18 @@ const PLACEHOLDER_CATEGORIES = [...new Set(PLACEHOLDER_GROUPS.map(p => p.categor
                 [placeholder]="'Текст колонки ' + (i + 1) + '...'"
                 rows="3"
               ></textarea>
+
+              <!-- Live WYSIWYG preview -->
+              @if (col.content.trim()) {
+                <div
+                  class="editor__preview"
+                  [style.font-weight]="col.fontWeight || 'normal'"
+                  [style.font-style]="col.fontStyle || 'normal'"
+                  [style.text-decoration]="col.textDecoration || 'none'"
+                  [style.text-align]="col.textAlign || 'left'"
+                  [style.color]="col.color || 'inherit'"
+                >{{ col.content }}</div>
+              }
 
               <!-- Панель плейсхолдеров -->
               <div class="editor__placeholders">
@@ -302,6 +314,22 @@ const PLACEHOLDER_CATEGORIES = [...new Set(PLACEHOLDER_GROUPS.map(p => p.categor
       margin-top: 16px;
     }
 
+    /* === WYSIWYG Preview === */
+    .editor__preview {
+      margin-top: 8px;
+      padding: 10px 12px;
+      min-height: 36px;
+      background: var(--color-surface);
+      border: 1px dashed var(--color-border);
+      border-radius: 4px;
+      font-size: 14px;
+      line-height: 1.5;
+      color: var(--color-text);
+      white-space: pre-wrap;
+      word-break: break-word;
+      transition: all 0.15s;
+    }
+
     /* === Placeholders Panel === */
     .editor__placeholders {
       margin-top: 8px;
@@ -432,6 +460,15 @@ export class KpDocTextEditorDialogComponent {
 
   /** Какая колонка и категория плейсхолдеров сейчас открыты */
   placeholderState = signal<{ colId: string; category: string | null } | null>(null);
+
+  /** Динамическая ширина диалога: чем больше колонок — тем шире */
+  dialogWidth = computed(() => {
+    const n = this.columnCount();
+    if (n <= 3) return '900px';
+    if (n === 4) return '1100px';
+    if (n === 5) return '1300px';
+    return '95vw'; // 6 колонок — почти на весь экран
+  });
 
   open(block: DocBlock) {
     this.block.set(block);

@@ -1,4 +1,4 @@
-import { Component, input, output, signal, ChangeDetectionStrategy, inject, effect } from '@angular/core';
+import { Component, input, output, signal, computed, ChangeDetectionStrategy, inject, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { firstValueFrom } from 'rxjs';
 import type { DocBlock, TableTemplate } from '../../../../shared/types/index.js';
@@ -34,7 +34,7 @@ function tableNameToApiPath(name: string): string {
               @for (row of data; track trackByRow(row, $index)) {
                 <tr>
                   @for (col of template.columns; track col.fieldName) {
-                    <td>{{ getFieldValue(row, col.fieldName) }}</td>
+                    <td [class.table-block__td-num]="isNumericField(col.fieldName)">{{ getFieldValue(row, col.fieldName) }}</td>
                   }
                 </tr>
               }
@@ -46,6 +46,29 @@ function tableNameToApiPath(name: string): string {
                 </tr>
               }
             </tbody>
+            @if (data.length > 0 && columnSummaries(); as sums) {
+              <tfoot>
+                <tr class="table-block__footer-row">
+                  @for (col of template.columns; track col.fieldName) {
+                    <td [class.table-block__td-num]="isNumericField(col.fieldName)">
+                      @if (sums[col.fieldName] !== undefined) {
+                        <strong>{{ formatSum(sums[col.fieldName], col.fieldName) }}</strong>
+                      }
+                    </td>
+                  }
+                </tr>
+                @for (fr of footerRows(); track fr.label) {
+                  <tr class="table-block__footer-row table-block__footer-row--extra">
+                    <td>
+                      <span class="table-block__footer-label">{{ fr.label }}</span>
+                    </td>
+                    <td [attr.colspan]="template.columns.length - 1" style="text-align:right">
+                      <strong>{{ fr.value }}</strong>
+                    </td>
+                  </tr>
+                }
+              </tfoot>
+            }
           </table>
         } @else {
           <table class="table-block__preview">
@@ -102,6 +125,26 @@ function tableNameToApiPath(name: string): string {
     }
     .table-block__empty-row {
       text-align: center; padding: 4mm; color: #9ca3af;
+    }
+
+    .table-block__td-num { text-align: right; font-variant-numeric: tabular-nums; }
+
+    .table-block__footer-row {
+      font-weight: 700;
+      background: #f8fafc;
+    }
+    .table-block__footer-row td {
+      border-top: 2px solid #94a3b8;
+      padding: 2mm 3mm;
+    }
+    .table-block__footer-row--extra td {
+      border-top: none;
+      padding-top: 1mm;
+      font-weight: 600;
+    }
+    .table-block__footer-label {
+      color: #64748b;
+      font-weight: 600;
     }
   `]
 })
@@ -167,6 +210,64 @@ export class KpDocBlockTableComponent {
     } finally {
       this.loadingData.set(false);
     }
+  }
+
+  /** Итоговые суммы по колонкам (из _inlineRows + _columnSummaries) */
+  columnSummaries = computed(() => {
+    const block = this.block();
+    const data = this.rows();
+    if (!data || data.length === 0) return null;
+
+    const tmpl = this.tmpl();
+    if (!tmpl) return null;
+
+    const sums: Record<string, number> = { ...(block._columnSummaries || {}) };
+
+    // Суммируем числовые поля из данных
+    for (const col of tmpl.columns) {
+      if (this.isNumericField(col.fieldName) && sums[col.fieldName] === undefined) {
+        sums[col.fieldName] = data.reduce((acc, row) => {
+          const val = row[col.fieldName];
+          return acc + (typeof val === 'number' ? val : 0);
+        }, 0);
+      }
+    }
+
+    return sums;
+  });
+
+  /** Дополнительные строки подвала */
+  footerRows = computed(() => {
+    return this.block()._footerRows || [];
+  });
+
+  /** Проверить, является ли поле числовым (цена, сумма, количество) */
+  isNumericField(fieldName: string): boolean {
+    const numKeywords = ['price', 'total', 'sum', 'amount', 'quantity', 'count', 'weight', 'percent', 'markup'];
+    const lower = fieldName.toLowerCase();
+    const isNumeric = numKeywords.some(kw => lower.includes(kw));
+    if (isNumeric) return true;
+    // Fallback: если хоть одна строка содержит число в этом поле
+    const data = this.rows();
+    if (data && data.length > 0) {
+      return typeof data[0][fieldName] === 'number';
+    }
+    return false;
+  }
+
+  /** Форматировать сумму с символом валюты */
+  formatSum(val: number, fieldName: string): string {
+    const lower = fieldName.toLowerCase();
+    if (lower.includes('percent') || lower.includes('markup')) {
+      return val.toLocaleString('ru-RU') + '%';
+    }
+    if (lower.includes('weight') || lower.includes('kg')) {
+      return val.toLocaleString('ru-RU') + ' кг';
+    }
+    if (lower.includes('price') || lower.includes('total') || lower.includes('sum') || lower.includes('amount')) {
+      return val.toLocaleString('ru-RU') + ' ₽';
+    }
+    return val.toLocaleString('ru-RU');
   }
 
   /** Получить значение поля из строки с форматированием */
