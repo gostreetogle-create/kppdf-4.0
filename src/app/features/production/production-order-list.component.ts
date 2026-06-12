@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, signal, computed, ChangeDetectionStrategy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MenuItem } from 'primeng/api';
@@ -133,7 +133,7 @@ const DOC_TEMPLATES = [
   styles: [`:host { display: block; max-width: 100%; margin: 0; padding: var(--space-6); } .page__title { font-size: var(--font-size-xl); font-weight: var(--font-weight-bold); margin: var(--space-4) 0; } .po-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--space-3); } .po-form { display: flex; flex-direction: column; gap: var(--space-4); } .po-form__row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: var(--space-3); } .po-actions { display: flex; justify-content: flex-end; gap: var(--space-3); padding-top: var(--space-4); border-top: 1px solid var(--color-border-light); margin-top: var(--space-4); } .po-missing { display: flex; flex-direction: column; gap: var(--space-3); max-height: 400px; overflow-y: auto; } .po-missing__item { display: flex; gap: var(--space-3); padding: var(--space-3); background: var(--color-surface); border-radius: var(--radius-md); border: 1px solid var(--color-border); } .po-missing__icon { font-size: 1.5rem; flex-shrink: 0; } .po-missing__body p { margin: var(--space-1) 0 0; color: var(--color-text-secondary); font-size: var(--font-size-sm); } .po-detail { display: flex; flex-direction: column; gap: var(--space-4); } .po-detail__info { display: flex; flex-direction: column; gap: var(--space-3); } .po-detail__row { display: flex; align-items: center; gap: var(--space-3); font-size: var(--font-size-sm); } .po-detail__row--notes { flex-direction: column; align-items: flex-start; padding: var(--space-3); background: var(--color-surface-alt); border-radius: var(--radius-md); } .po-detail__label { color: var(--color-text-muted); min-width: 100px; flex-shrink: 0; font-weight: var(--font-weight-medium); } .po-detail__actions { display: flex; gap: var(--space-2); flex-wrap: wrap; }`],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class ProductionOrderListComponent {
+export class ProductionOrderListComponent implements OnInit {
   private svc = inject(ProductionOrderService);
   private taskSvc = inject(OrderTaskService);
   private productSvc = inject(ProductService);
@@ -198,7 +198,7 @@ export class ProductionOrderListComponent {
     { icon: 'play', severity: 'success', tooltip: 'Следующий статус', visible: (r: unknown) => !!(NEXT_STATUS[(r as ProductionOrder).status]) },
   ];
 
-  constructor() { this.loadRows(); this.loadCachedData(); }
+  ngOnInit() { this.loadRows(); this.loadCachedData(); }
 
   private async loadCachedData() {
     const [prodRes, orgRes] = await Promise.all([

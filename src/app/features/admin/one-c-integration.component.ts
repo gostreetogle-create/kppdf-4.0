@@ -1,4 +1,4 @@
-import { Component, inject, signal, OnInit, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, signal, OnInit, ChangeDetectionStrategy, DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
@@ -13,6 +13,7 @@ import { OneCService } from '../../core/one-c.service';
 import { PageTitleService } from '../../core/page-title.service';
 import { MessageService } from 'primeng/api';
 import { catchError, of } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import type { OneCSettings } from '../../../../shared/types/one-c';
 
 @Component({
@@ -32,6 +33,7 @@ export class OneCIntegrationComponent implements OnInit {
   private oneCService = inject(OneCService);
   private pageTitle = inject(PageTitleService);
   private messageService = inject(MessageService);
+  private destroyRef = inject(DestroyRef);
 
   settings = signal<OneCSettings | null>(null);
   loading = signal(true);
@@ -74,7 +76,8 @@ export class OneCIntegrationComponent implements OnInit {
         this.messageService.add({ severity: 'error', summary: 'Ошибка', detail: 'Не удалось загрузить настройки' });
         this.loading.set(false);
         return of(null);
-      })
+      }),
+      takeUntilDestroyed(this.destroyRef)
     ).subscribe(res => {
       if (res?.success && res.data) {
         const s = res.data;
@@ -104,7 +107,8 @@ export class OneCIntegrationComponent implements OnInit {
         this.messageService.add({ severity: 'error', summary: 'Ошибка', detail: 'Не удалось сохранить настройки' });
         this.saving.set(false);
         return of(null);
-      })
+      }),
+      takeUntilDestroyed(this.destroyRef)
     ).subscribe(res => {
       if (res?.success) {
         this.settings.set(res.data);
@@ -122,7 +126,8 @@ export class OneCIntegrationComponent implements OnInit {
         this.messageService.add({ severity: 'error', summary: 'Ошибка', detail: 'Синхронизация не удалась' });
         this.syncing.set(false);
         return of(null);
-      })
+      }),
+      takeUntilDestroyed(this.destroyRef)
     ).subscribe(res => {
       if (res?.success) {
         const r = res.data;

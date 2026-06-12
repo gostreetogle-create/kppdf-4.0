@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, signal, computed, ChangeDetectionStrategy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
@@ -290,7 +290,7 @@ function statusBreakdown<T extends { status: string }>(
   `],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class FinanceDashboardComponent {
+export class FinanceDashboardComponent implements OnInit {
   private orderSvc = inject(ProductionOrderService);
   private cpSvc = inject(CommercialProposalService);
   private contractSvc = inject(ContractService);
@@ -324,7 +324,7 @@ export class FinanceDashboardComponent {
     return Math.max((count / total) * 100, 2);
   }
 
-  constructor() { this.load(); }
+  ngOnInit() { this.load(); }
 
   async load() {
     try {

@@ -1,4 +1,4 @@
-import { Component, inject, signal, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, signal, ChangeDetectionStrategy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { MenuItem } from 'primeng/api';
@@ -74,7 +74,7 @@ interface RequestRow extends PurchaseRequest {
   `],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class PurchaseRequestListComponent {
+export class PurchaseRequestListComponent implements OnInit {
   private router = inject(Router);
   private prService = inject(PurchaseRequestService);
   private notification = inject(NotificationService);
@@ -103,7 +103,7 @@ export class PurchaseRequestListComponent {
     { field: 'statusLabel', header: 'Статус', width: '120px', type: 'badge' },
   ];
 
-  constructor() { this.load(); }
+  ngOnInit() { this.load(); }
 
   async load() {
     this.loading.set(true);

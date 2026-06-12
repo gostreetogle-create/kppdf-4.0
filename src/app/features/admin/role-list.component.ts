@@ -1,4 +1,4 @@
-import { Component, inject, signal, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, signal, ChangeDetectionStrategy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { firstValueFrom } from 'rxjs';
 import { MenuItem } from 'primeng/api';
@@ -26,7 +26,7 @@ const SECTION_LABELS: Record<string, string> = { sales: 'Продажи', produc
   styles: [`:host { display: block; padding: var(--space-6); } .page__title { font-size: var(--font-size-xl); font-weight: var(--font-weight-bold); margin: var(--space-4) 0; }`],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class RoleListComponent {
+export class RoleListComponent implements OnInit {
   private svc = inject(RoleService);
   rows = signal<RoleDef[]>([]);
   breadcrumbs: MenuItem[] = [{ label: '⚙️ Администрирование' }, { label: 'Пользователи и роли' }];
@@ -37,7 +37,7 @@ export class RoleListComponent {
     { field: 'isActive', header: 'Активна', width: '90px', type: 'badge' },
   ];
 
-  constructor() { this.load(); }
+  ngOnInit() { this.load(); }
   async load() {
     const r = await firstValueFrom(this.svc.getAll());
     this.rows.set(r.data.map(role => ({ ...role, sectionsStr: role.sectionIds.map(s => SECTION_LABELS[s] || s).join(', ') } as RoleDef & { sectionsStr: string })));

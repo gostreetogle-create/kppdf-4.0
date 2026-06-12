@@ -55,16 +55,16 @@
   height: 36px;
   min-width: 36px;
   min-height: 36px;
-  border: 2px solid var(--color-warn, #f59e0b);
-  background: color-mix(in srgb, var(--color-warn, #f59e0b) 12%, transparent);
+  border: 2px solid var(--color-warning);
+  background: color-mix(in srgb, var(--color-warning) 12%, transparent);
   border-radius: var(--radius-md);
-  color: var(--color-warn, #f59e0b);
+  color: var(--color-warning);
   transition: all var(--transition-spring);
 }
 .dt-editor__field-row ::ng-deep .p-button.p-button-text.p-button-secondary:hover {
-  background: color-mix(in srgb, var(--color-warn, #f59e0b) 25%, transparent);
-  border-color: var(--color-warn, #f59e0b);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-warn, #f59e0b) 20%, transparent);
+  background: color-mix(in srgb, var(--color-warning) 25%, transparent);
+  border-color: var(--color-warning);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-warning) 20%, transparent);
   transform: scale(1.08);
 }
 .dt-editor__field-row ::ng-deep .kp-btn__lucide {

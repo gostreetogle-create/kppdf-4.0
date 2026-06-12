@@ -164,27 +164,27 @@ export class UserManagementComponent {
 
   formUsername = linkedSignal<string | null, string>({
     source: () => this.editingUserId(),
-    computation: (id) => id ? this.userSvc.getRawItems().find(u => u.id === id)?.username ?? '' : '',
+    computation: (id) => id ? this.users().find(u => u.id === id)?.username ?? '' : '',
   });
   formDisplayName = linkedSignal<string | null, string>({
     source: () => this.editingUserId(),
-    computation: (id) => id ? this.userSvc.getRawItems().find(u => u.id === id)?.displayName ?? '' : '',
+    computation: (id) => id ? this.users().find(u => u.id === id)?.displayName ?? '' : '',
   });
   formEmail = linkedSignal<string | null, string>({
     source: () => this.editingUserId(),
-    computation: (id) => id ? this.userSvc.getRawItems().find(u => u.id === id)?.email ?? '' : '',
+    computation: (id) => id ? this.users().find(u => u.id === id)?.email ?? '' : '',
   });
   formPhone = linkedSignal<string | null, string>({
     source: () => this.editingUserId(),
-    computation: (id) => id ? this.userSvc.getRawItems().find(u => u.id === id)?.phone ?? '' : '',
+    computation: (id) => id ? this.users().find(u => u.id === id)?.phone ?? '' : '',
   });
   formPassword = linkedSignal<string | null, string>({
     source: () => this.editingUserId(),
-    computation: () => '', // пароль всегда сбрасывается
+    computation: () => '',
   });
   formRole = linkedSignal<string | null, string>({
     source: () => this.editingUserId(),
-    computation: (id) => id ? this.userSvc.getRawItems().find(u => u.id === id)?.role ?? '' : '',
+    computation: (id) => id ? this.users().find(u => u.id === id)?.role ?? '' : '',
   });
 
   constructor() {

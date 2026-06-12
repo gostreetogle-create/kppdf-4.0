@@ -9,11 +9,11 @@
   align-items: center;
   gap: 8px;
   font-size: 13px;
-  color: #6b7280;
+  color: var(--color-text-muted);
 }
 
 .preview__sep {
-  color: #d1d5db;
+  color: var(--color-border);
 }
 
 .preview__canvas-wrap {
@@ -24,7 +24,7 @@
   display: flex;
   justify-content: center;
   align-items: flex-start;
-  background: #e5e7eb;
+  background: var(--color-border-light);
   padding: 8px;
 }
 
@@ -41,7 +41,7 @@
   gap: 8px;
   justify-content: flex-end;
   padding-top: 12px;
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px solid var(--color-border-light);
 }
 
 /* Print-only hidden container */
@@ -128,12 +128,12 @@
     text-align: left;
   }
   .print-block__table th {
-    background: #f0f0f0;
+    background: var(--color-bg-secondary);
     font-weight: 700;
   }
 
   .print-block__table-placeholder {
-    color: #666;
+    color: var(--color-text-muted);
     font-style: italic;
     padding: 4mm;
   }

@@ -1,4 +1,4 @@
-import { Component, inject, signal, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, signal, ChangeDetectionStrategy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { MenuItem } from 'primeng/api';
@@ -75,7 +75,7 @@ interface OrderRow extends SupplierOrder {
   `],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class SupplierOrderListComponent {
+export class SupplierOrderListComponent implements OnInit {
   private router = inject(Router);
   private soService = inject(SupplierOrderService);
   private notification = inject(NotificationService);
@@ -104,7 +104,7 @@ export class SupplierOrderListComponent {
     { field: 'updatedAtDisplay', header: 'Изменён', width: '170px', sortable: true },
   ];
 
-  constructor() { this.load(); }
+  ngOnInit() { this.load(); }
 
   async load() {
     this.loading.set(true);

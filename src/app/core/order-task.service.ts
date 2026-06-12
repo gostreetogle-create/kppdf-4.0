@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable, from, map, firstValueFrom } from 'rxjs';
+import { Observable, from, firstValueFrom } from 'rxjs';
 import { WorkerService } from './worker.service.js';
 import { ProductService } from './product.service.js';
 import { ProductComponentService } from './product-component.service.js';
@@ -167,38 +167,38 @@ export class OrderTaskService {
 
   /** Проверить готовность заказа к производству — найти недостающие данные */
   checkMissingData(orderId: string, order: ProductionOrder): Observable<ApiResponse<MissingDataIssue[]>> {
-    return from(this.ensureProducts()).pipe(
-      map(products => {
-        const issues: MissingDataIssue[] = [];
-        const product = products.find(p => p.id === order.productId);
+    return from((async () => {
+      const products = await this.ensureProducts();
+      const issues: MissingDataIssue[] = [];
+      const product = products.find(p => p.id === order.productId);
 
-        if (!product) {
-          issues.push({ type: 'incomplete_spec', componentId: '', componentName: order.productName, detail: 'Товар не найден в справочнике' });
-          return { success: true, data: issues };
-        }
-
-        const components = this.compSvc.getRawItems().filter(c => c.productId === order.productId);
-
-        if (!components.length) {
-          issues.push({ type: 'incomplete_spec', componentId: '', componentName: order.productName, detail: 'Нет компонентов в BOM (спецификации). Нужен инженер-конструктор.' });
-          return { success: true, data: issues };
-        }
-
-        for (const comp of components) {
-          if (!comp.drawingUrl && product.hasDrawing) {
-            issues.push({ type: 'no_drawing', componentId: comp.id, componentName: comp.name, detail: `Нет чертежа для компонента «${comp.name}». Требуется проектировщик.` });
-          }
-          if (!comp.materials || comp.materials.length === 0) {
-            issues.push({ type: 'no_materials', componentId: comp.id, componentName: comp.name, detail: `Не указаны материалы для компонента «${comp.name}». Требуется снабженец / инженер.` });
-          }
-          if (!comp.workTypes || comp.workTypes.length === 0) {
-            issues.push({ type: 'no_work_types', componentId: comp.id, componentName: comp.name, detail: `Не указаны виды работ для компонента «${comp.name}». Требуется инженер-конструктор.` });
-          }
-        }
-
+      if (!product) {
+        issues.push({ type: 'incomplete_spec', componentId: '', componentName: order.productName, detail: 'Товар не найден в справочнике' });
         return { success: true, data: issues };
-      }),
-    );
+      }
+
+      const compRes = await firstValueFrom(this.compSvc.getByProduct(order.productId));
+      const components = compRes.data ?? [];
+
+      if (!components.length) {
+        issues.push({ type: 'incomplete_spec', componentId: '', componentName: order.productName, detail: 'Нет компонентов в BOM (спецификации). Нужен инженер-конструктор.' });
+        return { success: true, data: issues };
+      }
+
+      for (const comp of components) {
+        if (!comp.drawingUrl && product.hasDrawing) {
+          issues.push({ type: 'no_drawing', componentId: comp.id, componentName: comp.name, detail: `Нет чертежа для компонента «${comp.name}». Требуется проектировщик.` });
+        }
+        if (!comp.materials || comp.materials.length === 0) {
+          issues.push({ type: 'no_materials', componentId: comp.id, componentName: comp.name, detail: `Не указаны материалы для компонента «${comp.name}». Требуется снабженец / инженер.` });
+        }
+        if (!comp.workTypes || comp.workTypes.length === 0) {
+          issues.push({ type: 'no_work_types', componentId: comp.id, componentName: comp.name, detail: `Не указаны виды работ для компонента «${comp.name}». Требуется инженер-конструктор.` });
+        }
+      }
+
+      return { success: true, data: issues };
+    })());
   }
 
   /** Сгенерировать авто-задачи на основе проблем комплектации */

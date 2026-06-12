@@ -92,8 +92,10 @@ export class CartService {
         unit: product.unit,
         quantity,
         price: product.basePrice ?? 0,
-        /** Фиксируем наценку по умолчанию из товара */
         markupPercent: product.defaultMarkupPercent ?? 0,
+        weightKg: product.weightKg,
+        dimensions: product.dimensions,
+        material: product.material,
       };
       this.items.update(list => [...list, newItem]);
     }
@@ -127,6 +129,22 @@ export class CartService {
     this.items.update(list =>
       list.map(i => i.id === itemId ? { ...i, markupPercent } : i)
     );
+  }
+
+  /** Полностью заменить позицию (для редактирования name/sku/price/qty/markup) */
+  replaceItem(itemId: string, newItem: CartItem): void {
+    this.items.update(list => list.map(i => i.id === itemId ? newItem : i));
+  }
+
+  /** Добавить копию позиции и удалить оригинал (Save as copy — замена с новым id) */
+  replaceWithCopy(itemId: string, newItem: CartItem): void {
+    this.items.update(list => {
+      const idx = list.findIndex(i => i.id === itemId);
+      if (idx === -1) return list;
+      const updated = [...list];
+      updated.splice(idx, 1, newItem); // заменяем оригинал на копию
+      return updated;
+    });
   }
 
   /** Очистить корзину полностью */

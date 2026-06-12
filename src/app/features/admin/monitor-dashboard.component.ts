@@ -1,4 +1,4 @@
-import { Component, inject, signal, OnInit, ChangeDetectionStrategy, computed } from '@angular/core';
+import { Component, inject, signal, OnInit, ChangeDetectionStrategy, computed, DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { TooltipModule } from 'primeng/tooltip';
@@ -8,6 +8,7 @@ import { KpButtonComponent } from '../../shared/ui/kp-button.component';
 import { MonitorService, MonitorData } from '../../core/monitor.service';
 import { PageTitleService } from '../../core/page-title.service';
 import { catchError, of } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-monitor-dashboard',
@@ -24,6 +25,7 @@ import { catchError, of } from 'rxjs';
 export class MonitorDashboardComponent implements OnInit {
   private monitorService = inject(MonitorService);
   private pageTitle = inject(PageTitleService);
+  private destroyRef = inject(DestroyRef);
 
   data = signal<MonitorData | null>(null);
   error = signal<string | null>(null);
@@ -65,7 +67,8 @@ export class MonitorDashboardComponent implements OnInit {
         this.error.set(err?.error?.message || err?.message || 'Ошибка получения данных');
         this.loading.set(false);
         return of(null);
-      })
+      }),
+      takeUntilDestroyed(this.destroyRef)
     ).subscribe(res => {
       if (res?.success && res.data) {
         this.data.set(res.data);

@@ -1,4 +1,4 @@
-import { Component, inject, signal, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, signal, ChangeDetectionStrategy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { firstValueFrom } from 'rxjs';
 import { MenuItem } from 'primeng/api';
@@ -27,7 +27,7 @@ const STATUS_LABELS: Record<TenderStatus, string> = { draft: 'Черновик',
   styles: [`:host { display: block; padding: var(--space-6); } .page__title { font-size: var(--font-size-xl); font-weight: var(--font-weight-bold); margin: var(--space-4) 0; }`],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class TenderListComponent {
+export class TenderListComponent implements OnInit {
   private svc = inject(TenderService);
   private notification = inject(NotificationService);
   rows = signal<Tender[]>([]);
@@ -42,7 +42,7 @@ export class TenderListComponent {
     { field: 'submissionDeadline', header: 'Дедлайн', width: '110px' },
   ];
 
-  constructor() { this.load(); }
+  ngOnInit() { this.load(); }
   async load() {
     const r = await firstValueFrom(this.svc.getAll());
     this.rows.set(r.data.map(t => ({ ...t, typeLabel: t.type === '44fz' ? '44-ФЗ' : t.type === '223fz' ? '223-ФЗ' : 'Комм.', statusLabel: STATUS_LABELS[t.status] })));

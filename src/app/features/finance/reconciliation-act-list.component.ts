@@ -1,4 +1,4 @@
-import { Component, inject, signal, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, signal, ChangeDetectionStrategy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { firstValueFrom } from 'rxjs';
 import { MenuItem } from 'primeng/api';
@@ -27,7 +27,7 @@ const STATUS_LABELS: Record<string, string> = { draft: 'Черновик', sent:
   styles: [`:host { display: block; padding: var(--space-6); } .page__title { font-size: var(--font-size-xl); font-weight: var(--font-weight-bold); margin: var(--space-4) 0; }`],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class ReconciliationActListComponent {
+export class ReconciliationActListComponent implements OnInit {
   private svc = inject(ReconciliationActService);
   private notification = inject(NotificationService);
   rows = signal<ReconciliationAct[]>([]);
@@ -46,7 +46,7 @@ export class ReconciliationActListComponent {
     { icon: 'check', severity: 'success', tooltip: 'Подписать', visible: (r: unknown) => (r as ReconciliationAct).status === 'draft' || (r as ReconciliationAct).status === 'sent' },
   ];
 
-  constructor() { this.load(); }
+  ngOnInit() { this.load(); }
   async load() {
     const r = await firstValueFrom(this.svc.getAll());
     this.rows.set(r.data.map(a => ({ ...a, statusLabel: STATUS_LABELS[a.status] || a.status } as ReconciliationAct & { statusLabel: string })));

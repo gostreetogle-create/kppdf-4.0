@@ -148,105 +148,47 @@ import { generateId } from '../../core/crud-factory.js';
             />
           </div>
 
-          <!-- Selected items summary -->
-          @let items = selectedItems();
-          @if (items.length > 0) {
-            <div class="showcase__items-bar">
-              <span class="showcase__items-count">
-                {{ items.length }} {{ plural(items.length, 'позиция', 'позиции', 'позиций') }} ·
-                {{ totalUnits() }} {{ plural(totalUnits(), 'ед.', 'ед.', 'ед.') }} ·
-                @let cm = clientMarkupPercent();
-                @if (cm > 0) {
-                  база {{ totalSum().toLocaleString('ru-RU') }} ₽ →
-                }
-                <strong>{{ totalWithMarkup().toLocaleString('ru-RU') }} ₽</strong>
-                @if (cm > 0) {
-                  (наценка {{ cm }}%)
-                }
-              </span>
-              <kp-button
-                label="Очистить"
-                lucideIcon="trash-2"
-                severity="danger"
-                size="small"
-                [text]="true"
-                (buttonClick)="clearItems()"
-              />
-            </div>
-
-            <!-- Per-item markup detail (collapsible via details/summary) -->
-            <details class="showcase__items-detail" open>
-              <summary class="showcase__items-detail-summary">Детали наценок</summary>
-              <div class="showcase__items-detail-content">
-                <div class="showcase__detail-header">
-                  <span class="showcase__detail-th">Товар</span>
-                  <span class="showcase__detail-th showcase__detail-th--num">Кол-во</span>
-                  <span class="showcase__detail-th showcase__detail-th--num">Цена</span>
-                  <span class="showcase__detail-th showcase__detail-th--num">Наценка</span>
-                  <span class="showcase__detail-th showcase__detail-th--num">Сумма</span>
-                </div>
-                @for (item of items; track item.id) {
-                  <div class="showcase__detail-row" (click)="openEditItem(item)">
-                    <div class="showcase__detail-name">
-                      <span>{{ item.name }}</span>
-                      <span class="showcase__detail-sku">{{ item.sku }}</span>
-                    </div>
-                    <div class="showcase__detail-num">{{ item.quantity }} {{ item.unit }}</div>
-                    <div class="showcase__detail-num">{{ item.price.toLocaleString('ru-RU') }} ₽</div>
-                    <div class="showcase__detail-num">
-                      <input
-                        class="showcase__markup-input"
-                        type="number"
-                        [ngModel]="effectiveMarkup(item)"
-                        (ngModelChange)="onItemMarkupChange(item.id, $event)"
-                        (click)="$event.stopPropagation()"
-                        min="0"
-                      />%
-                    </div>
-                    <div class="showcase__detail-num showcase__detail-total">
-                      {{ itemTotal(item).toLocaleString('ru-RU') }} ₽
-                    </div>
-                  </div>
-                }
-              </div>
-            </details>
-          }
+          <!-- Selected items summary — скрыто, настройки таблицы при клике на A4 -->
 
           <!-- Диалог редактирования строки -->
           <kp-dialog
-            header="Редактирование позиции"
+            header="✎ Редактирование позиции"
             [(visible)]="editDialogVisible"
-            width="400px"
+            width="480px"
           >
             @if (editItem(); as ei) {
               <div class="showcase__edit-form">
-                <div class="showcase__edit-name">{{ ei.name }}</div>
-                <div class="showcase__edit-sku">{{ ei.sku }}</div>
-                <kp-input
-                  label="Количество"
-                  type="number"
-                  [(ngModel)]="editQuantity"
-                />
-                <kp-input
-                  label="Цена за ед."
-                  type="number"
-                  [(ngModel)]="editPrice"
-                />
-                <kp-input
-                  label="Наценка, %"
-                  type="number"
-                  [(ngModel)]="editMarkup"
-                />
+                <!-- Инфо блок: что редактируем -->
+                <div class="showcase__edit-header">
+                  <kp-input label="Название" [(ngModel)]="editName" />
+                  <kp-input label="Артикул" [(ngModel)]="editSku" placeholder="Артикул" />
+                </div>
+                <div class="showcase__edit-grid">
+                  <kp-input label="Количество" type="number" [(ngModel)]="editQuantity" />
+                  <kp-input label="Цена за ед." type="number" [(ngModel)]="editPrice" />
+                  <kp-input label="Наценка, %" type="number" [(ngModel)]="editMarkup" />
+                </div>
+                @let total = editPrice() * editQuantity() * (1 + editMarkup() / 100);
                 <div class="showcase__edit-total">
-                  Итого: <strong>{{ (editPrice() * editQuantity() * (1 + editMarkup() / 100)).toLocaleString('ru-RU') }} ₽</strong>
+                  <span>Итого по позиции:</span>
+                  <strong>{{ total.toLocaleString('ru-RU') }} ₽</strong>
                 </div>
               </div>
               <div class="showcase__dialog-footer">
                 <kp-button
-                  label="Сохранить"
+                  label="💾 Сохранить"
                   lucideIcon="check"
+                  severity="success"
                   (buttonClick)="saveEditItem()"
                 />
+                @if (productChanged()) {
+                  <kp-button
+                    label="📋 Сохранить как копию"
+                    lucideIcon="copy"
+                    severity="info"
+                    (buttonClick)="saveEditItemAsCopy()"
+                  />
+                }
                 <kp-button
                   label="Отмена"
                   lucideIcon="x"
@@ -257,12 +199,63 @@ import { generateId } from '../../core/crud-factory.js';
             }
           </kp-dialog>
 
+          <!-- Диалог настроек таблицы -->
+          <kp-dialog
+            header="⚙ Настройки таблицы"
+            [(visible)]="settingsDialogVisible"
+            width="400px"
+          >
+            <div class="showcase__settings-form">
+              <kp-input
+                label="Общая скидка, %"
+                type="number"
+                [(ngModel)]="discountPercent"
+                placeholder="0"
+                min="0"
+                max="100"
+              />
+              @if (selectedItems().length > 0) {
+                <div class="showcase__settings-info">
+                  <span>Всего позиций:</span>
+                  <strong>{{ selectedItems().length }} шт.</strong>
+                </div>
+                <div class="showcase__settings-info">
+                  <span>Сумма до скидки:</span>
+                  <strong>{{ totalWithMarkup().toLocaleString('ru-RU') }} ₽</strong>
+                </div>
+                @if (discountPercent() > 0) {
+                  <div class="showcase__settings-info showcase__settings-info--discount">
+                    <span>Скидка {{ discountPercent() }}%:</span>
+                    <strong>-{{ discountAmount().toLocaleString('ru-RU') }} ₽</strong>
+                  </div>
+                }
+              }
+            </div>
+            <div class="showcase__dialog-footer">
+              <kp-button
+                label="🗑 Очистить все товары"
+                lucideIcon="trash-2"
+                severity="danger"
+                [disabled]="selectedItems().length === 0"
+                (buttonClick)="clearItems(); settingsDialogVisible.set(false)"
+              />
+              <kp-button
+                label="Закрыть"
+                lucideIcon="x"
+                severity="secondary"
+                (buttonClick)="settingsDialogVisible.set(false)"
+              />
+            </div>
+          </kp-dialog>
+
           <!-- A4 Canvas -->
           <div class="showcase__canvas">
             <kp-doc-canvas
               [blocks]="docBlocks()"
               [editable]="false"
               [backgroundImages]="selectedBackgroundImage() ? [selectedBackgroundImage()] : []"
+              (blockRowClick)="onCanvasRowClick($event)"
+              (canvasClick)="onCanvasClick()"
             />
           </div>
         </div>
@@ -451,23 +444,7 @@ import { generateId } from '../../core/crud-factory.js';
     }
     .showcase__doc-select { flex: 1; }
 
-    .showcase__items-bar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: var(--space-3);
-      padding: var(--space-3) var(--space-4);
-      background: var(--color-surface);
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-md);
-    }
-    .showcase__items-count {
-      font-size: var(--font-size-sm);
-      color: var(--color-text-secondary);
-    }
-    .showcase__items-count strong {
-      color: var(--color-primary);
-    }
+
 
     .showcase__canvas {
       border: 1px solid var(--color-border-light);
@@ -475,84 +452,25 @@ import { generateId } from '../../core/crud-factory.js';
       overflow: hidden;
     }
 
-    /* ── Items detail (per-item markup) ── */
-    .showcase__items-detail {
-      border: 1px solid var(--color-border-light);
-      border-radius: var(--radius-md);
-      overflow: hidden;
-    }
-    .showcase__items-detail-summary {
-      padding: var(--space-2) var(--space-3);
-      font-size: var(--font-size-xs);
-      font-weight: 600;
-      color: var(--color-text-secondary);
-      cursor: pointer;
-      background: var(--color-surface);
-      border-bottom: 1px solid var(--color-border-light);
-      user-select: none;
-    }
-    .showcase__items-detail-summary:hover {
-      color: var(--color-text);
-    }
-    .showcase__items-detail-content {
-      padding: var(--space-2);
-      font-size: var(--font-size-xs);
-    }
-    .showcase__detail-header {
-      display: grid;
-      grid-template-columns: 1fr 60px 70px 65px 85px;
-      gap: var(--space-1);
-      padding: var(--space-1) var(--space-2);
-      font-weight: 600;
-      color: var(--color-text-muted);
-      border-bottom: 1px solid var(--color-border-light);
-    }
-    .showcase__detail-th--num { text-align: right; }
-    .showcase__detail-row {
-      display: grid;
-      grid-template-columns: 1fr 60px 70px 65px 85px;
-      gap: var(--space-1);
-      padding: var(--space-1) var(--space-2);
-      align-items: center;
-      border-bottom: 1px solid var(--color-border-light);
-    }
-    .showcase__detail-row:last-child { border-bottom: none; }
-    .showcase__detail-name {
+    /* Settings dialog */
+    .showcase__settings-form {
       display: flex;
       flex-direction: column;
-      min-width: 0;
+      gap: var(--space-4);
     }
-    .showcase__detail-name span:first-child {
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+    .showcase__settings-info {
+      display: flex;
+      justify-content: space-between;
+      padding: var(--space-2) 0;
+      border-bottom: 1px solid var(--color-border-light);
+      font-size: var(--font-size-sm);
     }
-    .showcase__detail-sku {
-      font-family: 'Courier New', monospace;
-      font-size: 0.75em;
-      color: var(--color-text-muted);
+    .showcase__settings-info--discount {
+      color: var(--color-error);
+      font-weight: 600;
     }
-    .showcase__detail-num {
-      text-align: right;
-      font-variant-numeric: tabular-nums;
-    }
-    .showcase__detail-total {
+    .showcase__settings-info strong {
       font-weight: 700;
-      color: var(--color-primary);
-    }
-    .showcase__markup-input {
-      width: 48px;
-      padding: 2px 4px;
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-sm);
-      font-size: var(--font-size-xs);
-      text-align: right;
-      background: var(--color-bg);
-      color: var(--color-text);
-    }
-    .showcase__markup-input:focus {
-      outline: none;
-      border-color: var(--color-primary);
     }
 
     /* Row editing dialog */
@@ -561,17 +479,15 @@ import { generateId } from '../../core/crud-factory.js';
       flex-direction: column;
       gap: var(--space-4);
     }
-    .showcase__edit-name {
-      font-size: var(--font-size-lg);
-      font-weight: 700;
-      color: var(--color-text);
+    .showcase__edit-header {
+      display: flex;
+      gap: var(--space-3);
     }
-    .showcase__edit-sku {
-      font-family: 'Courier New', monospace;
-      font-size: var(--font-size-sm);
-      color: var(--color-text-muted);
-      margin-top: -12px;
-      margin-bottom: 8px;
+    .showcase__edit-header > * { flex: 1; }
+    .showcase__edit-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: var(--space-3);
     }
     .showcase__edit-total {
       padding: var(--space-3);
@@ -580,6 +496,10 @@ import { generateId } from '../../core/crud-factory.js';
       text-align: center;
       font-size: var(--font-size-lg);
       color: var(--color-text);
+      display: flex;
+      justify-content: center;
+      gap: var(--space-2);
+      align-items: baseline;
     }
     .showcase__edit-total strong {
       color: var(--color-primary);
@@ -588,6 +508,7 @@ import { generateId } from '../../core/crud-factory.js';
       display: flex;
       gap: var(--space-3);
       justify-content: flex-end;
+      flex-wrap: wrap;
       margin-top: var(--space-4);
     }
 
@@ -627,9 +548,22 @@ export class ProposalShowcaseComponent {
   // Row editing dialog
   editDialogVisible = signal(false);
   editItem = signal<CartItem | null>(null);
+  editName = signal('');
+  editSku = signal('');
   editQuantity = signal(1);
   editPrice = signal(0);
   editMarkup = signal(0);
+
+  // Table settings dialog
+  settingsDialogVisible = signal(false);
+  discountPercent = signal(0);
+
+  /** true если пользователь изменил поля самого товара (name/sku) */
+  productChanged = computed(() => {
+    const item = this.editItem();
+    if (!item) return false;
+    return this.editName().trim() !== item.name || this.editSku().trim() !== item.sku;
+  });
 
   allProducts = signal<Product[]>([]);
   categories = signal<{ id: string; name: string }[]>([]);
@@ -691,13 +625,42 @@ export class ProposalShowcaseComponent {
     return client?.personalMarkupPercent ?? 0;
   });
 
-  /** Итоговая сумма с учётом наценки */
+  /** Итоговая сумма с учётом наценки (без учёта глобальной скидки) */
   totalWithMarkup = computed(() => {
     const clientMarkup = this.clientMarkupPercent();
     return this.selectedItems().reduce((sum, ci) => {
       const markup = clientMarkup > 0 ? clientMarkup : (ci.markupPercent ?? 0);
       return sum + ci.price * (1 + markup / 100) * ci.quantity;
     }, 0);
+  });
+
+  /** Сумма глобальной скидки */
+  discountAmount = computed(() => {
+    const total = this.totalWithMarkup();
+    const pct = this.discountPercent();
+    if (pct <= 0) return 0;
+    return Math.round(total * pct / 100 * 100) / 100;
+  });
+
+  /** Итоговая сумма с учётом наценки И глобальной скидки */
+  grandTotal = computed(() => {
+    return this.totalWithMarkup() - this.discountAmount();
+  });
+
+  /** Ставка НДС (%) из выбранной организации (по умолчанию 20%) */
+  selectedVatRate = computed(() => {
+    const orgId = this.selectedOrgId();
+    if (!orgId) return 20;
+    const org = this.organizations().find(o => o.id === orgId);
+    return org?.vatRate ?? 20;
+  });
+
+  /** Сумма НДС от итоговой суммы (после скидки) */
+  ndsAmount = computed(() => {
+    const total = this.grandTotal();
+    const rate = this.selectedVatRate();
+    // НДС = total * rate / (100 + rate) — выделение НДС из суммы
+    return Math.round(total * rate / (100 + rate) * 100) / 100;
   });
 
   /** Filtered products based on search + filters */
@@ -739,9 +702,11 @@ export class ProposalShowcaseComponent {
         blocks.push({
           id: 'tbl',
           type: 'table',
-          order: 1,
-          title: `Товары (${items.length} позиций)`,
+          order: 1,            title: `Товары (${items.length} позиций)`,
           _inlineRows: items.map(item => this.cartItemToRow(item)),
+          _footerRows: [
+            { label: 'Итого:', value: this.grandTotal().toLocaleString('ru-RU') + ' ₽' },
+          ],
         });
       }
       return blocks;
@@ -758,7 +723,7 @@ export class ProposalShowcaseComponent {
     const client = clientId ? this.clients().find(c => c.id === clientId) : null;
     const clientName = client ? [client.lastName, client.firstName, client.patronymic].filter(Boolean).join(' ') : 'Клиент';
     const orgName = org ? (org.shortName || org.name) : 'Организация';
-    const total = this.totalWithMarkup();
+    const total = this.grandTotal();
 
     const placeholders: Record<string, string> = {
       '{{client.name}}': clientName,
@@ -792,7 +757,9 @@ export class ProposalShowcaseComponent {
     // If there are selected items, populate the FIRST table block with product data
     if (items.length > 0) {
       const clientMarkup = this.clientMarkupPercent();
-      const grandTotal = this.totalWithMarkup();
+      const effectiveGrandTotal = this.grandTotal();
+      const beforeDiscount = this.totalWithMarkup();
+      const discount = this.discountAmount();
       const baseTotal = this.totalSum();
 
       const tableBlock = blocks.find(b => b.type === 'table' && b.tableTemplateId);
@@ -803,17 +770,27 @@ export class ProposalShowcaseComponent {
         // Итоги по колонкам
         const summaries: Record<string, number> = {
           quantity: items.reduce((s, i) => s + i.quantity, 0),
-          total: grandTotal,
-          totalAmount: grandTotal,
+          total: effectiveGrandTotal,
+          totalAmount: effectiveGrandTotal,
           price: items.reduce((s, i) => s + i.price, 0) / items.length, // средняя цена
         };
         tableBlock._columnSummaries = summaries;
 
-        // Footer строки
+        // Footer строки: Итого, НДС, Всего к оплате
+        const vatRate = this.selectedVatRate();
+        const nds = this.ndsAmount();
         const footerRows: { label: string; value: string }[] = [];
-        footerRows.push({ label: 'Итого:', value: grandTotal.toLocaleString('ru-RU') + ' ₽' });
+        if (discount > 0) {
+          footerRows.push({ label: 'Итого (без скидки):', value: beforeDiscount.toLocaleString('ru-RU') + ' ₽' });
+          footerRows.push({ label: `Скидка ${this.discountPercent()}%:`, value: '-' + discount.toLocaleString('ru-RU') + ' ₽' });
+        }
+        footerRows.push({ label: 'Итого:', value: effectiveGrandTotal.toLocaleString('ru-RU') + ' ₽' });
+        if (vatRate > 0) {
+          footerRows.push({ label: `в том числе НДС ${vatRate}%:`, value: nds.toLocaleString('ru-RU') + ' ₽' });
+          footerRows.push({ label: 'Всего к оплате:', value: effectiveGrandTotal.toLocaleString('ru-RU') + ' ₽' });
+        }
         if (clientMarkup > 0) {
-          const markupAmount = grandTotal - baseTotal;
+          const markupAmount = beforeDiscount - baseTotal;
           footerRows.push({ label: 'Наценка (' + clientMarkup + '%):', value: '+' + markupAmount.toLocaleString('ru-RU') + ' ₽' });
         }
         tableBlock._footerRows = footerRows;
@@ -842,6 +819,7 @@ export class ProposalShowcaseComponent {
       sku: item.sku,
       price: item.price,
       unitPrice: item.price,
+      basePrice: item.price,
       quantity: item.quantity,
       unit: item.unit,
       total,
@@ -850,6 +828,9 @@ export class ProposalShowcaseComponent {
       productSku: item.sku,
       productUnit: item.unit,
       markupPercent: item.markupPercent ?? 0,
+      weightKg: item.weightKg,
+      dimensions: item.dimensions,
+      material: item.material,
     };
   }
 
@@ -914,13 +895,15 @@ export class ProposalShowcaseComponent {
   /** Открыть диалог редактирования строки */
   openEditItem(item: CartItem) {
     this.editItem.set(item);
+    this.editName.set(item.name);
+    this.editSku.set(item.sku);
     this.editQuantity.set(item.quantity);
     this.editPrice.set(item.price);
     this.editMarkup.set(this.effectiveMarkup(item));
     this.editDialogVisible.set(true);
   }
 
-  /** Сохранить изменения в отредактированной строке */
+  /** Сохранить изменения — заменить текущую строку */
   saveEditItem() {
     const item = this.editItem();
     if (!item) return;
@@ -928,21 +911,47 @@ export class ProposalShowcaseComponent {
     const qty = Math.max(1, Math.round(this.editQuantity()));
     const price = Math.max(0, this.editPrice());
     const markup = Math.max(0, this.editMarkup());
+    const name = this.editName().trim() || item.name;
+    const sku = this.editSku().trim() || item.sku;
 
-    this.cartService.updateQuantity(item.id, qty);
-    // Price update - since CartService doesn't have updatePrice, we do it here
-    this.cartService.updatePrice(item.id, price);
-    this.cartService.updateMarkup(item.id, markup);
+    const updated: CartItem = {
+      ...item,
+      name,
+      sku,
+      quantity: qty,
+      price,
+      markupPercent: markup,
+    };
 
+    this.cartService.replaceItem(item.id, updated);
     this.editDialogVisible.set(false);
     this.notification.success('Позиция обновлена');
   }
 
-  /** Изменить наценку для позиции */
-  onItemMarkupChange(itemId: string, value: string | number) {
-    const num = parseFloat(String(value));
-    if (isNaN(num) || num < 0) return;
-    this.cartService.updateMarkup(itemId, num);
+  /** Сохранить как копию — удалить старую, вставить новую на её место */
+  saveEditItemAsCopy() {
+    const item = this.editItem();
+    if (!item) return;
+
+    const qty = Math.max(1, Math.round(this.editQuantity()));
+    const price = Math.max(0, this.editPrice());
+    const markup = Math.max(0, this.editMarkup());
+    const name = this.editName().trim() || item.name;
+    const sku = this.editSku().trim() || item.sku;
+
+    const copy: CartItem = {
+      ...item,
+      id: generateId(), // новый id
+      name,
+      sku,
+      quantity: qty,
+      price,
+      markupPercent: markup,
+    };
+
+    this.cartService.replaceWithCopy(item.id, copy);
+    this.editDialogVisible.set(false);
+    this.notification.success('Копия сохранена на место оригинала');
   }
 
   /** Наценка для данной позиции (клиентская или из товара) */
@@ -976,6 +985,22 @@ export class ProposalShowcaseComponent {
     );
   }
 
+  /** Клик по строке в A4-таблице — открыть редактор */
+  onCanvasRowClick(event: { block: DocBlock; row: Record<string, unknown>; index: number }) {
+    const items = this.selectedItems();
+    const item = items[event.index];
+    if (item) {
+      this.openEditItem(item);
+    }
+  }
+
+  /** Клик по пустому месту A4 — открыть настройки таблицы */
+  onCanvasClick() {
+    if (this.selectedItems().length > 0) {
+      this.settingsDialogVisible.set(true);
+    }
+  }
+
   /** Add product to the document (via cart service) */
   onAddProduct(product: Product) {
     this.cartService.addItem(product);
@@ -986,15 +1011,6 @@ export class ProposalShowcaseComponent {
   clearItems() {
     this.cartService.clearCart();
     this.notification.success('Список товаров очищен');
-  }
-
-  plural(n: number, one: string, few: string, many: string): string {
-    n = Math.abs(n) % 100;
-    const n1 = n % 10;
-    if (n > 10 && n < 20) return many;
-    if (n1 > 1 && n1 < 5) return few;
-    if (n1 === 1) return one;
-    return many;
   }
 
   /** Create commercial proposal from selected items */

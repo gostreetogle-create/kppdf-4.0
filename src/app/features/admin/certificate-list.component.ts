@@ -1,4 +1,4 @@
-import { Component, inject, signal, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, signal, ChangeDetectionStrategy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { firstValueFrom } from 'rxjs';
 import { MenuItem } from 'primeng/api';
@@ -26,7 +26,7 @@ const STATUS_LABELS: Record<CertStatus, string> = { valid: '✅ Действуе
   styles: [`:host { display: block; padding: var(--space-6); } .page__title { font-size: var(--font-size-xl); font-weight: var(--font-weight-bold); margin: var(--space-4) 0; }`],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class CertificateListComponent {
+export class CertificateListComponent implements OnInit {
   private svc = inject(CertificateService);
   rows = signal<Certificate[]>([]);
   breadcrumbs: MenuItem[] = [{ label: '⚙️ Администрирование' }, { label: 'Сертификаты ЕАЭС' }];
@@ -39,7 +39,7 @@ export class CertificateListComponent {
     { field: 'expiryDate', header: 'До', width: '110px' },
   ];
 
-  constructor() { this.load(); }
+  ngOnInit() { this.load(); }
   async load() {
     const r = await firstValueFrom(this.svc.getAll());
     this.rows.set(r.data.map(c => ({ ...c, certTypeLabel: c.certType === 'declaration' ? 'Декларация' : 'Сертификат', statusLabel: STATUS_LABELS[c.status] } as Certificate & { certTypeLabel: string; statusLabel: string })));

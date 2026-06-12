@@ -182,6 +182,8 @@ export interface Organization {
   contactPerson: string;
   /** Отсрочка платежа в днях (для поставщиков) */
   paymentTermDays: number;
+  /** Ставка НДС (%) — по умолчанию 20% */
+  vatRate?: number;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
@@ -433,6 +435,12 @@ export interface CartItem {
   price: number;
   /** Процент наценки (копия из Product.defaultMarkupPercent на момент добавления) */
   markupPercent?: number;
+  /** Вес, кг (копия из Product) */
+  weightKg?: number;
+  /** Габариты (копия из Product) */
+  dimensions?: string;
+  /** Основной материал (копия из Product) */
+  material?: string;
 }
 
 // ========================================

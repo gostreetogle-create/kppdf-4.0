@@ -1,4 +1,4 @@
-import { Component, inject, signal, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, signal, ChangeDetectionStrategy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { firstValueFrom } from 'rxjs';
 import { MenuItem } from 'primeng/api';
@@ -27,7 +27,7 @@ const STATUS_LABELS: Record<string, string> = { draft: 'Черновик', final
   styles: [`:host { display: block; padding: var(--space-6); } .page__title { font-size: var(--font-size-xl); font-weight: var(--font-weight-bold); margin: var(--space-4) 0; }`],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class FinancialReportListComponent {
+export class FinancialReportListComponent implements OnInit {
   private svc = inject(FinancialReportService);
   rows = signal<FinancialReport[]>([]);
   breadcrumbs: MenuItem[] = [{ label: '💰 Бухгалтерия' }, { label: 'Финансовые отчёты' }];
@@ -41,7 +41,7 @@ export class FinancialReportListComponent {
     { field: 'generatedAt', header: 'Сформирован', width: '130px' },
   ];
 
-  constructor() { this.load(); }
+  ngOnInit() { this.load(); }
   async load() {
     const r = await firstValueFrom(this.svc.getAll());
     this.rows.set(r.data.map(f => ({ ...f, typeLabel: TYPE_LABELS[f.reportType] || f.reportType, statusLabel: STATUS_LABELS[f.status] || f.status } as FinancialReport & { typeLabel: string; statusLabel: string })));

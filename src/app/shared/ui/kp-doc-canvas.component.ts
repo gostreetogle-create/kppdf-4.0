@@ -99,7 +99,12 @@ const BLOCK_TYPE_LABELS: Record<string, string> = {
                       <kp-doc-block-text [block]="block" (editClick)="blockEdit.emit($event)" />
                     }
                     @case ('table') {
-                      <kp-doc-block-table [block]="block" [mode]="mode()" (editClick)="blockEdit.emit($event)" />
+                      <kp-doc-block-table
+                        [block]="block"
+                        [mode]="mode()"
+                        (editClick)="blockEdit.emit($event)"
+                        (rowClick)="blockRowClick.emit({ block, row: $event.row, index: $event.index })"
+                      />
                     }
                     @case ('separator') {
                       <kp-doc-block-separator [height]="block.height ?? 20" [showLine]="block.showLine ?? false" />
@@ -357,6 +362,8 @@ export class KpDocCanvasComponent {
   blockDblClick = output<DocBlock>();
   blocksReorder = output<{ previousIndex: number; currentIndex: number }>();
   canvasClick = output<void>();
+  /** Клик по строке внутри табличного блока */
+  blockRowClick = output<{ block: DocBlock; row: Record<string, unknown>; index: number }>();
 
   private fallbackIcon = 'box';
 

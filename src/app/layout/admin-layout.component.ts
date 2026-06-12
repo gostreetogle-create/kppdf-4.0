@@ -1,10 +1,11 @@
-import { Component, inject, signal, computed, viewChild, ChangeDetectionStrategy, OnInit, OnDestroy } from '@angular/core';
+import { Component, inject, signal, computed, viewChild, ChangeDetectionStrategy, OnInit, DestroyRef } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet, Router, NavigationEnd } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TooltipModule } from 'primeng/tooltip';
 import { MenuItem } from 'primeng/api';
-import { filter, Subscription } from 'rxjs';
+import { filter } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 import { AuthService } from '../core/auth.service';
 import { ThemeService } from '../core/theme.service';
@@ -31,24 +32,20 @@ import { LucideDynamicIcon } from '@lucide/angular';
   styleUrls: ['./admin-layout.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class AdminLayoutComponent implements OnInit, OnDestroy {
+export class AdminLayoutComponent implements OnInit {
   private authService = inject(AuthService);
   private themeService = inject(ThemeService);
   private pageTitleService = inject(PageTitleService);
   private router = inject(Router);
 
   readonly pageTitle = this.pageTitleService.title;
-  private routerSub!: Subscription;
+  private destroyRef = inject(DestroyRef);
 
   ngOnInit(): void {
     // При каждой навигации очищаем заголовок — страницы сами установят свой в ngOnInit
-    this.routerSub = this.router.events
-      .pipe(filter(e => e instanceof NavigationEnd))
+    this.router.events
+      .pipe(filter(e => e instanceof NavigationEnd), takeUntilDestroyed(this.destroyRef))
       .subscribe(() => this.pageTitleService.clearTitle());
-  }
-
-  ngOnDestroy(): void {
-    this.routerSub?.unsubscribe();
   }
 
   readonly userMenuRef = viewChild<KpTieredMenuComponent>('userMenu');

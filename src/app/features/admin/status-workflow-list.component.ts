@@ -1,4 +1,4 @@
-import { Component, inject, signal, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, signal, ChangeDetectionStrategy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { firstValueFrom } from 'rxjs';
 import { MenuItem } from 'primeng/api';
@@ -24,7 +24,7 @@ import type { StatusWorkflow } from '../../../../shared/types/index.js';
   styles: [`:host { display: block; padding: var(--space-6); } .page__title { font-size: var(--font-size-xl); font-weight: var(--font-weight-bold); margin: var(--space-4) 0; }`],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class StatusWorkflowListComponent {
+export class StatusWorkflowListComponent implements OnInit {
   private svc = inject(StatusWorkflowService);
   rows = signal<StatusWorkflow[]>([]);
   breadcrumbs: MenuItem[] = [{ label: '⚙️ Администрирование' }, { label: 'Статусные модели' }];
@@ -35,7 +35,7 @@ export class StatusWorkflowListComponent {
     { field: 'transitionCount', header: 'Переходов', width: '100px', type: 'number' },
   ];
 
-  constructor() { this.load(); }
+  ngOnInit() { this.load(); }
   async load() {
     const r = await firstValueFrom(this.svc.getAll());
     this.rows.set(r.data.map(w => ({ ...w, statusCount: w.statuses.length, transitionCount: w.transitions.length } as StatusWorkflow & { statusCount: number; transitionCount: number })));

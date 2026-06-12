@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed, OnInit, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, signal, computed, viewChild, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
@@ -11,6 +11,10 @@ import { KpButtonComponent } from '../../shared/ui/kp-button.component';
 import { KpBreadcrumbComponent } from '../../shared/ui/kp-breadcrumb.component';
 import { KpCardComponent } from '../../shared/ui/kp-card.component';
 import { KpToastComponent } from '../../shared/ui/kp-toast.component';
+import { KpDialogComponent } from '../../shared/ui/kp-dialog.component';
+import { KpDocCanvasComponent } from '../../shared/ui/kp-doc-canvas.component';
+import { KpDocPreviewDialogComponent } from '../../shared/ui/kp-doc-preview-dialog.component';
+import { LucideDynamicIcon } from '@lucide/angular';
 import { NotificationService } from '../../core/notification.service';
 import { CommercialProposalService } from '../../core/commercial-proposal.service';
 import { CartService } from '../../core/cart.service';
@@ -18,8 +22,8 @@ import { OrganizationService } from '../../core/organization.service';
 import { ClientService } from '../../core/client.service';
 import { DocumentTemplateService } from '../../core/document-template.service';
 import { generateId } from '../../core/crud-factory.js';
-import { ConfirmationService } from 'primeng/api';
-import type { CommercialProposal, ProposalItem, ProposalStatus, Organization, Client, DocumentTemplate } from '../../../../shared/types/index.js';
+
+import type { CommercialProposal, ProposalItem, ProposalStatus, Organization, Client, DocumentTemplate, DocBlock } from '../../../../shared/types/index.js';
 
 const STATUS_OPTIONS: SelectOption[] = [
   { value: 'draft', label: 'Черновик' },
@@ -35,8 +39,10 @@ const STATUS_OPTIONS: SelectOption[] = [
     CommonModule, FormsModule,
     KpInputComponent, KpSelectComponent, KpButtonComponent,
     KpBreadcrumbComponent, KpCardComponent, KpToastComponent,
+    KpDialogComponent, KpDocCanvasComponent, KpDocPreviewDialogComponent,
+    LucideDynamicIcon,
   ],
-  providers: [ConfirmationService],
+
   template: `
     <kp-toast />
 
@@ -68,6 +74,13 @@ const STATUS_OPTIONS: SelectOption[] = [
             />
           }
           <kp-button
+            label="Скачать PDF"
+            lucideIcon="download"
+            severity="success"
+            [disabled]="docBlocks().length === 0"
+            (buttonClick)="openPdfPreview()"
+          />
+          <kp-button
             label="Сохранить"
             lucideIcon="check"
             [loading]="saving()"
@@ -92,6 +105,7 @@ const STATUS_OPTIONS: SelectOption[] = [
               [options]="orgOptions()"
               [(ngModel)]="editOrganizationId"
               placeholder="Выберите организацию"
+              (ngModelChange)="onOrgChange()"
             />
             <kp-select
               label="Контактное лицо"
@@ -212,12 +226,132 @@ const STATUS_OPTIONS: SelectOption[] = [
           }
         </div>
       </kp-card>
+
+      <!-- ===== A4 Preview with interactive features ===== -->
+      @if (itemCount > 0) {
+        <div class="cp-editor__preview-section">
+          <h3 class="cp-editor__section-title">Предпросмотр</h3>
+          <p class="cp-editor__preview-hint">
+            Кликните по строке в таблице чтобы отредактировать позицию.
+            Кликните по пустому месту для настроек таблицы.
+          </p>
+          <div class="cp-editor__canvas">
+            <kp-doc-canvas
+              [blocks]="docBlocks()"
+              [editable]="false"
+              [backgroundImages]="selectedBackgroundImage() ? [selectedBackgroundImage()] : []"
+              (blockRowClick)="onCanvasRowClick($event)"
+              (canvasClick)="onCanvasClick()"
+            />
+          </div>
+        </div>
+      }
+
+      <!-- Диалог редактирования строки -->
+      <kp-dialog
+        header="✎ Редактирование позиции"
+        [(visible)]="editDialogVisible"
+        width="480px"
+      >
+        @if (editItem(); as ei) {
+          <div class="cp-editor__edit-form">
+            <div class="cp-editor__edit-header">
+              <kp-input label="Название" [(ngModel)]="editName" />
+              <kp-input label="Артикул" [(ngModel)]="editSku" placeholder="Артикул" />
+            </div>
+            <div class="cp-editor__edit-grid">
+              <kp-input label="Количество" type="number" [(ngModel)]="editQuantity" />
+              <kp-input label="Цена за ед." type="number" [(ngModel)]="editPrice" />
+              <kp-input label="Наценка, %" type="number" [(ngModel)]="editMarkup" />
+            </div>
+            @let total = editPrice() * editQuantity() * (1 + editMarkup() / 100);
+            <div class="cp-editor__edit-total">
+              <span>Итого по позиции:</span>
+              <strong>{{ total.toLocaleString('ru-RU') }} ₽</strong>
+            </div>
+          </div>
+          <div class="cp-editor__dialog-footer">
+            <kp-button
+              label="💾 Сохранить"
+              lucideIcon="check"
+              severity="success"
+              (buttonClick)="saveEditItem()"
+            />
+            @if (productChanged()) {
+              <kp-button
+                label="📋 Сохранить как копию"
+                lucideIcon="copy"
+                severity="info"
+                (buttonClick)="saveEditItemAsCopy()"
+              />
+            }
+            <kp-button
+              label="Отмена"
+              lucideIcon="x"
+              severity="secondary"
+              (buttonClick)="editDialogVisible.set(false)"
+            />
+          </div>
+        }
+      </kp-dialog>
+
+      <!-- Диалог настроек таблицы -->
+      <kp-dialog
+        header="⚙ Настройки таблицы"
+        [(visible)]="settingsDialogVisible"
+        width="400px"
+      >
+        <div class="cp-editor__settings-form">
+          <kp-input
+            label="Общая скидка, %"
+            type="number"
+            [(ngModel)]="discountPercent"
+            placeholder="0"
+            min="0"
+            max="100"
+          />
+          @if (items().length > 0) {
+            <div class="cp-editor__settings-info">
+              <span>Всего позиций:</span>
+              <strong>{{ items().length }} шт.</strong>
+            </div>
+            <div class="cp-editor__settings-info">
+              <span>Сумма до скидки:</span>
+              <strong>{{ totalAmount().toLocaleString('ru-RU') }} ₽</strong>
+            </div>
+            @if (discountPercent() > 0) {
+              <div class="cp-editor__settings-info cp-editor__settings-info--discount">
+                <span>Скидка {{ discountPercent() }}%:</span>
+                <strong>-{{ discountAmount().toLocaleString('ru-RU') }} ₽</strong>
+              </div>
+            }
+          }
+        </div>
+        <div class="cp-editor__dialog-footer">
+          <kp-button
+            label="🗑 Очистить все товары"
+            lucideIcon="trash-2"
+            severity="danger"
+            [disabled]="items().length === 0"
+            (buttonClick)="clearItems(); settingsDialogVisible.set(false)"
+          />
+          <kp-button
+            label="Закрыть"
+            lucideIcon="x"
+            severity="secondary"
+            (buttonClick)="settingsDialogVisible.set(false)"
+          />
+        </div>
+      </kp-dialog>
+
+      <!-- PDF preview dialog -->
+      <kp-doc-preview-dialog />
     </div>
   `,
   styles: [`
     :host { display: block; }
     .cp-editor {
-      max-width: 1000px;
+      max-width: 1100px;
       margin: 0 auto;
       padding: var(--space-6);
     }
@@ -339,6 +473,83 @@ const STATUS_OPTIONS: SelectOption[] = [
     .cp-editor__summary-value {
       font-size: var(--font-size-xl); font-weight: 800; color: var(--color-primary);
     }
+
+    /* A4 Preview section */
+    .cp-editor__preview-section {
+      margin-top: var(--space-6);
+      padding-top: var(--space-6);
+      border-top: 1px solid var(--color-border);
+    }
+    .cp-editor__preview-hint {
+      font-size: var(--font-size-xs);
+      color: var(--color-text-secondary);
+      margin: var(--space-2) 0 var(--space-4);
+    }
+    .cp-editor__canvas {
+      border: 1px solid var(--color-border-light);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+    }
+
+    /* Settings dialog */
+    .cp-editor__settings-form {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-4);
+    }
+    .cp-editor__settings-info {
+      display: flex;
+      justify-content: space-between;
+      padding: var(--space-2) 0;
+      border-bottom: 1px solid var(--color-border-light);
+      font-size: var(--font-size-sm);
+    }
+    .cp-editor__settings-info--discount {
+      color: var(--color-error);
+      font-weight: 600;
+    }
+    .cp-editor__settings-info strong {
+      font-weight: 700;
+    }
+
+    /* Edit dialog */
+    .cp-editor__edit-form {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-4);
+    }
+    .cp-editor__edit-header {
+      display: flex;
+      gap: var(--space-3);
+    }
+    .cp-editor__edit-header > * { flex: 1; }
+    .cp-editor__edit-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: var(--space-3);
+    }
+    .cp-editor__edit-total {
+      padding: var(--space-3);
+      background: var(--color-primary-subtle);
+      border-radius: var(--radius-md);
+      text-align: center;
+      font-size: var(--font-size-lg);
+      color: var(--color-text);
+      display: flex;
+      justify-content: center;
+      gap: var(--space-2);
+      align-items: baseline;
+    }
+    .cp-editor__edit-total strong {
+      color: var(--color-primary);
+    }
+    .cp-editor__dialog-footer {
+      display: flex;
+      gap: var(--space-3);
+      justify-content: flex-end;
+      flex-wrap: wrap;
+      margin-top: var(--space-4);
+    }
   `],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -351,7 +562,9 @@ export class ProposalEditorComponent implements OnInit {
   private clientService = inject(ClientService);
   private templateService = inject(DocumentTemplateService);
   private notification = inject(NotificationService);
-  private confirmationService = inject(ConfirmationService);
+
+
+  previewDialog = viewChild(KpDocPreviewDialogComponent);
 
   isNew = signal(true);
   proposalId = signal<string | null>(null);
@@ -373,6 +586,26 @@ export class ProposalEditorComponent implements OnInit {
 
   statusOptions = STATUS_OPTIONS;
 
+  // Row editing dialog
+  editDialogVisible = signal(false);
+  editItem = signal<ProposalItem | null>(null);
+  editName = signal('');
+  editSku = signal('');
+  editQuantity = signal(1);
+  editPrice = signal(0);
+  editMarkup = signal(0);
+
+  // Table settings dialog
+  settingsDialogVisible = signal(false);
+  discountPercent = signal(0);
+
+  /** true если пользователь изменил поля самого товара (name/sku) */
+  productChanged = computed(() => {
+    const item = this.editItem();
+    if (!item) return false;
+    return this.editName().trim() !== item.productName || this.editSku().trim() !== item.productSku;
+  });
+
   totalAmount = computed(() =>
     this.items().reduce((sum, i) => sum + i.total, 0)
   );
@@ -385,6 +618,34 @@ export class ProposalEditorComponent implements OnInit {
     if (!id) return 0;
     const client = this.clients().find(c => c.id === id);
     return client?.personalMarkupPercent ?? 0;
+  });
+
+  /** Сумма глобальной скидки */
+  discountAmount = computed(() => {
+    const total = this.totalAmount();
+    const pct = this.discountPercent();
+    if (pct <= 0) return 0;
+    return Math.round(total * pct / 100 * 100) / 100;
+  });
+
+  /** Итоговая сумма с учётом скидки */
+  grandTotal = computed(() => {
+    return this.totalAmount() - this.discountAmount();
+  });
+
+  /** Ставка НДС (%) из выбранной организации (по умолчанию 20%) */
+  selectedVatRate = computed(() => {
+    const orgId = this.editOrganizationId();
+    if (!orgId) return 20;
+    const org = this.organizations().find(o => o.id === orgId);
+    return org?.vatRate ?? 20;
+  });
+
+  /** Сумма НДС от итоговой суммы (после скидки) */
+  ndsAmount = computed(() => {
+    const total = this.grandTotal();
+    const rate = this.selectedVatRate();
+    return Math.round(total * rate / (100 + rate) * 100) / 100;
   });
 
   breadcrumbs: MenuItem[] = [
@@ -416,6 +677,148 @@ export class ProposalEditorComponent implements OnInit {
       value: t.id,
     })),
   ]);
+
+  /** Generate document blocks from template + proposal items */
+  docBlocks = computed<DocBlock[]>(() => {
+    const tmplId = this.editTemplateId();
+    const proposalItems = this.items();
+    const blocks: DocBlock[] = [];
+
+    if (proposalItems.length === 0) return blocks;
+
+    if (!tmplId) {
+      // No template: show basic preview
+      blocks.push({
+        id: 'hdr',
+        type: 'text',
+        order: 0,
+        title: 'Коммерческое предложение',
+        content: 'Предварительный просмотр',
+        settings: { fontSize: '18px', align: 'center' },
+      });
+      blocks.push({
+        id: 'tbl',
+        type: 'table',
+        order: 1,
+        title: `Товары (${proposalItems.length} позиций)`,
+        _inlineRows: proposalItems.map(item => this.proposalItemToRow(item)),
+        _footerRows: [
+          { label: 'Итого:', value: this.grandTotal().toLocaleString('ru-RU') + ' ₽' },
+        ],
+      });
+      return blocks;
+    }
+
+    // Use the selected template
+    const tmpl = this.templates().find(t => t.id === tmplId);
+    if (!tmpl) return blocks;
+
+    // Resolve placeholder data
+    const orgId = this.editOrganizationId();
+    const org = orgId ? this.organizations().find(o => o.id === orgId) : null;
+    const clientId = this.editClientId();
+    const client = clientId ? this.clients().find(c => c.id === clientId) : null;
+    const clientName = client ? [client.lastName, client.firstName, client.patronymic].filter(Boolean).join(' ') : 'Клиент';
+    const orgName = org ? (org.shortName || org.name) : 'Организация';
+    const total = this.grandTotal();
+
+    const placeholders: Record<string, string> = {
+      '{{client.name}}': clientName,
+      '{{org.shortName}}': orgName,
+      '{{org.name}}': org ? org.name : 'Организация',
+      '{{total}}': total.toLocaleString('ru-RU') + ' ₽',
+      '{{date}}': new Date().toLocaleDateString('ru-RU'),
+      '{{items.count}}': String(proposalItems.length),
+    };
+
+    const replace = (text?: string) => {
+      if (!text) return text;
+      let result = text;
+      for (const [key, value] of Object.entries(placeholders)) {
+        result = result.replaceAll(key, value);
+      }
+      return result;
+    };
+
+    // Deep clone all template blocks with placeholder replacement
+    for (const b of tmpl.blocks) {
+      const cloned: DocBlock = {
+        ...b,
+        id: b.id + '-inst',
+        content: replace(b.content),
+        columns: b.columns?.map(c => ({ ...c, content: replace(c.content) || c.content })),
+      };
+      blocks.push(cloned);
+    }
+
+    // Populate the FIRST table block with product data
+    const tableBlock = blocks.find(b => b.type === 'table' && b.tableTemplateId);
+    if (tableBlock) {
+      tableBlock._inlineRows = proposalItems.map(item => this.proposalItemToRow(item));
+
+      const summaries: Record<string, number> = {
+        quantity: proposalItems.reduce((s, i) => s + i.quantity, 0),
+        total: this.grandTotal(),
+        totalAmount: this.grandTotal(),
+        unitPrice: proposalItems.reduce((s, i) => s + i.unitPrice, 0) / proposalItems.length,
+      };
+      tableBlock._columnSummaries = summaries;
+
+      // Footer строки: Итого, НДС, Всего к оплате
+      const vatRate = this.selectedVatRate();
+      const nds = this.ndsAmount();
+      const clientMarkup = this.clientMarkupPercent();
+      const beforeDiscount = this.totalAmount();
+      const discount = this.discountAmount();
+      const footerRows: { label: string; value: string }[] = [];
+
+      if (discount > 0) {
+        footerRows.push({ label: 'Итого (без скидки):', value: beforeDiscount.toLocaleString('ru-RU') + ' ₽' });
+        footerRows.push({ label: `Скидка ${this.discountPercent()}%:`, value: '-' + discount.toLocaleString('ru-RU') + ' ₽' });
+      }
+      footerRows.push({ label: 'Итого:', value: this.grandTotal().toLocaleString('ru-RU') + ' ₽' });
+      if (vatRate > 0) {
+        footerRows.push({ label: `в том числе НДС ${vatRate}%:`, value: nds.toLocaleString('ru-RU') + ' ₽' });
+        footerRows.push({ label: 'Всего к оплате:', value: this.grandTotal().toLocaleString('ru-RU') + ' ₽' });
+      }
+      if (clientMarkup > 0) {
+        const baseTotal = proposalItems.reduce((s, i) => s + (i.unitPrice * i.quantity), 0);
+        const markupAmount = beforeDiscount - baseTotal;
+        footerRows.push({ label: 'Наценка (' + clientMarkup + '%):', value: '+' + markupAmount.toLocaleString('ru-RU') + ' ₽' });
+      }
+      tableBlock._footerRows = footerRows;
+    }
+
+    return blocks;
+  });
+
+  /** Сформировать строку таблицы из ProposalItem */
+  private proposalItemToRow(item: ProposalItem): Record<string, unknown> {
+    return {
+      name: item.productName,
+      sku: item.productSku,
+      price: item.unitPrice,
+      unitPrice: item.unitPrice,
+      quantity: item.quantity,
+      unit: item.productUnit,
+      total: item.total,
+      totalAmount: item.total,
+      productName: item.productName,
+      productSku: item.productSku,
+      productUnit: item.productUnit,
+      markupPercent: item.markupPercent ?? 0,
+    };
+  }
+
+  /** Background images from selected template */
+  selectedBackgroundImage = computed(() => {
+    const tmplId = this.editTemplateId();
+    if (!tmplId) return '';
+    const tmpl = this.templates().find(t => t.id === tmplId);
+    const images = tmpl?.backgroundImages;
+    if (images && images.length > 0) return images[0];
+    return (tmpl as unknown as Record<string, unknown>)['backgroundImage'] as string ?? '';
+  });
 
   async ngOnInit() {
     this.loading.set(true);
@@ -471,6 +874,18 @@ export class ProposalEditorComponent implements OnInit {
     this.items.set(p.items.map(i => ({ ...i })));
   }
 
+  /** При смене организации — сбрасываем шаблон */
+  onOrgChange() {
+    const orgId = this.editOrganizationId();
+    const currentTmpl = this.editTemplateId();
+    if (currentTmpl) {
+      const tmpl = this.templates().find(t => t.id === currentTmpl);
+      if (tmpl && tmpl.organizationId && tmpl.organizationId !== orgId) {
+        this.editTemplateId.set('');
+      }
+    }
+  }
+
   /** Загрузить позиции из корзины (snapshot) */
   loadFromCart(silent = false) {
     const cartItems = this.cartService.items();
@@ -482,7 +897,6 @@ export class ProposalEditorComponent implements OnInit {
     const clientMarkup = this.clientMarkupPercent();
     let markedUpCount = 0;
     const newItems: ProposalItem[] = cartItems.map(ci => {
-      // Приоритет: наценка клиента > наценка из товара (CartItem.markupPercent) > 0
       const markup = clientMarkup > 0 ? clientMarkup : (ci.markupPercent ?? 0);
       if (markup > 0) markedUpCount++;
       return {
@@ -544,6 +958,125 @@ export class ProposalEditorComponent implements OnInit {
     });
   }
 
+  /** Clear all items */
+  clearItems() {
+    this.items.set([]);
+    this.notification.success('Список товаров очищен');
+  }
+
+  /** Открыть диалог редактирования строки */
+  openEditItem(item: ProposalItem) {
+    this.editItem.set(item);
+    this.editName.set(item.productName);
+    this.editSku.set(item.productSku);
+    this.editQuantity.set(item.quantity);
+    this.editPrice.set(item.unitPrice);
+    this.editMarkup.set(item.markupPercent);
+    this.editDialogVisible.set(true);
+  }
+
+  /** Сохранить изменения — заменить текущую строку */
+  saveEditItem() {
+    const item = this.editItem();
+    if (!item) return;
+
+    const qty = Math.max(1, Math.round(this.editQuantity()));
+    const price = Math.max(0, this.editPrice());
+    const markup = Math.max(0, this.editMarkup());
+    const name = this.editName().trim() || item.productName;
+    const sku = this.editSku().trim() || item.productSku;
+
+    this.items.update(list => {
+      const updated = [...list];
+      const idx = updated.findIndex(i => i.id === item.id);
+      if (idx === -1) return list;
+
+      const priceWithMarkup = price * (1 + markup / 100);
+      updated[idx] = {
+        ...updated[idx],
+        productName: name,
+        productSku: sku,
+        quantity: qty,
+        unitPrice: price,
+        markupPercent: markup,
+        total: Math.round(priceWithMarkup * qty * 100) / 100,
+      };
+      return updated;
+    });
+
+    this.editDialogVisible.set(false);
+    this.notification.success('Позиция обновлена');
+  }
+
+  /** Сохранить как копию — удалить старую, вставить новую на её место */
+  saveEditItemAsCopy() {
+    const item = this.editItem();
+    if (!item) return;
+
+    const qty = Math.max(1, Math.round(this.editQuantity()));
+    const price = Math.max(0, this.editPrice());
+    const markup = Math.max(0, this.editMarkup());
+    const name = this.editName().trim() || item.productName;
+    const sku = this.editSku().trim() || item.productSku;
+
+    const priceWithMarkup = price * (1 + markup / 100);
+    const copy: ProposalItem = {
+      ...item,
+      id: generateId(),
+      productName: name,
+      productSku: sku,
+      quantity: qty,
+      unitPrice: price,
+      markupPercent: markup,
+      total: Math.round(priceWithMarkup * qty * 100) / 100,
+    };
+
+    this.items.update(list => {
+      const idx = list.findIndex(i => i.id === item.id);
+      if (idx === -1) return [...list, copy];
+      const updated = [...list];
+      updated.splice(idx, 1, copy);
+      return updated;
+    });
+
+    this.editDialogVisible.set(false);
+    this.notification.success('Копия сохранена на место оригинала');
+  }
+
+  /** Клик по строке в A4-таблице — открыть редактор */
+  onCanvasRowClick(event: { block: DocBlock; row: Record<string, unknown>; index: number }) {
+    const proposalItems = this.items();
+    const item = proposalItems[event.index];
+    if (item) {
+      this.openEditItem(item);
+    }
+  }
+
+  /** Клик по пустому месту A4 — открыть настройки таблицы */
+  onCanvasClick() {
+    if (this.items().length > 0) {
+      this.settingsDialogVisible.set(true);
+    }
+  }
+
+  /** Открыть диалог предпросмотра с PDF экспортом */
+  openPdfPreview() {
+    const blocks = this.docBlocks();
+    if (blocks.length === 0) {
+      this.notification.warn('Нет данных для экспорта');
+      return;
+    }
+    const tmplId = this.editTemplateId();
+    const tmpl = tmplId ? this.templates().find(t => t.id === tmplId) : null;
+    this.previewDialog()?.open(
+      tmpl?.name || 'Коммерческое предложение',
+      'quotation',
+      blocks,
+      tmpl?.backgroundImages || [],
+      tmpl?.backgroundOpacity ?? 1,
+    );
+  }
+
   async save() {
     if (this.items().length === 0) {
       this.notification.error('Добавьте хотя бы одну позицию');
@@ -598,7 +1131,6 @@ export class ProposalEditorComponent implements OnInit {
         notes: this.editNotes().trim() || undefined,
       };
 
-      // Динамический диапазон наценок на основе текущих значений
       const currentMarkups = this.items().map(i => i.markupPercent);
       const maxMarkup = Math.max(...currentMarkups, 10);
       const midMarkup = Math.round(maxMarkup / 2);

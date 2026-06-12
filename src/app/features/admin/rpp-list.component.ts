@@ -1,4 +1,4 @@
-import { Component, inject, signal, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, signal, ChangeDetectionStrategy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { firstValueFrom } from 'rxjs';
 import { MenuItem } from 'primeng/api';
@@ -26,7 +26,7 @@ const STATUS_LABELS: Record<RppStatus, string> = { draft: 'Черновик', su
   styles: [`:host { display: block; padding: var(--space-6); } .page__title { font-size: var(--font-size-xl); font-weight: var(--font-weight-bold); margin: var(--space-4) 0; }`],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class RppListComponent {
+export class RppListComponent implements OnInit {
   private svc = inject(RppService);
   rows = signal<RppEntry[]>([]);
   breadcrumbs: MenuItem[] = [{ label: '⚙️ Администрирование' }, { label: 'Реестр РПП' }];
@@ -39,7 +39,7 @@ export class RppListComponent {
     { field: 'expiryDate', header: 'Действует до', width: '120px' },
   ];
 
-  constructor() { this.load(); }
+  ngOnInit() { this.load(); }
   async load() {
     const r = await firstValueFrom(this.svc.getAll());
     this.rows.set(r.data.map(e => ({ ...e, statusLabel: STATUS_LABELS[e.status] } as RppEntry & { statusLabel: string })));

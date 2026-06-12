@@ -1,4 +1,4 @@
-import { Component, inject, signal, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, signal, ChangeDetectionStrategy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { firstValueFrom } from 'rxjs';
 import { MenuItem } from 'primeng/api';
@@ -28,7 +28,7 @@ const TYPE_LABELS: Record<string, string> = { act: 'Акт', invoice: 'Счёт-
   styles: [`:host { display: block; padding: var(--space-6); } .page__title { font-size: var(--font-size-xl); font-weight: var(--font-weight-bold); margin: var(--space-4) 0; }`],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class OrderClosingListComponent {
+export class OrderClosingListComponent implements OnInit {
   private svc = inject(OrderClosingService);
   private notification = inject(NotificationService);
   rows = signal<OrderClosing[]>([]);
@@ -46,7 +46,7 @@ export class OrderClosingListComponent {
     { icon: 'check', severity: 'success', tooltip: 'Подписать', visible: (r: unknown) => (r as OrderClosing).status === 'draft' },
   ];
 
-  constructor() { this.load(); }
+  ngOnInit() { this.load(); }
   async load() {
     const r = await firstValueFrom(this.svc.getAll());
     this.rows.set(r.data.map(c => ({ ...c, typeLabel: TYPE_LABELS[c.closingType] || c.closingType, statusLabel: STATUS_LABELS[c.status] || c.status } as OrderClosing & { typeLabel: string; statusLabel: string })));

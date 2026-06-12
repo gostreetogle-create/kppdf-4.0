@@ -119,6 +119,15 @@
             [(ngModel)]="ogrn"
           />
         </div>
+        <div class="org-editor__field org-editor__field--compact">
+          <kp-input
+            label="НДС, %"
+            type="number"
+            placeholder="20"
+            [(ngModel)]="vatRate"
+            [error]="vatRateError()"
+          />
+        </div>
       </div>
     </fieldset>
 

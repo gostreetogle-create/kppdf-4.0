@@ -1,13 +1,30 @@
-import { Injectable } from '@angular/core';
-import { BaseCrudService } from './crud-factory.js';
-import type { RppEntry } from '../../../shared/types/index.js';
-
-const SEED_RPP: RppEntry[] = [
-  { id: 'rpp-1', productId: 'prod-1', productName: 'Стойка баскетбольная БСФП-120', productSku: 'SP0001', registryNumber: 'РПП-2026/001', status: 'registered', submissionDate: '2026-02-01', registrationDate: '2026-03-15', expiryDate: '2029-03-15', notes: 'Зарегистрировано в реестре Минпромторга', createdAt: '2026-02-01T10:00:00.000Z', updatedAt: '2026-03-15T10:00:00.000Z' },
-  { id: 'rpp-2', productId: 'prod-2', productName: 'Турник уличный ТУ-2', productSku: 'SP0002', status: 'draft', notes: 'Готовим документы для подачи', createdAt: '2026-06-01T10:00:00.000Z', updatedAt: '2026-06-01T10:00:00.000Z' },
-];
+import { Injectable, inject } from '@angular/core';
+import { Observable } from 'rxjs';
+import type { ApiResponse, RppEntry } from '../../../shared/types/index.js';
+import { ApiService } from './api.service.js';
 
 @Injectable({ providedIn: 'root' })
-export class RppService extends BaseCrudService<RppEntry> {
-  constructor() { super(); this.items = SEED_RPP.map(r => ({ ...r })); }
+export class RppService {
+  private api = inject(ApiService);
+  private basePath = '/rpp';
+
+  getAll(): Observable<ApiResponse<RppEntry[]>> {
+    return this.api.get<RppEntry[]>(this.basePath);
+  }
+
+  getById(id: string): Observable<ApiResponse<RppEntry | undefined>> {
+    return this.api.getById<RppEntry>(this.basePath, id);
+  }
+
+  create(data: Omit<RppEntry, 'id' | 'createdAt' | 'updatedAt'>): Observable<ApiResponse<RppEntry>> {
+    return this.api.post<RppEntry>(this.basePath, data);
+  }
+
+  update(id: string, data: Partial<Omit<RppEntry, 'id' | 'createdAt'>>): Observable<ApiResponse<RppEntry>> {
+    return this.api.put<RppEntry>(this.basePath, id, data);
+  }
+
+  delete(id: string): Observable<ApiResponse<void>> {
+    return this.api.delete<void>(this.basePath, id);
+  }
 }

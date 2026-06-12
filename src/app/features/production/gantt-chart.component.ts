@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, signal, computed, ChangeDetectionStrategy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
@@ -37,7 +37,7 @@ interface LayoutRow { type: 'group' | 'bar'; groupName?: string; groupId?: strin
   styleUrls: ['./gantt-chart.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class GanttChartComponent {
+export class GanttChartComponent implements OnInit {
   private taskSvc = inject(OrderTaskService);
   private orderSvc = inject(ProductionOrderService);
   private workerSvc = inject(WorkerService);
@@ -443,7 +443,7 @@ export class GanttChartComponent {
     }
   }
 
-  constructor() { this.load(); this.loadCachedData(); }
+  ngOnInit() { this.load(); this.loadCachedData(); }
 
   private async loadCachedData() {
     const [prodRes, orgRes, workerRes] = await Promise.all([

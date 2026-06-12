@@ -26,6 +26,7 @@ export interface IOrganization extends Document {
   contactPerson: string;
   /** Отсрочка платежа в днях (для поставщиков) */
   paymentTermDays: number;
+  vatRate?: number;
   isActive: boolean;
 }
 
@@ -48,6 +49,7 @@ const organizationSchema = new Schema<IOrganization>({
   counterpartyRoleIds: { type: [String], default: [] },
   contactPerson: { type: String, trim: true, default: '' },
   paymentTermDays: { type: Number, default: 0 },
+  vatRate: { type: Number, default: 20 },
   isActive: { type: Boolean, default: true }
 }, { timestamps: true });
 

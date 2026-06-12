@@ -1,4 +1,4 @@
-import { Component, inject, signal, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, signal, ChangeDetectionStrategy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { firstValueFrom } from 'rxjs';
 import { MenuItem } from 'primeng/api';
@@ -24,7 +24,7 @@ import type { InventorFile } from '../../../../shared/types/index.js';
   styles: [`:host { display: block; padding: var(--space-6); } .page__title { font-size: var(--font-size-xl); font-weight: var(--font-weight-bold); margin: var(--space-4) 0; }`],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class InventorFileListComponent {
+export class InventorFileListComponent implements OnInit {
   private svc = inject(InventorFileService);
   rows = signal<InventorFile[]>([]);
   breadcrumbs: MenuItem[] = [{ label: '⚙️ Администрирование' }, { label: 'CAD-файлы' }];
@@ -38,7 +38,7 @@ export class InventorFileListComponent {
     { field: 'version', header: 'Версия', width: '80px' },
   ];
 
-  constructor() { this.load(); }
+  ngOnInit() { this.load(); }
   async load() {
     const r = await firstValueFrom(this.svc.getAll());
     this.rows.set(r.data);

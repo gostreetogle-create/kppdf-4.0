@@ -69,6 +69,7 @@ export class OrganizationEditorComponent implements OnInit {
   bankAccount = signal('');
   signerName = signal('');
   signerPosition = signal('');
+  vatRate = signal<number>(20);
 
   /** Роли контрагента (динамически загружаются из справочника) */
   allRoles = signal<CounterpartyRoleDef[]>([]);
@@ -83,6 +84,7 @@ export class OrganizationEditorComponent implements OnInit {
   /** Ошибки валидации */
   nameError = signal('');
   innError = signal('');
+  vatRateError = signal('');
 
   legalFormOptions = LEGAL_FORM_OPTIONS;
 
@@ -155,6 +157,7 @@ export class OrganizationEditorComponent implements OnInit {
     this.bankAccount.set(org.bankAccount);
     this.signerName.set(org.signerName);
     this.signerPosition.set(org.signerPosition);
+    this.vatRate.set(org.vatRate ?? 20);
     this.selectedRoleIds.set([...org.counterpartyRoleIds]);
     this.contactPerson.set(org.contactPerson);
     this.paymentTermDays.set(org.paymentTermDays);
@@ -179,6 +182,18 @@ export class OrganizationEditorComponent implements OnInit {
       valid = false;
     } else {
       this.innError.set('');
+    }
+
+    // Ставка НДС: 0–100%
+    const vat = this.vatRate();
+    if (vat === null || vat === undefined || isNaN(vat)) {
+      this.vatRateError.set('Укажите ставку НДС');
+      valid = false;
+    } else if (vat < 0 || vat > 100) {
+      this.vatRateError.set('Ставка НДС должна быть от 0 до 100%');
+      valid = false;
+    } else {
+      this.vatRateError.set('');
     }
 
     return valid;
@@ -207,6 +222,7 @@ export class OrganizationEditorComponent implements OnInit {
         bankAccount: this.bankAccount().trim(),
         signerName: this.signerName().trim(),
         signerPosition: this.signerPosition().trim(),
+        vatRate: Number(this.vatRate() ?? 20),
         counterpartyRoleIds: this.selectedRoleIds(),
         contactPerson: hasAnyRole ? this.contactPerson().trim() : '',
         paymentTermDays: hasAnyRole ? Number(this.paymentTermDays() ?? 0) : 0,

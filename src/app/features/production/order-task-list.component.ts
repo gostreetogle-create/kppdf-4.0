@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, signal, computed, ChangeDetectionStrategy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MenuItem } from 'primeng/api';
@@ -85,7 +85,7 @@ const NEXT_STATUS: Partial<Record<TaskStatus, TaskStatus>> = { pending: 'assigne
   styles: [`:host { display: block; padding: var(--space-6); } .page__title { font-size: var(--font-size-xl); font-weight: var(--font-weight-bold); margin: var(--space-4) 0; } .ot-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--space-3); } .ot-controls { display: flex; gap: var(--space-2); align-items: center; } .ot-filter { width: 260px; } .missing-list { display: flex; flex-direction: column; gap: var(--space-3); max-height: 400px; overflow-y: auto; } .missing-item { display: flex; gap: var(--space-3); padding: var(--space-3); background: var(--color-surface); border-radius: var(--radius-md); border: 1px solid var(--color-border); } .missing-item__icon { font-size: 1.5rem; flex-shrink: 0; } .missing-item__body p { margin: var(--space-1) 0 0; color: var(--color-text-secondary); font-size: var(--font-size-sm); } .missing-actions { margin-top: var(--space-4); display: flex; justify-content: flex-end; } .worker-list { display: flex; flex-direction: column; gap: var(--space-1); max-height: 300px; overflow-y: auto; } .worker-item { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-2) var(--space-3); } .worker-item__name { font-weight: var(--font-weight-medium); min-width: 140px; } .worker-item__grade { color: var(--color-text-secondary); font-size: var(--font-size-sm); } .worker-item__busy { color: var(--color-warning); font-size: var(--font-size-xs); } .worker-actions { margin-top: var(--space-3); display: flex; justify-content: flex-end; }`],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class OrderTaskListComponent {
+export class OrderTaskListComponent implements OnInit {
   private taskSvc = inject(OrderTaskService);
   private orderSvc = inject(ProductionOrderService);
   private notification = inject(NotificationService);
@@ -133,7 +133,7 @@ export class OrderTaskListComponent {
     });
   });
 
-  constructor() { this.load(); }
+  ngOnInit() { this.load(); }
   async load() {
     const [tasks, orders] = await Promise.all([firstValueFrom(this.taskSvc.getTasks()), firstValueFrom(this.orderSvc.getAll())]);
     this.tasks.set(tasks.data); this.orders.set(orders.data);

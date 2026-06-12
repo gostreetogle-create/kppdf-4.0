@@ -31,8 +31,8 @@ function tableNameToApiPath(name: string): string {
               </tr>
             </thead>
             <tbody>
-              @for (row of data; track trackByRow(row, $index)) {
-                <tr>
+              @for (row of data; track trackByRow(row, $index); let i = $index) {
+                <tr class="table-block__data-row" (click)="onRowClick(row, i)">
                   @for (col of template.columns; track col.fieldName) {
                     <td [class.table-block__td-num]="isNumericField(col.fieldName)">{{ getFieldValue(row, col.fieldName) }}</td>
                   }
@@ -59,10 +59,8 @@ function tableNameToApiPath(name: string): string {
                 </tr>
                 @for (fr of footerRows(); track fr.label) {
                   <tr class="table-block__footer-row table-block__footer-row--extra">
-                    <td>
+                    <td [attr.colspan]="template.columns.length" class="table-block__footer-extra-cell">
                       <span class="table-block__footer-label">{{ fr.label }}</span>
-                    </td>
-                    <td [attr.colspan]="template.columns.length - 1" style="text-align:right">
                       <strong>{{ fr.value }}</strong>
                     </td>
                   </tr>
@@ -146,12 +144,33 @@ function tableNameToApiPath(name: string): string {
       color: #64748b;
       font-weight: 600;
     }
+    .table-block__footer-extra-cell {
+      text-align: right;
+      white-space: nowrap;
+      border: none !important;
+    }
+    .table-block__footer-extra-cell .table-block__footer-label {
+      margin-right: 4px;
+    }
+
+    .table-block__data-row {
+      cursor: pointer;
+      transition: background 0.12s ease;
+    }
+    .table-block__data-row:hover {
+      background: #f0f4ff;
+    }
+    .table-block__data-row:active {
+      background: #e2e8f0;
+    }
   `]
 })
 export class KpDocBlockTableComponent {
   block = input.required<DocBlock>();
   mode = input<'template' | 'instance'>('template');
   editClick = output<DocBlock>();
+  /** Клик по строке данных (для интерактивного режима) */
+  rowClick = output<{ row: Record<string, unknown>; index: number }>();
 
   private templateService = inject(TableTemplateService);
   private api = inject(ApiService);
@@ -291,6 +310,11 @@ export class KpDocBlockTableComponent {
       return val.toLocaleString('ru-RU');
     }
     return String(val);
+  }
+
+  /** Клик по строке данных */
+  onRowClick(row: Record<string, unknown>, index: number): void {
+    this.rowClick.emit({ row, index });
   }
 
   /** Трек для строк таблицы (по id или индексу) */

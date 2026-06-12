@@ -20,6 +20,7 @@ import type { Organization, CounterpartyRoleDef } from '../../../../shared/types
 interface OrganizationRow extends Organization {
   updatedAtDisplay: string;
   roleLabels: string;
+  vatRateDisplay: string;
 }
 
 interface Tab {
@@ -63,6 +64,7 @@ export class OrganizationListComponent implements OnInit {
     { field: 'name', header: 'Наименование', sortable: true },
     { field: 'legalForm', header: 'ОПФ', width: '80px' },
     { field: 'inn', header: 'ИНН', width: '140px', sortable: true },
+    { field: 'vatRateDisplay', header: 'НДС', width: '70px' },
     { field: 'roleLabels', header: 'Роли', width: '160px' },
     { field: 'phone', header: 'Телефон', width: '170px' },
     { field: 'email', header: 'Email', width: '200px' },
@@ -115,6 +117,7 @@ export class OrganizationListComponent implements OnInit {
       this.organizations.set(result.data.map(o => ({
         ...o,
         updatedAtDisplay: new Date(o.updatedAt).toLocaleString('ru-RU'),
+        vatRateDisplay: o.vatRate != null ? o.vatRate + '%' : '—',
         roleLabels: o.counterpartyRoleIds.length > 0
           ? o.counterpartyRoleIds.map(id => this.getRoleName(id)).join(', ')
           : '—',

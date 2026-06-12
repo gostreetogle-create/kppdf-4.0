@@ -1,12 +1,13 @@
-import { Component, inject, signal, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, signal, ChangeDetectionStrategy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { MenuItem } from 'primeng/api';
+import { MenuItem, ConfirmationService } from 'primeng/api';
 import { firstValueFrom } from 'rxjs';
 import { KpBreadcrumbComponent } from '../../shared/ui/kp-breadcrumb.component';
 import { KpCardComponent } from '../../shared/ui/kp-card.component';
 import { KpTableComponent, TableColumn } from '../../shared/ui/kp-table.component';
 import { KpToastComponent } from '../../shared/ui/kp-toast.component';
+import { KpConfirmDialogComponent } from '../../shared/ui/kp-confirm-dialog.component';
 import { NotificationService } from '../../core/notification.service';
 import { WorkTypeService } from '../../core/work-type.service';
 import type { WorkType } from '../../../../shared/types/index.js';
@@ -15,6 +16,7 @@ import type { WorkType } from '../../../../shared/types/index.js';
   selector: 'app-work-type-list',
   standalone: true,
   imports: [CommonModule, FormsModule, KpBreadcrumbComponent, KpCardComponent, KpTableComponent, KpToastComponent],
+  providers: [ConfirmationService],
   template: `
     <kp-toast />
     <kp-card>
@@ -26,9 +28,10 @@ import type { WorkType } from '../../../../shared/types/index.js';
   styles: [`:host { display: block; max-width: 1000px; margin: 0 auto; padding: var(--space-6); } .page__title { font-size: var(--font-size-xl); font-weight: var(--font-weight-bold); margin: var(--space-4) 0; }`],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class WorkTypeListComponent {
+export class WorkTypeListComponent implements OnInit {
   private svc = inject(WorkTypeService);
   private notification = inject(NotificationService);
+  private confirmationService = inject(ConfirmationService);
   rows = signal<WorkType[]>([]);
   breadcrumbs: MenuItem[] = [{ label: '🏭 Производство' }, { label: 'Виды работ' }];
   columns: TableColumn[] = [
@@ -36,8 +39,25 @@ export class WorkTypeListComponent {
     { field: 'department', header: 'Отдел', width: '150px' },
     { field: 'defaultDurationHours', header: 'Нормо-часы', width: '120px', type: 'number' },
   ];
-  constructor() { this.load(); }
+  ngOnInit() { this.load(); }
   async load() { const r = await firstValueFrom(this.svc.getAll()); this.rows.set(r.data); }
   onEdit(row: unknown) { this.notification.info('Редактирование: ' + (row as WorkType).name); }
-  onDelete(row: unknown) { const w = row as WorkType; if (confirm(`Удалить «${w.name}»?`)) { this.svc.delete(w.id).subscribe(() => this.load()); } }
+  onDelete(row: unknown) {
+    const w = row as WorkType;
+    KpConfirmDialogComponent.confirm(this.confirmationService, {
+      header: 'Удаление вида работ',
+      message: `Вы уверены, что хотите удалить вид работ «${w.name}»?`,
+      acceptLabel: 'Удалить',
+      rejectLabel: 'Отмена',
+      accept: async () => {
+        const res = await firstValueFrom(this.svc.delete(w.id));
+        if (res.success) {
+          this.notification.success('Вид работ удалён');
+          this.load();
+        } else {
+          this.notification.error(res.message || 'Ошибка удаления');
+        }
+      },
+    });
+  }
 }

@@ -1,4 +1,4 @@
-import { Component, inject, signal, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, signal, ChangeDetectionStrategy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { MenuItem } from 'primeng/api';
@@ -75,7 +75,7 @@ interface InvoiceRow extends IncomingInvoice {
   `],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class InvoiceListComponent {
+export class InvoiceListComponent implements OnInit {
   private router = inject(Router);
   private invoiceService = inject(InvoiceService);
   private notification = inject(NotificationService);
@@ -101,7 +101,7 @@ export class InvoiceListComponent {
     { field: 'statusLabel', header: 'Статус', width: '110px', type: 'badge' },
   ];
 
-  constructor() { this.load(); }
+  ngOnInit() { this.load(); }
 
   async load() {
     this.loading.set(true);
