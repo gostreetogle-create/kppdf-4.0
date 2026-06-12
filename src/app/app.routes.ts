@@ -79,6 +79,14 @@ export const routes: Routes = [
             path: 'cad-files',
             loadComponent: () => import('./features/admin/inventor-file-list.component').then(m => m.InventorFileListComponent)
           },
+          {
+            path: 'monitor',
+            loadComponent: () => import('./features/admin/monitor-dashboard.component').then(m => m.MonitorDashboardComponent)
+          },
+          {
+            path: 'one-c',
+            loadComponent: () => import('./features/admin/one-c-integration.component').then(m => m.OneCIntegrationComponent)
+          },
         ]
       },
 

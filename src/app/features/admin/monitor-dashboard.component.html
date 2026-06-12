@@ -1,0 +1,152 @@
+<!-- ===== Шапка ===== -->
+<div class="monitor-header">
+  <h1 class="monitor-title">Мониторинг системы</h1>
+  <div class="monitor-actions">
+    @if (lastRefresh()) {
+      <span class="monitor-refresh-time">Обновлено: {{ lastRefresh() }}</span>
+    }
+    <kp-button icon="refresh-cw" severity="secondary" (click)="refresh()" [disabled]="loading()">
+      Обновить
+    </kp-button>
+  </div>
+</div>
+
+<!-- ===== Ошибка ===== -->
+@if (error()) {
+  <div class="monitor-error">
+    <span>⚠️ {{ error() }}</span>
+    <kp-button severity="secondary" (click)="refresh()">Повторить</kp-button>
+  </div>
+}
+
+<!-- ===== Загрузка ===== -->
+@if (loading() && !data()) {
+  <div class="monitor-loading">
+    <span class="monitor-spinner"></span>
+    <span>Загрузка данных...</span>
+  </div>
+}
+
+<!-- ===== Данные ===== -->
+@if (data(); as d) {
+  <!-- Карточки верхнего уровня -->
+  <div class="monitor-cards">
+    <kp-card>
+      <div class="mc-item">
+        <span class="mc-label">Система</span>
+        <kp-badge [value]="systemStatusBadge().label" [severity]="systemStatusBadge().severity" />
+      </div>
+    </kp-card>
+    <kp-card>
+      <div class="mc-item">
+        <span class="mc-label">База данных</span>
+        <kp-badge [value]="dbStatusBadge().label" [severity]="dbStatusBadge().severity" />
+      </div>
+    </kp-card>
+    <kp-card>
+      <div class="mc-item">
+        <span class="mc-label">Окружение</span>
+        <span class="mc-value mc-env">{{ d.environment }}</span>
+      </div>
+    </kp-card>
+    <kp-card>
+      <div class="mc-item">
+        <span class="mc-label">Node.js</span>
+        <span class="mc-value">{{ d.nodeVersion }}</span>
+      </div>
+    </kp-card>
+  </div>
+
+  <!-- Системная информация -->
+  <div class="monitor-section">
+    <h2 class="monitor-section-title">🖥️ Система</h2>
+    <div class="monitor-grid">
+      <kp-card>
+        <h3 class="mg-title">Аптайм процесса</h3>
+        <div class="mg-big">{{ d.processUptime }}</div>
+      </kp-card>
+      <kp-card>
+        <h3 class="mg-title">Аптайм ОС</h3>
+        <div class="mg-big">{{ d.systemUptime }}</div>
+      </kp-card>
+      <kp-card>
+        <h3 class="mg-title">Платформа</h3>
+        <div class="mg-value">{{ d.platform }}</div>
+      </kp-card>
+      <kp-card>
+        <h3 class="mg-title">Нагрузка CPU</h3>
+        <div class="mg-row">
+          <span class="mg-val">1м: {{ d.cpu.loadAvg1m }}</span>
+          <span class="mg-val">5м: {{ d.cpu.loadAvg5m }}</span>
+          <span class="mg-val">15м: {{ d.cpu.loadAvg15m }}</span>
+        </div>
+        <div class="mg-sub">Ядер: {{ d.cpu.cpus }}</div>
+      </kp-card>
+    </div>
+  </div>
+
+  <!-- Память -->
+  <div class="monitor-section">
+    <h2 class="monitor-section-title">🧠 Память</h2>
+    <div class="monitor-grid">
+      <kp-card>
+        <h3 class="mg-title">Системная память</h3>
+        <div class="mg-memory-bar">
+          <div class="mg-memory-fill" [style.width.%]="memoryPercent()" [style.background]="memoryColor()"></div>
+        </div>
+        <div class="mg-row">
+          <span class="mg-val">Всего: {{ d.memory.total }}</span>
+          <span class="mg-val">Исп.: {{ d.memory.used }} ({{ memoryPercent() }}%)</span>
+          <span class="mg-val">Своб.: {{ d.memory.free }}</span>
+        </div>
+      </kp-card>
+      <kp-card>
+        <h3 class="mg-title">Память процесса (Heap)</h3>
+        <div class="mg-row">
+          <span class="mg-val">Heap: {{ d.memory.processHeapUsed }} / {{ d.memory.processHeapTotal }}</span>
+        </div>
+        <div class="mg-row">
+          <span class="mg-val">RSS: {{ d.memory.processRSS }}</span>
+        </div>
+      </kp-card>
+    </div>
+  </div>
+
+  <!-- База данных -->
+  <div class="monitor-section">
+    <h2 class="monitor-section-title">🗄️ База данных (MongoDB)</h2>
+    <div class="monitor-grid">
+      <kp-card>
+        <h3 class="mg-title">Подключение</h3>
+        <div class="mg-row">
+          <span class="mg-val">Хост: {{ d.database.host }}</span>
+          <span class="mg-val">БД: {{ d.database.name }}</span>
+        </div>
+      </kp-card>
+      <kp-card>
+        <h3 class="mg-title">Коллекции</h3>
+        <div class="mg-big">{{ d.database.collections }}</div>
+        <div class="mg-sub">Всего документов: {{ d.database.totalDocuments | number }}</div>
+      </kp-card>
+    </div>
+
+    <!-- Список коллекций -->
+    @if (d.database.collectionList.length) {
+      <div class="monitor-collections">
+        <h3 class="mg-title">Состав коллекций</h3>
+        <div class="mc-table">
+          <div class="mc-row mc-row-head">
+            <span class="mc-cell mc-cell-name">Коллекция</span>
+            <span class="mc-cell mc-cell-count">Документов</span>
+          </div>
+          @for (coll of d.database.collectionList; track coll.name) {
+            <div class="mc-row">
+              <span class="mc-cell mc-cell-name">{{ coll.name }}</span>
+              <span class="mc-cell mc-cell-count">{{ coll.count | number }}</span>
+            </div>
+          }
+        </div>
+      </div>
+    }
+  </div>
+}

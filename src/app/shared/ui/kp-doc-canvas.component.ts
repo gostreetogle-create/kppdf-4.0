@@ -1,4 +1,4 @@
-import { Component, input, output, ChangeDetectionStrategy } from '@angular/core';
+import { Component, input, output, computed, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { CdkDragDrop, DragDropModule } from '@angular/cdk/drag-drop';
 import { LucideDynamicIcon } from '@lucide/angular';
@@ -31,105 +31,114 @@ const BLOCK_TYPE_LABELS: Record<string, string> = {
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="canvas__workspace">
-      <div class="canvas__page" (click)="onPageClick($event)">
-        <!-- Фоновое изображение для страницы 1 (первое изображение = страница 1, остальные для следующих страниц) -->
-        @let bg = backgroundImages();
-        @if (bg.length > 0) {
-          <div class="canvas__watermark" [style.background-image]="'url(' + bg[0] + ')'" [style.opacity]="backgroundOpacity()" aria-hidden="true"></div>
-        }
-        @if (blocks().length === 0) {
-          <div class="canvas__empty">
-            Добавьте блоки с помощью панели инструментов слева
-          </div>
-        }
+      @let bg = backgroundImages();
+      @for (i of pageIndexes(); track i) {
+        <div class="canvas__page" [class.canvas__page--extra]="i > 0" (click)="onPageClick($event)">
+          <!-- Фоновое изображение: страница i → backgroundImages[i], если есть -->
+          @if (bg.length > i) {
+            <div class="canvas__watermark" [style.background-image]="'url(' + bg[i] + ')'" [style.opacity]="backgroundOpacity()" aria-hidden="true"></div>
+          }
 
-        <div
-          cdkDropList
-          class="canvas__blocks-list"
-          role="list"
-          aria-label="Список блоков документа"
-          tabindex="0"
-          [cdkDropListLockAxis]="'y'"
-          [cdkDropListDisabled]="!editable()"
-          (cdkDropListDropped)="onBlockDrop($event)"
-          (keydown)="onKeyDown($event)"
-        >
-          @for (block of blocks(); track block.id) {
+          <!-- Блоки только на первой странице -->
+          @if (i === 0) {
+            @if (blocks().length === 0) {
+              <div class="canvas__empty">
+                Добавьте блоки с помощью панели инструментов слева
+              </div>
+            }
+
             <div
-              class="canvas__block"
-              [class.canvas__block--selected]="selectedBlockId() === block.id && editable()"
-              cdkDrag
-              cdkDragLockAxis="y"
-              cdkDragBoundary=".canvas__blocks-list"
-              [cdkDragDisabled]="!editable()"
-              role="listitem"
-              [attr.aria-label]="getBlockLabel(block)"
-              [attr.aria-selected]="selectedBlockId() === block.id"
-              (click)="blockSelect.emit(block.id)"
-              (dblclick)="blockDblClick.emit(block)"
+              cdkDropList
+              class="canvas__blocks-list"
+              role="list"
+              aria-label="Список блоков документа"
+              tabindex="0"
+              [cdkDropListLockAxis]="'y'"
+              [cdkDropListDisabled]="!editable()"
+              (cdkDropListDropped)="onBlockDrop($event)"
+              (keydown)="onKeyDown($event)"
             >
-              @if (editable()) {
-                <!-- Кастомный превью — компактная плашка с иконкой и названием -->
-                <ng-template cdkDragPreview>
-                  <div class="canvas__drag-preview">
-                    <svg [lucideIcon]="getBlockIcon(block.type)" class="canvas__drag-preview-icon"></svg>
-                    <span>{{ getBlockLabel(block) }}</span>
-                  </div>
-                </ng-template>
+              @for (block of blocks(); track block.id) {
+                <div
+                  class="canvas__block"
+                  [class.canvas__block--selected]="selectedBlockId() === block.id && editable()"
+                  cdkDrag
+                  cdkDragLockAxis="y"
+                  cdkDragBoundary=".canvas__blocks-list"
+                  [cdkDragDisabled]="!editable()"
+                  role="listitem"
+                  [attr.aria-label]="getBlockLabel(block)"
+                  [attr.aria-selected]="selectedBlockId() === block.id"
+                  (click)="blockSelect.emit(block.id)"
+                  (dblclick)="blockDblClick.emit(block)"
+                >
+                  @if (editable()) {
+                    <!-- Кастомный превью — компактная плашка с иконкой и названием -->
+                    <ng-template cdkDragPreview>
+                      <div class="canvas__drag-preview">
+                        <svg [lucideIcon]="getBlockIcon(block.type)" class="canvas__drag-preview-icon"></svg>
+                        <span>{{ getBlockLabel(block) }}</span>
+                      </div>
+                    </ng-template>
 
-                <!-- Кастомный placeholder — видимая пунктирная зона -->
-                <ng-template cdkDragPlaceholder>
-                  <div class="canvas__drag-placeholder">
-                    <svg lucideIcon="arrow-up-down" class="canvas__drag-placeholder-icon"></svg>
-                  </div>
-                </ng-template>
+                    <!-- Кастомный placeholder — видимая пунктирная зона -->
+                    <ng-template cdkDragPlaceholder>
+                      <div class="canvas__drag-placeholder">
+                        <svg lucideIcon="arrow-up-down" class="canvas__drag-placeholder-icon"></svg>
+                      </div>
+                    </ng-template>
 
-                <!-- Drag handle (visible on hover) -->
-                <div class="canvas__drag-handle" aria-hidden="true">
-                  <svg lucideIcon="grip-vertical"></svg>
-                </div>
-              }
+                    <!-- Drag handle (visible on hover) -->
+                    <div class="canvas__drag-handle" aria-hidden="true">
+                      <svg lucideIcon="grip-vertical"></svg>
+                    </div>
+                  }
 
-              @switch (block.type) {
-                @case ('text') {
-                  <kp-doc-block-text [block]="block" (editClick)="blockEdit.emit($event)" />
-                }
-                @case ('table') {
-                  <kp-doc-block-table [block]="block" [mode]="mode()" (editClick)="blockEdit.emit($event)" />
-                }
-                @case ('separator') {
-                  <kp-doc-block-separator [height]="block.height ?? 20" [showLine]="block.showLine ?? false" />
-                }
-              }
+                  @switch (block.type) {
+                    @case ('text') {
+                      <kp-doc-block-text [block]="block" (editClick)="blockEdit.emit($event)" />
+                    }
+                    @case ('table') {
+                      <kp-doc-block-table [block]="block" [mode]="mode()" (editClick)="blockEdit.emit($event)" />
+                    }
+                    @case ('separator') {
+                      <kp-doc-block-separator [height]="block.height ?? 20" [showLine]="block.showLine ?? false" />
+                    }
+                  }
 
-              @if (editable()) {
-                <div class="canvas__block-actions">
-                  <kp-button
-                    lucideIcon="pencil"
-                    size="small"
-                    [text]="true"
-                    [rounded]="true"
-                    severity="secondary"
-                    pTooltip="Редактировать"
-                    tooltipPosition="left"
-                    (buttonClick)="blockEdit.emit(block)"
-                  />
-                  <kp-button
-                    lucideIcon="trash-2"
-                    size="small"
-                    [text]="true"
-                    [rounded]="true"
-                    severity="danger"
-                    pTooltip="Удалить блок"
-                    tooltipPosition="left"
-                    (buttonClick)="blockRemove.emit(block.id)"
-                  />
+                  @if (editable()) {
+                    <div class="canvas__block-actions">
+                      <kp-button
+                        lucideIcon="pencil"
+                        size="small"
+                        [text]="true"
+                        [rounded]="true"
+                        severity="secondary"
+                        pTooltip="Редактировать"
+                        tooltipPosition="left"
+                        (buttonClick)="blockEdit.emit(block)"
+                      />
+                      <kp-button
+                        lucideIcon="trash-2"
+                        size="small"
+                        [text]="true"
+                        [rounded]="true"
+                        severity="danger"
+                        pTooltip="Удалить блок"
+                        tooltipPosition="left"
+                        (buttonClick)="blockRemove.emit(block.id)"
+                      />
+                    </div>
+                  }
                 </div>
               }
             </div>
+          } @else {
+            <!-- Дополнительные страницы: пустой бланк с фоном -->
+            <div class="canvas__page-label">Страница {{ i + 1 }}</div>
           }
         </div>
-      </div>
+      }
     </div>
   `,
   styles: [`
@@ -137,7 +146,9 @@ const BLOCK_TYPE_LABELS: Record<string, string> = {
       background: #e5e7eb;
       padding: 16px;
       display: flex;
-      justify-content: center;
+      flex-direction: column;
+      align-items: center;
+      gap: 24px;
       min-height: 600px;
       border-radius: 8px;
     }
@@ -149,6 +160,20 @@ const BLOCK_TYPE_LABELS: Record<string, string> = {
       box-shadow: 0 4px 24px rgba(0,0,0,0.12);
       border-radius: 2px;
       position: relative;
+      flex-shrink: 0;
+    }
+    .canvas__page--extra {
+      opacity: 0.85;
+    }
+    .canvas__page-label {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 1123px;
+      font-size: 14px;
+      color: #9ca3af;
+      user-select: none;
+      pointer-events: none;
     }
     /* Водяной знак — фоновое изображение как бланк */
     .canvas__watermark {
@@ -312,6 +337,11 @@ const BLOCK_TYPE_LABELS: Record<string, string> = {
   `]
 })
 export class KpDocCanvasComponent {
+  /** Количество страниц = количеству фоновых изображений (минимум 1) */
+  readonly pageCount = computed(() => this.backgroundImages().length || 1);
+  /** Индексы страниц для @for */
+  readonly pageIndexes = computed(() => Array.from({ length: this.pageCount() }, (_, i) => i));
+
   blocks = input<DocBlock[]>([]);
   mode = input<'template' | 'instance'>('template');
   editable = input(true);

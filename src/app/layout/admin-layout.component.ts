@@ -192,6 +192,8 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
         { id: 'nav-rpp', label: '📋 Реестр РПП', routerLink: '/admin/rpp' },
         { id: 'nav-certs', label: '📜 Сертификаты ЕАЭС', routerLink: '/admin/certificates' },
         { id: 'nav-cad', label: '📁 CAD-файлы', routerLink: '/admin/cad-files' },
+        { id: 'nav-monitor', label: '🩺 Мониторинг', icon: 'activity', routerLink: '/admin/monitor' },
+        { id: 'nav-one-c', label: '🔄 1С Интеграция', icon: 'refresh-cw', routerLink: '/admin/one-c' },
       ]
     }
   ];

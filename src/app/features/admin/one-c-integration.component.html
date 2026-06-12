@@ -1,0 +1,187 @@
+<!-- ===== Шапка ===== -->
+<div class="onec-header">
+  <h1 class="onec-title">Интеграция с 1С:Предприятие</h1>
+  <kp-button icon="save" severity="primary" (click)="saveSettings()" [disabled]="saving()">
+    {{ saving() ? 'Сохранение...' : 'Сохранить настройки' }}
+  </kp-button>
+</div>
+
+<!-- ===== Загрузка ===== -->
+@if (loading()) {
+  <div class="onec-loading">
+    <span class="onec-spinner"></span>
+    <span>Загрузка настроек...</span>
+  </div>
+}
+
+@if (!loading()) {
+  <!-- Настройки подключения -->
+  <div class="onec-section">
+    <h2 class="onec-section-title">⚙️ Настройки подключения</h2>
+    <kp-card>
+      <div class="onec-form">
+        <div class="onec-field">
+          <kp-toggle
+            label="Интеграция включена"
+            [(checked)]="syncEnabled"
+          />
+        </div>
+
+        <div class="onec-field">
+          <label class="onec-label">Режим обмена</label>
+          <kp-select [options]="modeOptions" [(ngModel)]="syncMode" />
+        </div>
+
+        <div class="onec-field">
+          <kp-input
+            label="URL HTTP-сервиса 1С"
+            placeholder="http://1c-server/base/hs/exchange"
+            [(ngModel)]="syncBaseUrl"
+          />
+          <span class="onec-hint">Например: http://192.168.1.100/trade/hs/exchange</span>
+        </div>
+
+        <div class="onec-field">
+          <kp-input
+            label="Логин"
+            placeholder="Пользователь 1С"
+            [(ngModel)]="syncUsername"
+          />
+        </div>
+
+        <div class="onec-field">
+          <kp-input
+            label="Пароль"
+            placeholder="Оставьте пустым, чтобы не менять"
+            [(ngModel)]="syncPassword"
+          />
+        </div>
+
+        <div class="onec-field">
+          <kp-input
+            label="Интервал автообмена (мин)"
+            placeholder="0 — отключено"
+            type="number"
+            [(ngModel)]="syncInterval"
+          />
+        </div>
+      </div>
+    </kp-card>
+  </div>
+
+  <!-- Статус -->
+  @if (settings()?.lastSyncAt) {
+    <div class="onec-section">
+      <h2 class="onec-section-title">📊 Последняя синхронизация</h2>
+      <kp-card>
+        <div class="onec-status">
+          <div class="onec-status-row">
+            <span class="onec-status-label">Дата</span>
+            <span class="onec-status-value">{{ settings()!.lastSyncAt | date:'dd.MM.yyyy HH:mm:ss' }}</span>
+          </div>
+          <div class="onec-status-row">
+            <span class="onec-status-label">Статус</span>
+            <kp-badge
+              [value]="settings()!.lastSyncStatus === 'ok' ? 'Успешно' : 'Ошибка'"
+              [severity]="settings()!.lastSyncStatus === 'ok' ? 'success' : 'danger'"
+            />
+          </div>
+          @if (settings()!.lastSyncMessage) {
+            <div class="onec-status-row">
+              <span class="onec-status-label">Сообщение</span>
+              <span class="onec-status-value">{{ settings()!.lastSyncMessage }}</span>
+            </div>
+          }
+        </div>
+      </kp-card>
+    </div>
+  }
+
+  <!-- Ручная синхронизация -->
+  <div class="onec-section">
+    <h2 class="onec-section-title">🔄 Ручная синхронизация</h2>
+    <kp-card>
+      <div class="onec-sync">
+        <div class="onec-sync-row">
+          <span class="onec-label">Направление</span>
+          <div class="onec-sync-dir">
+            <kp-button
+              [severity]="syncDirection() === 'import' ? 'primary' : 'secondary'"
+              (click)="syncDirection.set('import')"
+            >Импорт из 1С</kp-button>
+            <kp-button
+              [severity]="syncDirection() === 'export' ? 'primary' : 'secondary'"
+              (click)="syncDirection.set('export')"
+            >Экспорт в 1С</kp-button>
+          </div>
+        </div>
+
+        <div class="onec-sync-row">
+          <span class="onec-label">Сущности</span>
+          <div class="onec-sync-entities">
+            @for (ent of entityOptions; track ent.value) {
+              <kp-button
+                [severity]="syncEntities().includes(ent.value) ? 'primary' : 'secondary'"
+                (click)="toggleEntity(ent.value)"
+              >{{ ent.label }}</kp-button>
+            }
+          </div>
+        </div>
+
+        <div class="onec-sync-action">
+          <kp-button
+            icon="refresh-cw"
+            severity="primary"
+            (click)="runSync()"
+            [disabled]="syncing() || syncEntities().length === 0 || !settings()?.enabled"
+          >
+            {{ syncing() ? 'Синхронизация...' : 'Запустить синхронизацию' }}
+          </kp-button>
+          @if (!settings()?.enabled) {
+            <span class="onec-hint">
+              ⚠️ Интеграция отключена. Включите её в настройках выше.
+            </span>
+          }
+          @if (syncEntities().length === 0) {
+            <span class="onec-hint">
+              ⚠️ Выберите хотя бы одну сущность для обмена.
+            </span>
+          }
+        </div>
+      </div>
+    </kp-card>
+  </div>
+
+  <!-- Инструкция -->
+  <div class="onec-section">
+    <h2 class="onec-section-title">📖 Как настроить интеграцию</h2>
+    <kp-card>
+      <div class="onec-guide">
+        <div class="onec-step">
+          <h3 class="onec-step-num">Шаг 1</h3>
+          <p>В конфигураторе 1С создайте HTTP-сервис с методами <code>import</code> и <code>export</code>.
+          Сервис должен принимать и возвращать JSON.</p>
+        </div>
+        <div class="onec-step">
+          <h3 class="onec-step-num">Шаг 2</h3>
+          <p>Опубликуйте HTTP-сервис на веб-сервере 1С и получите URL вида:
+          <code>http://ваш-сервер-1с/имя-базы/hs/обмен</code></p>
+        </div>
+        <div class="onec-step">
+          <h3 class="onec-step-num">Шаг 3</h3>
+          <p>Укажите URL, логин и пароль в настройках выше. Включите интеграцию.</p>
+        </div>
+        <div class="onec-step">
+          <h3 class="onec-step-num">Шаг 4</h3>
+          <p>Запустите ручную синхронизацию для проверки. При успехе настройте интервал автообмена.</p>
+        </div>
+      </div>
+
+      <div class="onec-note">
+        <h3>ℹ️ Формат обмена</h3>
+        <p>Эндпоинт для приёма данных от 1С: <code>POST /api/v1/one-c/import</code></p>
+        <p>Данные передаются в JSON формате. Полная спецификация API доступна в документации.</p>
+      </div>
+    </kp-card>
+  </div>
+}

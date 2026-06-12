@@ -418,6 +418,32 @@ sudo journalctl --vacuum-time=7d
 
 ## 11. Бэкапы и восстановление
 
+### sudo NOPASSWD для docker (рекомендуется)
+
+Чтобы не вводить пароль при каждом docker-команде, настройте sudo без пароля:
+
+```bash
+# Создать файл с правилами для пользователя tiit
+sudo visudo -f /etc/sudoers.d/tiit-docker
+```
+
+Добавить:
+
+```
+tiit ALL=(ALL) NOPASSWD: /usr/bin/docker
+tiit ALL=(ALL) NOPASSWD: /usr/bin/docker compose
+```
+
+Сохранить (Ctrl+O, Enter, Ctrl+X). Проверить:
+
+```bash
+sudo docker ps
+# Должен выполниться без запроса пароля
+```
+
+> ⚠️ **Важно:** это даёт пользователю `tiit` полный доступ к Docker без пароля.
+> Docker-команды выполняются от root, поэтому это безопасно только на доверенных серверах.
+
 ### Как работает бэкап
 
 Бэкап создаётся скриптом `deploy/backup-mongodb.sh`:

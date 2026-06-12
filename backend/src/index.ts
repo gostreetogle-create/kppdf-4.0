@@ -50,6 +50,8 @@ import orderTaskRoutes from './modules/order-task.routes.js';
 import inventoryRoutes from './modules/inventory.routes.js';
 
 import uploadRoutes from './modules/upload.routes.js';
+import monitorRoutes from './modules/monitor.routes.js';
+import oneCRoutes from './modules/one-c.routes.js';
 import { User } from './modules/user.model.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -112,6 +114,8 @@ app.use('/api/v1/work-types', workTypeRoutes);
 app.use('/api/v1/order-tasks', orderTaskRoutes);
 app.use('/api/v1/inventory', inventoryRoutes);
 app.use('/api/v1/upload', uploadRoutes);
+app.use('/api/v1/monitor', monitorRoutes);
+app.use('/api/v1/one-c', oneCRoutes);
 
 // Swagger docs
 setupSwagger(app);

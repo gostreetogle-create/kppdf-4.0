@@ -1,4 +1,4 @@
-import { ApplicationConfig, ErrorHandler, provideZoneChangeDetection } from '@angular/core';
+import { ApplicationConfig, ErrorHandler, provideZonelessChangeDetection } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
@@ -28,6 +28,7 @@ import {
   LucideWarehouse, LucidePackage, LucideTruck,
   LucideUser, LucidePieChart, LucideLogOut, LucideSettings,
   LucidePackageCheck, LucideThumbsUp, LucideThumbsDown,
+  LucideActivity, LucideRefreshCw,
 } from '@lucide/angular';
 import Aura from '@primeuix/themes/aura';
 
@@ -38,7 +39,7 @@ import { API_URL } from './core/api-url.token';
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideZoneChangeDetection({ eventCoalescing: true }),
+    provideZonelessChangeDetection(),
     provideRouter(routes),
     provideHttpClient(withInterceptors([authInterceptor])),
     provideAnimationsAsync(),
@@ -77,6 +78,7 @@ export const appConfig: ApplicationConfig = {
       LucideWarehouse, LucidePackage, LucideTruck,
       LucideUser, LucidePieChart, LucideLogOut, LucideSettings,
       LucidePackageCheck, LucideThumbsUp, LucideThumbsDown,
+      LucideActivity, LucideRefreshCw,
     ),
   ]
 };

@@ -1,0 +1,206 @@
+.onec-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.onec-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-text);
+  margin: 0;
+}
+
+.onec-loading {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 2rem;
+  color: var(--color-text-secondary);
+}
+
+.onec-spinner {
+  width: 1.25rem;
+  height: 1.25rem;
+  border: 2px solid var(--color-border);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: onec-spin 0.8s linear infinite;
+}
+
+@keyframes onec-spin {
+  to { transform: rotate(360deg); }
+}
+
+.onec-section {
+  margin-bottom: 2rem;
+}
+
+.onec-section-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--color-text);
+  margin: 0 0 1rem;
+}
+
+/* ---- Форма ---- */
+.onec-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.onec-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.onec-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
+.onec-hint {
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+  opacity: 0.7;
+}
+
+/* ---- Статус ---- */
+.onec-status {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.onec-status-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.onec-status-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  min-width: 90px;
+}
+
+.onec-status-value {
+  font-size: 0.9rem;
+  color: var(--color-text);
+}
+
+/* ---- Синхронизация ---- */
+.onec-sync {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.onec-sync-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.onec-sync-dir {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.onec-sync-entities {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.onec-sync-action {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+/* ---- Инструкция ---- */
+.onec-guide {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.onec-step {
+  padding: 1rem;
+  border-radius: var(--radius-md);
+  background: var(--color-bg-secondary);
+}
+
+.onec-step-num {
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-primary);
+  margin: 0 0 0.5rem;
+}
+
+.onec-step p {
+  font-size: 0.85rem;
+  color: var(--color-text-secondary);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.onec-step code {
+  font-family: 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
+  font-size: 0.8rem;
+  background: var(--color-bg);
+  padding: 0.1rem 0.35rem;
+  border-radius: 3px;
+}
+
+.onec-note {
+  padding: 1rem;
+  border-radius: var(--radius-md);
+  background: var(--color-bg-secondary);
+  border-left: 3px solid var(--color-primary);
+}
+
+.onec-note h3 {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--color-text);
+  margin: 0 0 0.5rem;
+}
+
+.onec-note p {
+  font-size: 0.85rem;
+  color: var(--color-text-secondary);
+  margin: 0.25rem 0;
+}
+
+.onec-note code {
+  font-family: 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
+  font-size: 0.8rem;
+  background: var(--color-bg);
+  padding: 0.1rem 0.35rem;
+  border-radius: 3px;
+}
+
+/* ---- Адаптив ---- */
+@media (max-width: 600px) {
+  .onec-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .onec-guide {
+    grid-template-columns: 1fr;
+  }
+}

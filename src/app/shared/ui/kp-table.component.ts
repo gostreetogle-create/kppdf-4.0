@@ -1,4 +1,4 @@
-import { Component, input, output, OnInit, afterNextRender, signal, ChangeDetectionStrategy, ElementRef, inject } from '@angular/core';
+import { Component, input, output, OnInit, afterRenderEffect, signal, ChangeDetectionStrategy, ElementRef, inject } from '@angular/core';
 import { TableModule } from 'primeng/table';
 import { TooltipModule } from 'primeng/tooltip';
 import { CommonModule } from '@angular/common';
@@ -353,13 +353,14 @@ export class KpTableComponent implements OnInit {
   }
 
   constructor() {
-    // Применяем сохранённые ширины после первого рендера
-    // (PrimeNG перезаписывает [style.width] при init, поэтому применяем через DOM)
-    afterNextRender(() => {
+    // Применяем сохранённые ширины колонок после каждого рендера,
+    // когда savedWidths изменяется (PrimeNG перезаписывает [style.width] при init).
+    afterRenderEffect(() => {
       const saved = this.savedWidths();
       const keys = Object.keys(saved);
       if (keys.length === 0) return;
 
+      // requestAnimationFrame даёт PrimeNG время закончить async DOM-инициализацию колонок
       requestAnimationFrame(() => {
         for (const field of keys) {
           const th = this.elementRef.nativeElement.querySelector(`th[id="${field}"]`) as HTMLElement | null;
