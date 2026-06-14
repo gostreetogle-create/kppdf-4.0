@@ -1,0 +1,60 @@
+:host { display: block; }
+.wh-dash { max-width: 1100px; margin: 0 auto; padding: var(--space-6); }
+.wh-dash__header {
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: var(--space-3); margin: var(--space-4) 0;
+}
+.wh-dash__title { font-size: var(--font-size-xl); font-weight: var(--font-weight-bold); color: var(--color-text); margin: 0; }
+.wh-dash__header-actions { display: flex; gap: var(--space-3); }
+.wh-dash__loading, .wh-dash__empty { text-align: center; padding: var(--space-8); color: var(--color-text-secondary); }
+
+.wh-dash__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: var(--space-4);
+}
+
+.wh-dash__card {
+  display: block;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  text-decoration: none;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+.wh-dash__card:hover {
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.wh-dash__card-header {
+  display: flex; align-items: flex-start; gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+.wh-dash__card-icon { font-size: 2rem; line-height: 1; }
+.wh-dash__card-info { flex: 1; min-width: 0; }
+.wh-dash__card-name { font-size: var(--font-size-base); font-weight: 700; color: var(--color-text); margin: 0; }
+.wh-dash__card-addr { font-size: var(--font-size-xs); color: var(--color-text-secondary); }
+.wh-dash__card-arrow { font-size: 1.25rem; color: var(--color-text-secondary); opacity: 0.5; }
+
+.wh-dash__card-stats {
+  display: flex; gap: var(--space-4); margin-bottom: var(--space-3);
+}
+.wh-dash__stat { text-align: center; flex: 1; }
+.wh-dash__stat-value {
+  display: block; font-size: 1.5rem; font-weight: 800; color: var(--color-primary);
+}
+.wh-dash__stat-label {
+  display: block; font-size: var(--font-size-xs); color: var(--color-text-secondary);
+}
+
+.wh-dash__card-zones { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.wh-dash__zone-tag {
+  padding: 2px 10px; border-radius: 999px;
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  font-size: var(--font-size-xs); color: var(--color-text-secondary);
+}

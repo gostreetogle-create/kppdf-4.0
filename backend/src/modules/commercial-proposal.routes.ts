@@ -5,11 +5,16 @@
 import { Router } from 'express';
 import { createCrudRouter } from '../utils/crud-factory.js';
 import { CommercialProposal } from './commercial-proposal.model.js';
+import { nextCounter } from './counter.model.js';
 import { success } from '../utils/api-response.js';
 
 const router = createCrudRouter(CommercialProposal, {
   searchFields: ['number', 'notes'],
   sortFields: ['number', 'status', 'totalAmount', 'createdAt', 'updatedAt'],
+  beforeCreate: async () => {
+    const nextNum = await nextCounter('cp');
+    return { number: `КП-${String(nextNum).padStart(4, '0')}` };
+  },
 });
 
 // PATCH /:id/status — смена статуса

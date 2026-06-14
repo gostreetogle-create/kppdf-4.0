@@ -38,7 +38,6 @@ interface ProductRow extends Product {
     KpTableComponent, KpSelectComponent,
     KpInputComponent, KpToastComponent,
   ],
-  providers: [ConfirmationService],
   template: `
     <kp-toast />
 
@@ -87,22 +86,7 @@ interface ProductRow extends Product {
       />
     </kp-card>
   `,
-  styles: [`
-    :host { display: block; padding: var(--space-6); }
-    .prod-list__header {
-      display: flex; align-items: center; justify-content: space-between;
-      flex-wrap: wrap; gap: var(--space-3); margin: var(--space-4) 0;
-    }
-    .prod-list__title {
-      font-size: var(--font-size-xl); font-weight: var(--font-weight-bold);
-      color: var(--color-text); margin: 0;
-    }
-    .prod-list__header-actions {
-      display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap;
-    }
-    .prod-list__search { width: 220px; }
-    .prod-list__filter { width: 180px; }
-  `],
+  styleUrl: './product-list.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ProductListComponent {

@@ -19,6 +19,7 @@ import { ClientService } from '../../core/client.service';
 import { OrganizationService } from '../../core/organization.service';
 import { ConfirmationService } from 'primeng/api';
 import { ContractService } from '../../core/contract.service';
+import { generateId } from '../../core/crud-factory.js';
 import type { CommercialProposal, ProposalStatus, DocBlock } from '../../../../shared/types/index.js';
 
 interface ProposalRow extends CommercialProposal {
@@ -35,7 +36,6 @@ interface ProposalRow extends CommercialProposal {
     KpButtonComponent, KpBreadcrumbComponent, KpCardComponent,
     KpTableComponent, KpToastComponent, KpDocPreviewDialogComponent,
   ],
-  providers: [ConfirmationService],
   template: `
     <kp-toast />
 
@@ -127,6 +127,12 @@ export class ProposalListComponent {
       severity: 'info',
       tooltip: 'Создать договор',
       visible: (row: unknown) => (row as CommercialProposal).status === 'approved' || (row as CommercialProposal).status === 'sent',
+    },
+    {
+      icon: 'copy',
+      severity: 'secondary',
+      tooltip: 'Дублировать',
+      visible: () => true,
     },
   ];
 
@@ -314,6 +320,36 @@ export class ProposalListComponent {
 
   async onStatusChange(event: { icon: string; row: unknown }) {
     const p = event.row as CommercialProposal;
+
+    // Дублировать КП
+    if (event.icon === 'copy') {
+      KpConfirmDialogComponent.confirm(this.confirmationService, {
+        header: 'Дублирование КП',
+        message: `Создать копию КП «${p.number}»? Позиции будут скопированы в новый черновик.`,
+        acceptLabel: 'Дублировать',
+        rejectLabel: 'Отмена',
+        accept: async () => {
+          const itemsCopy = p.items.map(i => ({ ...i, id: generateId() }));
+          const res = await firstValueFrom(this.proposalService.createWithItems(
+            {
+              organizationId: p.organizationId,
+              clientId: p.clientId,
+              templateId: p.templateId,
+              status: 'draft',
+              notes: p.notes ? `${p.notes} (копия)` : `Копия ${p.number}`,
+            },
+            itemsCopy,
+          ));
+          if (res.success) {
+            this.notification.success(`КП «${res.data!.number}» создан как копия «${p.number}»`);
+            this.load();
+          } else {
+            this.notification.error(res.message || 'Ошибка дублирования');
+          }
+        },
+      });
+      return;
+    }
 
     // Создать договор из КП
     if (event.icon === 'file-signature') {

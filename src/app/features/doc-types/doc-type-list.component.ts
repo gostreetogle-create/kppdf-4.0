@@ -32,7 +32,6 @@ interface DocTypeRow extends DocTypeDef {
     KpTableComponent, KpDialogComponent, KpInputComponent,
     KpToggleComponent, KpToastComponent,
   ],
-  providers: [ConfirmationService],
   template: `
     <kp-toast />
 

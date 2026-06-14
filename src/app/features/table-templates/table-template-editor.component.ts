@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed, OnInit, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, signal, computed, OnInit, ChangeDetectionStrategy, DestroyRef } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
@@ -14,7 +14,6 @@ import { KpBreadcrumbComponent } from '../../shared/ui/kp-breadcrumb.component';
 import { KpCardComponent } from '../../shared/ui/kp-card.component';
 import { KpToastComponent } from '../../shared/ui/kp-toast.component';
 import { KpDialogComponent } from '../../shared/ui/kp-dialog.component';
-import { KpTableComponent, TableColumn } from '../../shared/ui/kp-table.component';
 import { PageTitleService } from '../../core/page-title.service';
 import { NotificationService } from '../../core/notification.service';
 import { TableRegistryService } from '../../core/table-registry.service';
@@ -40,8 +39,7 @@ interface EditableColumn {
   imports: [
     CommonModule, FormsModule, DragDropModule,
     KpInputComponent, KpSelectComponent, KpButtonComponent,
-    KpBreadcrumbComponent, KpCardComponent, KpToastComponent,
-    KpDialogComponent, KpTableComponent, LucideDynamicIcon,
+    KpBreadcrumbComponent, KpCardComponent, KpToastComponent, KpDialogComponent, LucideDynamicIcon,
   ],
   templateUrl: './table-template-editor.component.html',
   styleUrls: ['./table-template-editor.component.scss'],
@@ -54,6 +52,7 @@ export class TableTemplateEditorComponent implements OnInit {
   private templateService = inject(TableTemplateService);
   private pageTitle = inject(PageTitleService);
   private notification = inject(NotificationService);
+  private destroyRef = inject(DestroyRef);
 
   isNew = signal(true);
   templateId = signal<string | null>(null);
@@ -68,33 +67,32 @@ export class TableTemplateEditorComponent implements OnInit {
   loading = signal(false);
   saving = signal(false);
 
-  previewVisible = signal(false);
+  /** Индекс редактируемой колонки (-1 = закрыто) */
+  editingColumnIndex = signal(-1);
+  columnEditorVisible = false;
 
-  /** Колонки для kp-table в предпросмотре (только с выбранным полем) */
-  previewColumns = computed<TableColumn[]>(() =>
-    this.columns()
-      .filter(c => !!c.fieldName)
-      .map(c => ({
-        field: c.fieldName,
-        header: c.label || this.getFieldLabel(c.fieldName) || c.fieldName,
-        width: c.width || undefined,
-      }))
-  );
+  /** Текущая редактируемая колонка */
+  editingColumn = computed(() => {
+    const i = this.editingColumnIndex();
+    const cols = this.columns();
+    return i >= 0 && i < cols.length ? cols[i] : null;
+  });
 
-  /** Фейковые данные для предпросмотра (3 строки с тестовыми данными) */
+  openColumnEditor(index: number) {
+    this.editingColumnIndex.set(index);
+    this.columnEditorVisible = true;
+  }
+
+  /** Фейковые данные для живой таблицы (3 строки) */
   previewData = computed<Record<string, string>[]>(() => {
-    const cols = this.previewColumns();
+    const cols = this.columns();
     if (cols.length === 0) return [];
-    const rows: Record<string, string>[] = [];
     const sampleValues = ['Значение 1', 'Значение 2', 'Значение 3'];
-    for (const sv of sampleValues) {
+    return sampleValues.map(sv => {
       const row: Record<string, string> = {};
-      for (const col of cols) {
-        row[col.field] = sv;
-      }
-      rows.push(row);
-    }
-    return rows;
+      cols.forEach(c => { if (c.fieldName) row[c.fieldName] = sv; });
+      return row;
+    });
   });
 
   tableOptions = computed<SelectOption[]>(() =>
@@ -206,22 +204,58 @@ export class TableTemplateEditorComponent implements OnInit {
     });
   }
 
-  /** Предпросмотр таблицы */
-  openPreview() {
-    if (!this.selectedTable() || this.columns().length === 0) {
-      this.notification.info('Добавьте хотя бы одну колонку');
-      return;
-    }
-    this.previewVisible.set(true);
+  updateLabel(index: number, value: string) {
+    this.columns.update(cols => {
+      const arr = [...cols];
+      arr[index] = { ...arr[index], label: value };
+      return arr;
+    });
   }
 
-  /** Обновить ширину колонки из предпросмотра */
-  onColumnResized(event: { field: string; width: string }) {
-    this.columns.update(cols =>
-      cols.map(c =>
-        c.fieldName === event.field ? { ...c, width: event.width } : c
-      )
-    );
+  updateWidth(index: number, value: string) {
+    this.columns.update(cols => {
+      const arr = [...cols];
+      arr[index] = { ...arr[index], width: value };
+      return arr;
+    });
+  }
+
+  /** Ресайз колонки перетаскиванием */
+  private resizeIndex = -1;
+  private startX = 0;
+  private startWidth = 0;
+
+  initResize(event: MouseEvent, index: number) {
+    event.preventDefault();
+    event.stopPropagation();
+    this.resizeIndex = index;
+    this.startX = event.clientX;
+    const cell = (event.target as HTMLElement).closest('.live-th') as HTMLElement;
+    this.startWidth = cell ? cell.offsetWidth : 150;
+
+    const onMouseMove = (e: MouseEvent) => {
+      if (this.resizeIndex === -1) return;
+      const newWidth = Math.min(2000, Math.max(20, this.startWidth + (e.clientX - this.startX)));
+      this.columns.update(cols => {
+        const arr = [...cols];
+        arr[this.resizeIndex] = { ...arr[this.resizeIndex], width: `${newWidth}px` };
+        return arr;
+      });
+    };
+
+    const onMouseUp = () => {
+      this.resizeIndex = -1;
+      document.removeEventListener('mousemove', onMouseMove);
+      document.removeEventListener('mouseup', onMouseUp);
+    };
+
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp);
+
+    this.destroyRef.onDestroy(() => {
+      document.removeEventListener('mousemove', onMouseMove);
+      document.removeEventListener('mouseup', onMouseUp);
+    });
   }
 
   removeColumn(index: number) {

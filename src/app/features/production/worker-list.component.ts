@@ -15,8 +15,7 @@ import type { Worker } from '../../../../shared/types/index.js';
 @Component({
   selector: 'app-worker-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, KpBreadcrumbComponent, KpCardComponent, KpTableComponent, KpToastComponent],
-  providers: [ConfirmationService],
+  imports: [CommonModule, FormsModule, KpBreadcrumbComponent, KpCardComponent, KpTableComponent, KpToastComponent  ],
   template: `
     <kp-toast />
     <kp-card>
@@ -25,7 +24,7 @@ import type { Worker } from '../../../../shared/types/index.js';
       <kp-table storageKey="workers" [data]="rows()" [columns]="columns" [rows]="20" [paginator]="true" [sortField]="'lastName'" [sortOrder]="1" emptyMessage="Нет работников" [showActions]="true" (rowEdit)="onEdit($event)" (rowDelete)="onDelete($event)" />
     </kp-card>
   `,
-  styles: [`:host { display: block; max-width: 1000px; margin: 0 auto; padding: var(--space-6); } .page__title { font-size: var(--font-size-xl); font-weight: var(--font-weight-bold); margin: var(--space-4) 0; }`],
+  styleUrl: './worker-list.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class WorkerListComponent implements OnInit {

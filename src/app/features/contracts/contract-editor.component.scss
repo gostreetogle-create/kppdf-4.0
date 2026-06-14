@@ -1,0 +1,39 @@
+:host { display: block; }
+.ct-editor { max-width: 1000px; margin: 0 auto; padding: var(--space-6); }
+.ct-editor__header {
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: var(--space-3); margin: var(--space-4) 0;
+}
+.ct-editor__title { font-size: var(--font-size-xl); font-weight: var(--font-weight-bold); color: var(--color-text); margin: 0; }
+.ct-editor__header-actions { display: flex; align-items: center; gap: var(--space-3); }
+.ct-editor__section { margin-bottom: var(--space-5); padding-bottom: var(--space-5); border-bottom: 1px solid var(--color-border); }
+.ct-editor__section:last-child { border-bottom: none; margin-bottom: 0; }
+.ct-editor__section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-3); }
+.ct-editor__section-title { font-size: var(--font-size-base); font-weight: var(--font-weight-semibold); color: var(--color-text); margin: 0; }
+.ct-editor__row { display: flex; gap: var(--space-3); flex-wrap: wrap; }
+.ct-editor__row > * { flex: 1; min-width: 200px; }
+.ct-editor__row--mt { margin-top: var(--space-3); }
+.ct-editor__empty { text-align: center; padding: var(--space-6); color: var(--color-text-secondary); font-size: var(--font-size-sm); }
+.ct-editor__items { border: 1px solid var(--color-border); border-radius: var(--radius-md); overflow: hidden; }
+.ct-editor__items-header {
+  display: grid; grid-template-columns: 1fr 100px 80px 60px;
+  padding: var(--space-2) var(--space-3); background: var(--color-bg-secondary);
+  border-bottom: 1px solid var(--color-border); font-size: var(--font-size-xs); font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-text-secondary);
+}
+.ct-editor__th--qty { text-align: right; }
+.ct-editor__item-row {
+  display: grid; grid-template-columns: 1fr 100px 80px 60px;
+  padding: var(--space-2) var(--space-3); border-bottom: 1px solid var(--color-border);
+  transition: background 0.15s;
+}
+.ct-editor__item-row:last-child { border-bottom: none; }
+.ct-editor__item-row:hover { background: var(--color-bg-secondary); }
+.ct-editor__td { display: flex; align-items: center; font-size: var(--font-size-sm); }
+.ct-editor__td--qty { justify-content: flex-end; font-weight: 600; }
+.ct-editor__td--unit { color: var(--color-text-secondary); }
+.ct-editor__sku-badge {
+  padding: 2px 6px; border-radius: 4px; background: var(--color-bg);
+  border: 1px solid var(--color-border); font-family: 'Courier New', monospace;
+  font-size: var(--font-size-xs); color: var(--color-text-secondary);
+}

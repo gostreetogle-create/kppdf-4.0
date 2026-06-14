@@ -6,7 +6,10 @@ import { KpCardComponent } from '../../shared/ui/kp-card.component';
 import { KpBreadcrumbComponent } from '../../shared/ui/kp-breadcrumb.component';
 import { KpTableComponent, TableColumn } from '../../shared/ui/kp-table.component';
 import { KpToastComponent } from '../../shared/ui/kp-toast.component';
+import { KpConfirmDialogComponent } from '../../shared/ui/kp-confirm-dialog.component';
+import { NotificationService } from '../../core/notification.service';
 import { FinancialReportService } from '../../core/financial-report.service';
+import { ConfirmationService } from 'primeng/api';
 import type { FinancialReport } from '../../../../shared/types/index.js';
 
 const TYPE_LABELS: Record<string, string> = { profit_loss: 'Прибыли/убытки', cashflow: 'Движение средств', receivables: 'Дебиторская', payables: 'Кредиторская' };
@@ -15,7 +18,7 @@ const STATUS_LABELS: Record<string, string> = { draft: 'Черновик', final
 @Component({
   selector: 'app-financial-report-list',
   standalone: true,
-  imports: [CommonModule, KpCardComponent, KpBreadcrumbComponent, KpTableComponent, KpToastComponent],
+  imports: [CommonModule, KpCardComponent, KpBreadcrumbComponent, KpTableComponent, KpToastComponent  ],
   template: `
     <kp-toast />
     <kp-card>
@@ -24,11 +27,13 @@ const STATUS_LABELS: Record<string, string> = { draft: 'Черновик', final
       <kp-table storageKey="financial-reports" [data]="rows()" [columns]="columns" [rows]="20" [paginator]="true" emptyMessage="Отчёты не найдены" [showActions]="true" (rowDelete)="onDelete($event)" />
     </kp-card>
   `,
-  styles: [`:host { display: block; padding: var(--space-6); } .page__title { font-size: var(--font-size-xl); font-weight: var(--font-weight-bold); margin: var(--space-4) 0; }`],
+  styleUrl: './financial-report-list.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class FinancialReportListComponent implements OnInit {
   private svc = inject(FinancialReportService);
+  private notification = inject(NotificationService);
+  private confirmationService = inject(ConfirmationService);
   rows = signal<FinancialReport[]>([]);
   breadcrumbs: MenuItem[] = [{ label: '💰 Бухгалтерия' }, { label: 'Финансовые отчёты' }];
   columns: TableColumn[] = [
@@ -46,5 +51,5 @@ export class FinancialReportListComponent implements OnInit {
     const r = await firstValueFrom(this.svc.getAll());
     this.rows.set(r.data.map(f => ({ ...f, typeLabel: TYPE_LABELS[f.reportType] || f.reportType, statusLabel: STATUS_LABELS[f.status] || f.status } as FinancialReport & { typeLabel: string; statusLabel: string })));
   }
-  async onDelete(row: unknown) { const f = row as FinancialReport; if (confirm(`Удалить «${f.title}»?`)) { await firstValueFrom(this.svc.delete(f.id)); this.load(); } }
+  async onDelete(row: unknown) { const f = row as FinancialReport; KpConfirmDialogComponent.confirm(this.confirmationService, { header: 'Удаление', message: `Удалить «${f.title}»?`, acceptLabel: 'Удалить', rejectLabel: 'Отмена', accept: async () => { await firstValueFrom(this.svc.delete(f.id)); this.notification.success('Отчёт удалён'); this.load(); } }); }
 }

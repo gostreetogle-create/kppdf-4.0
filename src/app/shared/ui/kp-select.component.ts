@@ -19,6 +19,7 @@ export interface SelectOption {
       }
       <p-select
         [inputId]="inputId()"
+        [name]="inputId()"
         [options]="options()"
         [(ngModel)]="value"
         (ngModelChange)="onValueChange($event)"
@@ -34,6 +35,7 @@ export interface SelectOption {
         [attr.aria-describedby]="error() ? inputId() + '-error' : null"
         styleClass="kp-select__trigger"
         panelStyleClass="kp-select__panel"
+        [appendTo]="appendTo()"
       />
       @if (error()) {
         <small class="kp-select__error" [id]="inputId() + '-error'">{{ error() }}</small>
@@ -232,6 +234,7 @@ export class KpSelectComponent implements ControlValueAccessor {
   showClear = input(false);
   filter = input(false);
   filterBy = input('label');
+  appendTo = input<string>('body');
   inputId = input(`kp-select-${Math.random().toString(36).slice(2, 8)}`);
 
   value: unknown = null;

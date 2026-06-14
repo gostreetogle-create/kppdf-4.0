@@ -2,10 +2,6 @@
   display: block;
 }
 
-.tt-editor__header {
-  margin-bottom: var(--space-4);
-}
-
 .tt-editor__title {
   font-size: var(--font-size-xl);
   font-weight: var(--font-weight-bold);
@@ -26,15 +22,11 @@
   align-items: flex-end;
 }
 
-.tt-editor__columns {
-  margin-top: var(--space-6);
-}
-
-.tt-editor__columns-header {
+.tt-editor__live-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: var(--space-3);
+  margin: var(--space-4) 0 var(--space-3);
 }
 
 .tt-editor__columns-title {
@@ -44,107 +36,9 @@
   margin: 0;
 }
 
-.tt-editor__columns-header-actions {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-}
-
-.tt-editor__columns-list {
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-  gap: var(--space-3);
-  overflow-x: auto;
-  padding-bottom: var(--space-2);
-}
-
-.tt-editor__column-card {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border-light);
-  border-radius: var(--radius-md);
-  padding: var(--space-3);
-  transition: box-shadow var(--transition-spring), border-color var(--transition-spring);
-  cursor: default;
-}
-
-.tt-editor__column-card--error {
-  border-color: var(--color-error);
-}
-
-/* CDK Drag styles */
-.tt-editor__column-card.cdk-drag-preview {
-  box-shadow: var(--shadow-xl);
-  border-color: var(--color-primary);
-  background: var(--color-surface);
-  border-radius: var(--radius-md);
-  opacity: 0.95;
-}
-
-.tt-editor__column-card.cdk-drag-placeholder {
-  opacity: 0.35;
-  border-style: dashed;
-  border-color: var(--color-primary-light);
-  background: var(--color-primary-subtle);
-}
-
-.cdk-drop-list-dragging .tt-editor__column-card:not(.cdk-drag-placeholder) {
-  transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
-}
-
-/* === Заголовок карточки колонки === */
-.tt-editor__card-header {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  margin-bottom: var(--space-3);
-  padding-bottom: var(--space-2);
-  border-bottom: 1px solid var(--color-border-light);
-}
-
-.tt-editor__card-title {
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-semibold);
-  color: var(--color-text-secondary);
-  flex: 1;
-}
-
-.tt-editor__drag-handle {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--color-text-muted);
-  cursor: grab;
-  flex-shrink: 0;
-  transition: color var(--transition-spring);
-
-  &:hover {
-    color: var(--color-primary);
-  }
-
-  svg {
-    width: 1rem;
-    height: 1rem;
-  }
-}
-
-/* === Поля колонки (вертикально) === */
-.tt-editor__column-fields {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-}
-
-.tt-editor__column-hint {
-  color: var(--color-text-muted);
-  font-size: 0.7rem;
-  margin-top: -6px;
-  line-height: 1.2;
-}
-
 .tt-editor__empty {
   text-align: center;
-  padding: var(--space-6);
+  padding: var(--space-8);
   color: var(--color-text-muted);
   border: 1px dashed var(--color-border);
   border-radius: var(--radius-md);
@@ -164,8 +58,184 @@
   padding: var(--space-12);
 }
 
-/* === Предпросмотр таблицы === */
-.tt-editor__preview-footer {
+/* ============== Живая таблица (flex-подход) ============== */
+
+.live-table-wrapper {
+  overflow-x: auto;
+  width: 100%;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.live-table {
   display: flex;
-  justify-content: flex-end;
+  flex-direction: column;
+  width: max-content;
+}
+
+.live-row {
+  display: flex;
+  flex-direction: row;
+}
+
+/* ============== Ячейки ============== */
+
+.live-th {
+  position: relative;
+  flex-shrink: 0;
+  overflow: hidden;
+  border-right: 1px solid var(--color-border-light);
+  border-bottom: 1px solid var(--color-border-light);
+  background: var(--color-surface);
+  transition: border-color var(--transition-fast), background var(--transition-fast);
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.live-th--error {
+  border-color: var(--color-error);
+}
+
+.live-th--active {
+  background: var(--color-primary-subtle);
+  outline: 2px solid var(--color-primary);
+  outline-offset: -2px;
+  z-index: 1;
+}
+
+.live-td {
+  flex-shrink: 0;
+  overflow: hidden;
+  padding: var(--space-2) var(--space-3);
+  border-right: 1px solid var(--color-border-light);
+  border-bottom: 1px solid var(--color-border-light);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  box-sizing: border-box;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.live-td:last-child,
+.live-th:last-child {
+  border-right: none;
+}
+
+.live-data-row:last-child .live-td {
+  border-bottom: none;
+}
+
+/* ============== Содержимое заголовка ============== */
+
+.th-content {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 4px 6px;
+  cursor: pointer;
+  user-select: none;
+  min-height: 28px;
+  transition: background var(--transition-fast);
+
+  &:hover {
+    background: var(--color-surface-hover);
+  }
+}
+
+.th-drag-handle {
+  display: flex;
+  align-items: center;
+  color: var(--color-text-muted);
+  cursor: grab;
+  flex-shrink: 1;
+  min-width: 0;
+  overflow: hidden;
+  padding: 1px;
+  border-radius: var(--radius-sm);
+  transition: color var(--transition-fast);
+
+  &:hover { color: var(--color-primary); }
+
+  svg { width: 12px; height: 12px; flex-shrink: 0; }
+}
+
+.th-label {
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+  min-width: 0;
+}
+
+.th-error-icon {
+  font-size: 12px;
+  flex-shrink: 0;
+}
+
+/* ============== Ресайзер ============== */
+
+.live-resizer {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 5px;
+  cursor: col-resize;
+  z-index: 5;
+  transition: background var(--transition-fast);
+
+  &:hover,
+  &:active {
+    background: var(--color-primary);
+    opacity: 0.35;
+  }
+}
+
+/* ============== Попап-меню колонки ============== */
+
+.col-editor {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.col-editor__hint {
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+  margin-top: -12px;
+}
+
+.col-editor__actions {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--color-border-light);
+}
+
+/* ============== CDK Drag ============== */
+
+.col-drag-preview {
+  background: var(--color-surface);
+  border: 2px solid var(--color-primary);
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-md);
+  font-weight: bold;
+  font-size: var(--font-size-sm);
+}
+
+.live-th.cdk-drag-placeholder {
+  opacity: 0.25;
+  border-style: dashed;
+  border-color: var(--color-primary);
+  background: var(--color-primary-subtle);
+}
+
+.cdk-drop-list-dragging .live-th:not(.cdk-drag-placeholder) {
+  transition: transform 180ms cubic-bezier(0.25, 0.8, 0.25, 1.2);
 }

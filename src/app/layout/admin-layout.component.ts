@@ -11,9 +11,9 @@ import { AuthService } from '../core/auth.service';
 import { ThemeService } from '../core/theme.service';
 import { PageTitleService } from '../core/page-title.service';
 import { KpToastComponent } from '../shared/ui/kp-toast.component';
+import { KpConfirmDialogComponent } from '../shared/ui/kp-confirm-dialog.component';
 import { KpButtonComponent } from '../shared/ui/kp-button.component';
 import { KpSelectComponent, SelectOption } from '../shared/ui/kp-select.component';
-import { KpDrawerComponent } from '../shared/ui/kp-drawer.component';
 import { KpAvatarComponent } from '../shared/ui/kp-avatar.component';
 import { KpTieredMenuComponent } from '../shared/ui/kp-tiered-menu.component';
 import { LucideDynamicIcon } from '@lucide/angular';
@@ -25,8 +25,8 @@ import { LucideDynamicIcon } from '@lucide/angular';
     CommonModule, FormsModule,
     RouterOutlet, RouterLink, RouterLinkActive,
     TooltipModule,
-    KpToastComponent, KpButtonComponent, KpSelectComponent,
-    KpDrawerComponent, KpAvatarComponent, KpTieredMenuComponent, LucideDynamicIcon,
+    KpToastComponent, KpConfirmDialogComponent, KpButtonComponent, KpSelectComponent,
+    KpAvatarComponent, KpTieredMenuComponent, LucideDynamicIcon,
   ],
   templateUrl: './admin-layout.component.html',
   styleUrls: ['./admin-layout.component.scss'],
@@ -51,7 +51,6 @@ export class AdminLayoutComponent implements OnInit {
   readonly userMenuRef = viewChild<KpTieredMenuComponent>('userMenu');
 
   sidebarVisible = signal(true);
-  mobileSidebarVisible = signal(false);
   isDark = this.themeService.isDark;
   currentUser = this.authService.currentUser;
 
@@ -190,7 +189,6 @@ export class AdminLayoutComponent implements OnInit {
         { id: 'nav-certs', label: '📜 Сертификаты ЕАЭС', routerLink: '/admin/certificates' },
         { id: 'nav-cad', label: '📁 CAD-файлы', routerLink: '/admin/cad-files' },
         { id: 'nav-monitor', label: '🩺 Мониторинг', icon: 'activity', routerLink: '/admin/monitor' },
-        { id: 'nav-one-c', label: '🔄 1С Интеграция', icon: 'refresh-cw', routerLink: '/admin/one-c' },
       ]
     }
   ];
@@ -225,10 +223,6 @@ export class AdminLayoutComponent implements OnInit {
 
   toggleSidebar() {
     this.sidebarVisible.update(v => !v);
-  }
-
-  toggleMobileSidebar() {
-    this.mobileSidebarVisible.update(v => !v);
   }
 
   toggleTheme() {

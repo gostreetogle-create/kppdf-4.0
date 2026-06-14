@@ -25,12 +25,11 @@ interface RoleRow extends CounterpartyRoleDef {
   imports: [
     CommonModule, RouterLink,
     KpButtonComponent, KpBreadcrumbComponent, KpCardComponent,
-    KpTableComponent, KpToastComponent, KpConfirmDialogComponent,
+    KpTableComponent, KpToastComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <kp-toast />
-    <kp-confirm-dialog />
 
     <kp-card>
       <kp-breadcrumb [items]="breadcrumbs" />

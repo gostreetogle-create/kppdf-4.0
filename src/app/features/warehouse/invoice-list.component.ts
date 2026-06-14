@@ -30,7 +30,6 @@ interface InvoiceRow extends IncomingInvoice {
     KpButtonComponent, KpBreadcrumbComponent, KpCardComponent,
     KpTableComponent, KpToastComponent,
   ],
-  providers: [ConfirmationService],
   template: `
     <kp-toast />
 
@@ -68,11 +67,7 @@ interface InvoiceRow extends IncomingInvoice {
       </kp-card>
     </div>
   `,
-  styles: [`
-    :host { display: block; max-width: 1100px; margin: 0 auto; padding: var(--space-6); }
-    .inv-list__header { display: flex; align-items: center; justify-content: space-between; margin: var(--space-4) 0; }
-    .inv-list__title { font-size: var(--font-size-xl); font-weight: var(--font-weight-bold); color: var(--color-text); margin: 0; }
-  `],
+  styleUrl: './invoice-list.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class InvoiceListComponent implements OnInit {

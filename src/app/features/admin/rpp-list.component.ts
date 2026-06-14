@@ -6,7 +6,10 @@ import { KpCardComponent } from '../../shared/ui/kp-card.component';
 import { KpBreadcrumbComponent } from '../../shared/ui/kp-breadcrumb.component';
 import { KpTableComponent, TableColumn } from '../../shared/ui/kp-table.component';
 import { KpToastComponent } from '../../shared/ui/kp-toast.component';
+import { KpConfirmDialogComponent } from '../../shared/ui/kp-confirm-dialog.component';
+import { NotificationService } from '../../core/notification.service';
 import { RppService } from '../../core/rpp.service';
+import { ConfirmationService } from 'primeng/api';
 import type { RppEntry, RppStatus } from '../../../../shared/types/index.js';
 
 const STATUS_LABELS: Record<RppStatus, string> = { draft: 'Черновик', submitted: 'Подана', registered: '✅ Зарегистр.', expired: 'Истекла' };
@@ -14,7 +17,7 @@ const STATUS_LABELS: Record<RppStatus, string> = { draft: 'Черновик', su
 @Component({
   selector: 'app-rpp-list',
   standalone: true,
-  imports: [CommonModule, KpCardComponent, KpBreadcrumbComponent, KpTableComponent, KpToastComponent],
+  imports: [CommonModule, KpCardComponent, KpBreadcrumbComponent, KpTableComponent, KpToastComponent  ],
   template: `
     <kp-toast />
     <kp-card>
@@ -23,11 +26,13 @@ const STATUS_LABELS: Record<RppStatus, string> = { draft: 'Черновик', su
       <kp-table storageKey="rpp" [data]="rows()" [columns]="columns" [rows]="20" emptyMessage="Записи не найдены" [showActions]="true" (rowDelete)="onDelete($event)" />
     </kp-card>
   `,
-  styles: [`:host { display: block; padding: var(--space-6); } .page__title { font-size: var(--font-size-xl); font-weight: var(--font-weight-bold); margin: var(--space-4) 0; }`],
+  styleUrl: './rpp-list.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class RppListComponent implements OnInit {
   private svc = inject(RppService);
+  private notification = inject(NotificationService);
+  private confirmationService = inject(ConfirmationService);
   rows = signal<RppEntry[]>([]);
   breadcrumbs: MenuItem[] = [{ label: '⚙️ Администрирование' }, { label: 'Реестр РПП' }];
   columns: TableColumn[] = [
@@ -44,5 +49,5 @@ export class RppListComponent implements OnInit {
     const r = await firstValueFrom(this.svc.getAll());
     this.rows.set(r.data.map(e => ({ ...e, statusLabel: STATUS_LABELS[e.status] } as RppEntry & { statusLabel: string })));
   }
-  async onDelete(row: unknown) { const e = row as RppEntry; if (confirm(`Удалить «${e.productName}»?`)) { await firstValueFrom(this.svc.delete(e.id)); this.load(); } }
+  async onDelete(row: unknown) { const e = row as RppEntry; KpConfirmDialogComponent.confirm(this.confirmationService, { header: 'Удаление', message: `Удалить «${e.productName}»?`, acceptLabel: 'Удалить', rejectLabel: 'Отмена', accept: async () => { await firstValueFrom(this.svc.delete(e.id)); this.notification.success('Запись удалена'); this.load(); } }); }
 }

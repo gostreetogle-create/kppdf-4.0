@@ -36,7 +36,6 @@ interface ClientRow extends Client {
     KpTableComponent, KpDialogComponent, KpInputComponent,
     KpSelectComponent, KpToggleComponent, KpToastComponent,
   ],
-  providers: [ConfirmationService],
   template: `
     <kp-toast />
 

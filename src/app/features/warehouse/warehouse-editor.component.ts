@@ -98,41 +98,7 @@ import { WarehouseService } from '../../core/warehouse.service';
       </kp-card>
     </div>
   `,
-  styles: [`
-    :host { display: block; }
-    .wh-editor { max-width: 700px; margin: 0 auto; padding: var(--space-6); }
-    .wh-editor__header {
-      display: flex; align-items: center; justify-content: space-between;
-      flex-wrap: wrap; gap: var(--space-3); margin: var(--space-4) 0;
-    }
-    .wh-editor__title { font-size: var(--font-size-xl); font-weight: var(--font-weight-bold); color: var(--color-text); margin: 0; }
-    .wh-editor__header-actions { display: flex; gap: var(--space-3); }
-    .wh-editor__form { display: flex; flex-direction: column; gap: var(--space-4); }
-    .wh-editor__section { padding-top: var(--space-4); border-top: 1px solid var(--color-border); }
-    .wh-editor__section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-2); }
-    .wh-editor__section-title { font-size: var(--font-size-sm); font-weight: 700; color: var(--color-text); margin: 0; }
-    .wh-editor__hint { font-size: var(--font-size-xs); color: var(--color-text-secondary); margin: 0 0 var(--space-2); }
-    .wh-editor__zone-row { display: flex; gap: var(--space-2); align-items: center; margin-bottom: var(--space-2); }
-    .wh-editor__zone-input {
-      flex: 1; padding: var(--space-2) var(--space-3);
-      border: 1px solid var(--color-border); border-radius: var(--radius-md);
-      font-size: var(--font-size-sm);
-      background: var(--color-bg);
-      color: var(--color-text);
-    }
-    .wh-editor__zone-input:focus { outline: none; border-color: var(--color-primary); }
-    .wh-editor__zone-remove {
-      width: 32px; height: 32px; border-radius: 50%;
-      border: 1px solid var(--color-border);
-      background: var(--color-bg);
-      font-size: var(--font-size-lg); line-height: 1;
-      color: var(--color-text-secondary);
-      cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-      transition: all 0.15s;
-    }
-    .wh-editor__zone-remove:hover { background: var(--color-error-bg, #fef2f2); color: var(--color-error, #dc2626); border-color: var(--color-error, #dc2626); }
-  `],
+  styleUrl: './warehouse-editor.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class WarehouseEditorComponent implements OnInit {
@@ -206,6 +172,7 @@ export class WarehouseEditorComponent implements OnInit {
           name: this.formName,
           address: this.formAddress || undefined,
           zoneNames: zones,
+          roleIds,
         }));
         this.notification.success('Склад сохранён');
       }

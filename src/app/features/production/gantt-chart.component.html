@@ -3,6 +3,7 @@
   <div class="gantt-header">
     <h2 class="gantt-title">📊 Диаграмма Ганта</h2>
     <div class="gantt-controls">
+      <kp-button label="+ Новый заказ" lucideIcon="plus" severity="info" size="small" (buttonClick)="openCreateDialog()" />
       @let z = zoom();
       <div class="gantt-zoom">
         <kp-button label="День" [severity]="z === 'day' ? 'info' : 'secondary'" size="small" (buttonClick)="zoom.set('day')" />
@@ -174,66 +175,9 @@
   }
 
   <!-- ─── Диалог создания заказа ─── -->
-  <kp-dialog
-    header="📋 Новый производственный заказ"
-    [(visible)]="dialogVisible"
-    width="520px"
-    (onHide)="closeCreateDialog()"
-  >
-    <div class="gantt-order-form">
-      <div class="gantt-order-form__row">
-        <kp-select
-          label="Товар"
-          [options]="productOptions()"
-          [(ngModel)]="formProductId"
-          placeholder="Выберите товар..."
-          [filter]="true"
-          [showClear]="true"
-        />
-      </div>
-      <div class="gantt-order-form__row">
-        <kp-select
-          label="Заказчик"
-          [options]="orgOptions()"
-          [(ngModel)]="formOrgId"
-          placeholder="Выберите организацию..."
-          [filter]="true"
-          [showClear]="true"
-        />
-      </div>
-      <div class="gantt-order-form__row gantt-order-form__row--cols">
-        <kp-input
-          label="Количество"
-          type="number"
-          [(ngModel)]="formQuantity"
-        />
-        <kp-datepicker
-          label="Дата начала"
-          [(selectedDate)]="formStartDate"
-        />
-        <kp-datepicker
-          label="Дата окончания"
-          [(selectedDate)]="formEndDate"
-        />
-      </div>
-      <div class="gantt-order-form__row">
-        <kp-input
-          label="Примечание"
-          [(ngModel)]="formNotes"
-          placeholder="Опционально..."
-        />
-      </div>
-    </div>
-    <div class="gantt-order-form__actions">
-      <kp-button label="Отмена" severity="secondary" (buttonClick)="closeCreateDialog()" />
-      <kp-button
-        label="Создать заказ"
-        lucideIcon="plus"
-        severity="info"
-        [loading]="formSubmitting()"
-        [disabled]="!formProductId() || !formOrgId() || formQuantity() < 1"
-        (buttonClick)="createOrder()"
-      />
-    </div>
-  </kp-dialog>
+  <app-create-order-dialog
+    [products]="cachedProducts()"
+    [organizations]="cachedOrganizations()"
+    (orderCreated)="onOrderCreated($event)"
+  />
 </kp-card>

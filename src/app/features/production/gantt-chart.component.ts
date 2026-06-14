@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed, ChangeDetectionStrategy, OnInit } from '@angular/core';
+import { Component, inject, signal, computed, viewChild, ChangeDetectionStrategy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
@@ -7,9 +7,7 @@ import { KpCardComponent } from '../../shared/ui/kp-card.component';
 import { KpBreadcrumbComponent } from '../../shared/ui/kp-breadcrumb.component';
 import { KpSelectComponent } from '../../shared/ui/kp-select.component';
 import { KpButtonComponent } from '../../shared/ui/kp-button.component';
-import { KpDialogComponent } from '../../shared/ui/kp-dialog.component';
-import { KpInputComponent } from '../../shared/ui/kp-input.component';
-import { KpDatepickerComponent } from '../../shared/ui/kp-datepicker.component';
+import { CreateOrderDialogComponent } from './create-order-dialog.component';
 import { OrderTaskService } from '../../core/order-task.service';
 import { WorkerService } from '../../core/worker.service';
 import { ProductionOrderService } from '../../core/production-order.service';
@@ -32,7 +30,7 @@ interface LayoutRow { type: 'group' | 'bar'; groupName?: string; groupId?: strin
 @Component({
   selector: 'app-gantt-chart',
   standalone: true,
-  imports: [CommonModule, FormsModule, KpCardComponent, KpBreadcrumbComponent, KpSelectComponent, KpButtonComponent, KpDialogComponent, KpInputComponent, KpDatepickerComponent],
+  imports: [CommonModule, FormsModule, KpCardComponent, KpBreadcrumbComponent, KpSelectComponent, KpButtonComponent, CreateOrderDialogComponent],
   templateUrl: './gantt-chart.component.html',
   styleUrls: ['./gantt-chart.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -374,73 +372,15 @@ export class GanttChartComponent implements OnInit {
   }
 
   // ─── Форма создания заказа ───
-  dialogVisible = signal(false);
-  formProductId = signal<string | null>(null);
-  formOrgId = signal<string | null>(null);
-  formQuantity = signal<number>(1);
-  formStartDate = signal<Date | null>(new Date());
-  formEndDate = signal<Date | null>(new Date(Date.now() + 7 * 86400000));
-  formNotes = signal('');
-  formSubmitting = signal(false);
+  createOrderDialog = viewChild.required(CreateOrderDialogComponent);
 
-  productOptions = computed(() => this.cachedProducts()
-    .filter(p => p.productType === 'manufactured' && p.isActive)
-    .map(p => ({ label: `${p.sku} — ${p.name}`, value: p.id })));
+  openCreateDialog() { this.createOrderDialog().open(); }
 
-  orgOptions = computed(() => this.cachedOrganizations()
-    .filter(o => o.isActive)
-    .map(o => ({ label: o.shortName || o.name, value: o.id })));
-
-  openCreateDialog() { this.dialogVisible.set(true); }
-
-  closeCreateDialog() { this.dialogVisible.set(false); this.resetForm(); }
-
-  private resetForm() {
-    this.formProductId.set(null);
-    this.formOrgId.set(null);
-    this.formQuantity.set(1);
-    const today = new Date();
-    this.formStartDate.set(today);
-    const end = new Date(today); end.setDate(end.getDate() + 7);
-    this.formEndDate.set(end);
-    this.formNotes.set('');
-  }
-
-  async createOrder() {
-    const productId = this.formProductId();
-    const orgId = this.formOrgId();
-    const qty = this.formQuantity();
-    if (!productId || !orgId || qty < 1) return;
-    this.formSubmitting.set(true);
-    try {
-      const product = this.cachedProducts().find(p => p.id === productId);
-      const org = this.cachedOrganizations().find(o => o.id === orgId);
-      if (!product || !org) return;
-      const sd = this.formStartDate() || new Date();
-      const ed = this.formEndDate() || new Date(new Date().getTime() + 7 * 86400000);
-      const data = {
-        contractId: '',
-        productId: product.id,
-        productName: product.name,
-        productSku: product.sku,
-        quantity: qty,
-        status: 'accepted' as const,
-        plannedStartDate: sd.toISOString().substring(0, 10),
-        plannedEndDate: ed.toISOString().substring(0, 10),
-        notes: this.formNotes(),
-      };
-      const res = await firstValueFrom(this.orderSvc.createOrder(data));
-      if (res.success) {
-        this.closeCreateDialog();
-        // Обновить список заказов и выбрать новый
-        const ordersRes = await firstValueFrom(this.orderSvc.getAll());
-        this.orders.set(ordersRes.data);
-        this.selectedOrderId.set(res.data.id);
-        this.loadTasks();
-      }
-    } finally {
-      this.formSubmitting.set(false);
-    }
+  async onOrderCreated(order: ProductionOrder) {
+    const ordersRes = await firstValueFrom(this.orderSvc.getAll());
+    this.orders.set(ordersRes.data);
+    this.selectedOrderId.set(order.id);
+    this.loadTasks();
   }
 
   ngOnInit() { this.load(); this.loadCachedData(); }

@@ -15,8 +15,7 @@ import type { WorkType } from '../../../../shared/types/index.js';
 @Component({
   selector: 'app-work-type-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, KpBreadcrumbComponent, KpCardComponent, KpTableComponent, KpToastComponent],
-  providers: [ConfirmationService],
+  imports: [CommonModule, FormsModule, KpBreadcrumbComponent, KpCardComponent, KpTableComponent, KpToastComponent  ],
   template: `
     <kp-toast />
     <kp-card>
@@ -25,7 +24,7 @@ import type { WorkType } from '../../../../shared/types/index.js';
       <kp-table storageKey="work-types" [data]="rows()" [columns]="columns" [rows]="20" [paginator]="true" [sortField]="'name'" [sortOrder]="1" emptyMessage="Виды работ не найдены" [showActions]="true" (rowEdit)="onEdit($event)" (rowDelete)="onDelete($event)" />
     </kp-card>
   `,
-  styles: [`:host { display: block; max-width: 1000px; margin: 0 auto; padding: var(--space-6); } .page__title { font-size: var(--font-size-xl); font-weight: var(--font-weight-bold); margin: var(--space-4) 0; }`],
+  styleUrl: './work-type-list.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class WorkTypeListComponent implements OnInit {

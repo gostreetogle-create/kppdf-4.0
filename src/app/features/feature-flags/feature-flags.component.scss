@@ -1,0 +1,65 @@
+:host { display: block; }
+.ff__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.ff__title {
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0;
+}
+.ff__note {
+  font-size: 13px;
+  color: var(--color-text-muted);
+  margin: -4px 0 20px;
+}
+.ff__section {
+  margin-bottom: 24px;
+}
+.ff__section-title {
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-muted);
+  margin: 0 0 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--color-border-light);
+}
+.ff__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  border-radius: 6px;
+  transition: background 0.15s;
+}
+.ff__row:hover {
+  background: var(--color-surface-alt);
+}
+.ff__row + .ff__row {
+  border-top: 1px solid var(--color-border-light);
+}
+.ff__row-info {
+  flex: 1;
+  min-width: 0;
+}
+.ff__row-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.ff__row-desc {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  margin-top: 2px;
+}
+.ff__row-toggle {
+  flex-shrink: 0;
+  margin-left: 16px;
+}

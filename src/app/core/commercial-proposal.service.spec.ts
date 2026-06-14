@@ -59,14 +59,13 @@ describe('CommercialProposalService', () => {
 
   // ─────── CRUD: создание ───────
 
-  it('createWithItems создаёт КП через POST с авто-номером', async () => {
+  it('createWithItems создаёт КП через POST (номер генерирует бэкенд)', async () => {
     const promise = firstValueFrom(service.createWithItems(
       { organizationId: 'org-1', clientId: 'cli-1', status: 'draft' },
       [makeProposalItem()],
     ));
     const req = httpMock.expectOne('/api/v1/commercial-proposals');
     expect(req.request.method).toBe('POST');
-    expect(req.request.body.number).toMatch(/^КП-\d{4}$/);
     expect(req.request.body.totalAmount).toBe(178500);
     expect(req.request.body.items.length).toBe(1);
     req.flush({ success: true, data: MOCK_CP });
@@ -104,37 +103,28 @@ describe('CommercialProposalService', () => {
     expect(res.data!.totalAmount).toBe(0);
   });
 
-  // ─────── Нумерация ───────
+  // ─────── Нумерация (на бэкенде) ───────
 
-  it('авто-нумерация: номера увеличиваются последовательно', async () => {
+  it('номера КП приходят с бэкенда в формате КП-NNNN', async () => {
     const p1 = firstValueFrom(service.createWithItems({ organizationId: 'org-1' }, [makeProposalItem()]));
-    const r1 = httpMock.expectOne('/api/v1/commercial-proposals');
-    const num1 = r1.request.body.number;
-    r1.flush({ success: true, data: { ...MOCK_CP, number: num1 } });
+    httpMock.expectOne('/api/v1/commercial-proposals').flush({ success: true, data: { ...MOCK_CP, number: 'КП-0001' } });
 
     const p2 = firstValueFrom(service.createWithItems({ organizationId: 'org-2' }, [makeProposalItem()]));
-    const r2 = httpMock.expectOne('/api/v1/commercial-proposals');
-    const num2 = r2.request.body.number;
-    r2.flush({ success: true, data: { ...MOCK_CP, number: num2 } });
+    httpMock.expectOne('/api/v1/commercial-proposals').flush({ success: true, data: { ...MOCK_CP, number: 'КП-0002' } });
 
     const p3 = firstValueFrom(service.createWithItems({ organizationId: 'org-3' }, [makeProposalItem()]));
-    const r3 = httpMock.expectOne('/api/v1/commercial-proposals');
-    const num3 = r3.request.body.number;
-    r3.flush({ success: true, data: { ...MOCK_CP, number: num3 } });
+    httpMock.expectOne('/api/v1/commercial-proposals').flush({ success: true, data: { ...MOCK_CP, number: 'КП-0003' } });
 
     const [res1, res2, res3] = await Promise.all([p1, p2, p3]);
     expect(res1.data!.number).toMatch(/^КП-\d{4}$/);
     expect(res2.data!.number).toMatch(/^КП-\d{4}$/);
     expect(res3.data!.number).toMatch(/^КП-\d{4}$/);
-    // Три разных номера
     expect(new Set([res1.data!.number, res2.data!.number, res3.data!.number]).size).toBe(3);
   });
 
-  it('номер КП всегда в формате КП-NNNN (4 цифры)', async () => {
+  it('формат номера КП всегда КП-NNNN (4 цифры)', async () => {
     const promise = firstValueFrom(service.createWithItems({ organizationId: 'org-1' }, [makeProposalItem()]));
-    const req = httpMock.expectOne('/api/v1/commercial-proposals');
-    expect(req.request.body.number).toMatch(/^КП-\d{4}$/);
-    req.flush({ success: true, data: MOCK_CP });
+    httpMock.expectOne('/api/v1/commercial-proposals').flush({ success: true, data: MOCK_CP });
     const res = await promise;
     expect(res.data!.number).toMatch(/^КП-\d{4}$/);
   });

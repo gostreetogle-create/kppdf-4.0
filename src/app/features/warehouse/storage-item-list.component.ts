@@ -11,6 +11,7 @@ import { KpBreadcrumbComponent } from '../../shared/ui/kp-breadcrumb.component';
 import { KpToastComponent } from '../../shared/ui/kp-toast.component';
 import { KpTableComponent, TableColumn } from '../../shared/ui/kp-table.component';
 import { KpInputComponent } from '../../shared/ui/kp-input.component';
+import { KpDialogComponent } from '../../shared/ui/kp-dialog.component';
 import { KpConfirmDialogComponent } from '../../shared/ui/kp-confirm-dialog.component';
 
 import { NotificationService } from '../../core/notification.service';
@@ -28,9 +29,8 @@ interface StorageItemRow extends StorageItem {
   imports: [
     CommonModule, FormsModule, RouterLink,
     KpCardComponent, KpButtonComponent, KpBreadcrumbComponent, KpToastComponent,
-    KpTableComponent, KpInputComponent,
+    KpTableComponent, KpInputComponent, KpDialogComponent,
   ],
-  providers: [ConfirmationService],
   template: `
     <kp-toast />
 
@@ -70,87 +70,59 @@ interface StorageItemRow extends StorageItem {
       </kp-card>
 
       <!-- Create/Edit Dialog -->
-      @if (showDialog) {
-        <div class="si-list__overlay" (click)="showDialog = false">
-          <div class="si-list__dialog" (click)="$event.stopPropagation()">
-            <h3 class="si-list__dialog-title">{{ editingId ? 'Редактировать' : 'Новый инвентарь' }}</h3>
+      <kp-dialog
+        [header]="editingId ? 'Редактировать' : 'Новый инвентарь'"
+        [(visible)]="showDialog"
+        width="500px"
+        (dialogHide)="showDialog = false"
+      >
+        <div class="si-list__form">
+          <kp-input
+            label="Название *"
+            [(ngModel)]="formName"
+            placeholder="Например: Сварочный аппарат TIG-200"
+          />
+          <kp-input
+            label="Описание"
+            [(ngModel)]="formDescription"
+            placeholder="Характеристики, состояние..."
+          />
+          <div class="si-list__form-row">
+            <kp-input
+              label="Вес (кг)"
+              type="number"
+              [(ngModel)]="formWeight"
+            />
+            <kp-input
+              label="Габариты"
+              [(ngModel)]="formDimensions"
+              placeholder="Д×Ш×В мм"
+            />
+          </div>
+          <kp-input
+            label="Заметки"
+            [(ngModel)]="formNotes"
+            placeholder="Где используется, серийный номер..."
+          />
 
-            <div class="si-list__form">
-              <kp-input
-                label="Название *"
-                [(ngModel)]="formName"
-                placeholder="Например: Сварочный аппарат TIG-200"
-              />
-              <kp-input
-                label="Описание"
-                [(ngModel)]="formDescription"
-                placeholder="Характеристики, состояние..."
-              />
-              <div class="si-list__form-row">
-                <kp-input
-                  label="Вес (кг)"
-                  type="number"
-                  [(ngModel)]="formWeight"
-                />
-                <kp-input
-                  label="Габариты"
-                  [(ngModel)]="formDimensions"
-                  placeholder="Д×Ш×В мм"
-                />
-              </div>
-              <kp-input
-                label="Заметки"
-                [(ngModel)]="formNotes"
-                placeholder="Где используется, серийный номер..."
-              />
-
-              <div class="si-list__form-actions">
-                <kp-button
-                  [label]="editingId ? 'Сохранить' : 'Добавить на склад'"
-                  lucideIcon="check"
-                  [loading]="saving()"
-                  (buttonClick)="save()"
-                />
-                <kp-button
-                  label="Отмена"
-                  severity="secondary"
-                  (buttonClick)="showDialog = false"
-                />
-              </div>
-            </div>
+          <div class="si-list__form-actions">
+            <kp-button
+              [label]="editingId ? 'Сохранить' : 'Добавить на склад'"
+              lucideIcon="check"
+              [loading]="saving()"
+              (buttonClick)="save()"
+            />
+            <kp-button
+              label="Отмена"
+              severity="secondary"
+              (buttonClick)="showDialog = false"
+            />
           </div>
         </div>
-      }
+      </kp-dialog>
     </div>
   `,
-  styles: [`
-    :host { display: block; }
-    .si-list { max-width: 1000px; margin: 0 auto; padding: var(--space-6); }
-    .si-list__header {
-      display: flex; align-items: center; justify-content: space-between;
-      flex-wrap: wrap; gap: var(--space-3); margin: var(--space-4) 0;
-    }
-    .si-list__title { font-size: var(--font-size-xl); font-weight: var(--font-weight-bold); color: var(--color-text); margin: 0; }
-    .si-list__header-actions { display: flex; gap: var(--space-3); }
-
-    .si-list__overlay {
-      position: fixed; inset: 0; background: rgba(0,0,0,0.4);
-      display: flex; align-items: center; justify-content: center;
-      z-index: 1000;
-    }
-    .si-list__dialog {
-      background: var(--color-surface);
-      border-radius: var(--radius-lg);
-      padding: var(--space-6);
-      width: 100%; max-width: 500px;
-      box-shadow: var(--shadow-lg);
-    }
-    .si-list__dialog-title { font-size: var(--font-size-base); font-weight: 700; color: var(--color-text); margin: 0 0 var(--space-4); }
-    .si-list__form { display: flex; flex-direction: column; gap: var(--space-3); }
-    .si-list__form-row { display: flex; gap: var(--space-3); }
-    .si-list__form-row > * { flex: 1; }
-    .si-list__form-actions { display: flex; gap: var(--space-3); margin-top: var(--space-3); }
-  `],
+  styleUrl: './storage-item-list.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class StorageItemListComponent implements OnInit {

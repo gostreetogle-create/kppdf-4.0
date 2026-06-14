@@ -6,8 +6,10 @@ import { KpCardComponent } from '../../shared/ui/kp-card.component';
 import { KpBreadcrumbComponent } from '../../shared/ui/kp-breadcrumb.component';
 import { KpTableComponent, TableColumn, TableExtraAction } from '../../shared/ui/kp-table.component';
 import { KpToastComponent } from '../../shared/ui/kp-toast.component';
+import { KpConfirmDialogComponent } from '../../shared/ui/kp-confirm-dialog.component';
 import { NotificationService } from '../../core/notification.service';
 import { OrderClosingService } from '../../core/order-closing.service';
+import { ConfirmationService } from 'primeng/api';
 import type { OrderClosing } from '../../../../shared/types/index.js';
 
 const STATUS_LABELS: Record<string, string> = { draft: 'Черновик', signed: 'Подписан', closed: 'Закрыт' };
@@ -16,7 +18,7 @@ const TYPE_LABELS: Record<string, string> = { act: 'Акт', invoice: 'Счёт-
 @Component({
   selector: 'app-order-closing-list',
   standalone: true,
-  imports: [CommonModule, KpCardComponent, KpBreadcrumbComponent, KpTableComponent, KpToastComponent],
+  imports: [CommonModule, KpCardComponent, KpBreadcrumbComponent, KpTableComponent, KpToastComponent  ],
   template: `
     <kp-toast />
     <kp-card>
@@ -25,12 +27,13 @@ const TYPE_LABELS: Record<string, string> = { act: 'Акт', invoice: 'Счёт-
       <kp-table storageKey="order-closings" [data]="rows()" [columns]="columns" [rows]="20" [paginator]="true" emptyMessage="Документы не найдены" [showActions]="true" [extraActions]="statusActions" (rowDelete)="onDelete($event)" (rowExtraAction)="onSign($event)" />
     </kp-card>
   `,
-  styles: [`:host { display: block; padding: var(--space-6); } .page__title { font-size: var(--font-size-xl); font-weight: var(--font-weight-bold); margin: var(--space-4) 0; }`],
+  styleUrl: './order-closing-list.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class OrderClosingListComponent implements OnInit {
   private svc = inject(OrderClosingService);
   private notification = inject(NotificationService);
+  private confirmationService = inject(ConfirmationService);
   rows = signal<OrderClosing[]>([]);
   breadcrumbs: MenuItem[] = [{ label: '💰 Бухгалтерия' }, { label: 'Закрытие заказов' }];
   columns: TableColumn[] = [
@@ -57,5 +60,5 @@ export class OrderClosingListComponent implements OnInit {
     this.notification.success(`Подписан: ${c.number}`);
     this.load();
   }
-  async onDelete(row: unknown) { const c = row as OrderClosing; if (confirm(`Удалить «${c.number}»?`)) { await firstValueFrom(this.svc.delete(c.id)); this.load(); } }
+  async onDelete(row: unknown) { const c = row as OrderClosing; KpConfirmDialogComponent.confirm(this.confirmationService, { header: 'Удаление', message: `Удалить «${c.number}»?`, acceptLabel: 'Удалить', rejectLabel: 'Отмена', accept: async () => { await firstValueFrom(this.svc.delete(c.id)); this.notification.success('Документ удалён'); this.load(); } }); }
 }

@@ -1,0 +1,9 @@
+:host { display: block; max-width: 1000px; margin: 0 auto; padding: var(--space-6); }
+.cl-list__header {
+  display: flex; align-items: center; justify-content: space-between; margin: var(--space-4) 0;
+}
+.cl-list__title { font-size: var(--font-size-xl); font-weight: var(--font-weight-bold); color: var(--color-text); margin: 0; }
+.cl-list__form { display: flex; flex-direction: column; gap: var(--space-4); }
+.cl-list__form-row { display: flex; gap: var(--space-3); flex-wrap: wrap; }
+.cl-list__form-row > * { flex: 1; min-width: 140px; }
+.cl-list__dialog-footer { display: flex; gap: var(--space-3); justify-content: flex-end; margin-top: var(--space-4); }

@@ -13,6 +13,7 @@ import { KpConfirmDialogComponent } from '../../shared/ui/kp-confirm-dialog.comp
 
 import { NotificationService } from '../../core/notification.service';
 import { ContractService } from '../../core/contract.service';
+import { generateId } from '../../core/crud-factory.js';
 import { ConfirmationService } from 'primeng/api';
 import type { Contract, ContractStatus } from '../../../../shared/types/index.js';
 
@@ -30,7 +31,6 @@ interface ContractRow extends Contract {
     KpButtonComponent, KpBreadcrumbComponent, KpCardComponent,
     KpTableComponent, KpToastComponent,
   ],
-  providers: [ConfirmationService],
   template: `
     <kp-toast />
 
@@ -60,22 +60,15 @@ interface ContractRow extends Contract {
         [showActions]="true"
         [loading]="loading()"
         [extraActions]="statusActions"
+        (rowView)="onView($event)"
         (rowEdit)="onEditRow($event)"
         (rowDelete)="onDelete($event)"
+        (rowClone)="onDuplicate($event)"
         (rowExtraAction)="onStatusChange($event)"
       />
     </kp-card>
   `,
-  styles: [`
-    :host { display: block; max-width: 1100px; margin: 0 auto; padding: var(--space-6); }
-    .ct-list__header {
-      display: flex; align-items: center; justify-content: space-between; margin: var(--space-4) 0;
-    }
-    .ct-list__title {
-      font-size: var(--font-size-xl); font-weight: var(--font-weight-bold);
-      color: var(--color-text); margin: 0;
-    }
-  `],
+  styleUrl: './contract-list.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ContractListComponent {
@@ -149,9 +142,35 @@ export class ContractListComponent {
     return map[s] || s;
   }
 
+  onView(row: unknown) {
+    const c = row as Contract;
+    this.router.navigate(['/sales/contracts', c.id]);
+  }
+
   onEditRow(row: unknown) {
     const c = row as Contract;
     this.router.navigate(['/sales/contracts', c.id, 'edit']);
+  }
+
+  async onDuplicate(row: unknown) {
+    const c = row as ContractRow;
+    // Создаём копию договора с новыми ID и номером, статус — черновик
+    const duplicateData = {
+      organizationId: c.organizationId,
+      clientId: c.clientId,
+      proposalId: c.proposalId,
+      status: 'draft' as const,
+      notes: c.notes ? `Копия: ${c.notes}` : undefined,
+      items: c.items.map(item => ({ ...item, id: generateId() })),
+    };
+
+    const res = await firstValueFrom(this.contractService.createContract(duplicateData));
+    if (res.success) {
+      this.notification.success(`Дубликат «${res.data.number}» создан`);
+      this.load();
+    } else {
+      this.notification.error(res.message || 'Ошибка дублирования');
+    }
   }
 
   async onStatusChange(event: { icon: string; row: unknown }) {

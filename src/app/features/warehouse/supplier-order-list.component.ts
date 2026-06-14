@@ -30,7 +30,6 @@ interface OrderRow extends SupplierOrder {
     KpButtonComponent, KpBreadcrumbComponent, KpCardComponent,
     KpTableComponent, KpToastComponent,
   ],
-  providers: [ConfirmationService],
   template: `
     <kp-toast />
 
@@ -68,11 +67,7 @@ interface OrderRow extends SupplierOrder {
       </kp-card>
     </div>
   `,
-  styles: [`
-    :host { display: block; max-width: 1100px; margin: 0 auto; padding: var(--space-6); }
-    .so-list__header { display: flex; align-items: center; justify-content: space-between; margin: var(--space-4) 0; }
-    .so-list__title { font-size: var(--font-size-xl); font-weight: var(--font-weight-bold); color: var(--color-text); margin: 0; }
-  `],
+  styleUrl: './supplier-order-list.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SupplierOrderListComponent implements OnInit {

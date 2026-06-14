@@ -177,7 +177,7 @@ export const APP_PHASES: GuidePhase[] = [
   },
   {
     title: 'БУХГАЛТЕРИЯ',
-    subtitle: 'Закрытие заказов → Акты → Отчёты → 1С',
+    subtitle: 'Закрытие заказов → Акты → Отчёты',
     status: 'planned',
     gradient: 'linear-gradient(135deg, #be185d, #db2777)',
     modules: [
@@ -188,7 +188,7 @@ export const APP_PHASES: GuidePhase[] = [
           { label: 'Закрытие заказов', description: 'Акты, счета-фактуры', icon: '✅', status: 'planned' },
           { label: 'Акты сверки', description: 'Ежегодные сверки с контрагентами', icon: '📊', status: 'planned' },
           { label: 'Отчёты', description: 'Финансовая аналитика', icon: '📈', status: 'planned' },
-          { label: '1С-интеграция', description: 'Обмен данными с бухгалтерией', icon: '🔄', status: 'planned' },
+
         ],
       },
     ],
@@ -281,7 +281,7 @@ export const DEPENDANCY_LEVELS: DependancyLevel[] = [
       { icon: '✅', name: 'Закрытие заказов', dependsOn: ['Отгрузка'], enables: 'Акты и счета-фактуры', status: 'planned' },
       { icon: '📊', name: 'Акты сверки', dependsOn: ['Контрагенты (юр.лица)'], enables: 'Ежегодные сверки', status: 'planned' },
       { icon: '📈', name: 'Финансовые отчёты', dependsOn: ['Закрытие заказов'], enables: 'Аналитика прибыли', status: 'planned' },
-      { icon: '🔄', name: '1С-интеграция', dependsOn: ['Закрытие заказов', 'Контрагенты (юр.лица)'], enables: 'Обмен с бухгалтерией', status: 'planned' },
+
     ],
   },
 ];

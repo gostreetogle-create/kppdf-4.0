@@ -1,0 +1,12 @@
+:host { display: block; }
+.si-list { max-width: 1000px; margin: 0 auto; padding: var(--space-6); }
+.si-list__header {
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: var(--space-3); margin: var(--space-4) 0;
+}
+.si-list__title { font-size: var(--font-size-xl); font-weight: var(--font-weight-bold); color: var(--color-text); margin: 0; }
+.si-list__header-actions { display: flex; gap: var(--space-3); }
+.si-list__form { display: flex; flex-direction: column; gap: var(--space-3); }
+.si-list__form-row { display: flex; gap: var(--space-3); }
+.si-list__form-row > * { flex: 1; }
+.si-list__form-actions { display: flex; gap: var(--space-3); margin-top: var(--space-3); }

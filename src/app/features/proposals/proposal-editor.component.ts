@@ -17,6 +17,7 @@ import { KpDocPreviewDialogComponent } from '../../shared/ui/kp-doc-preview-dial
 import { LucideDynamicIcon } from '@lucide/angular';
 import { NotificationService } from '../../core/notification.service';
 import { CommercialProposalService } from '../../core/commercial-proposal.service';
+import { ProposalDocBuilderService } from '../../core/proposal-doc-builder.service';
 import { CartService } from '../../core/cart.service';
 import { OrganizationService } from '../../core/organization.service';
 import { ClientService } from '../../core/client.service';
@@ -348,215 +349,14 @@ const STATUS_OPTIONS: SelectOption[] = [
       <kp-doc-preview-dialog />
     </div>
   `,
-  styles: [`
-    :host { display: block; }
-    .cp-editor {
-      max-width: 1100px;
-      margin: 0 auto;
-      padding: var(--space-6);
-    }
-    .cp-editor__header {
-      display: flex; align-items: center; justify-content: space-between;
-      flex-wrap: wrap; gap: var(--space-3); margin: var(--space-4) 0;
-    }
-    .cp-editor__title {
-      font-size: var(--font-size-xl); font-weight: var(--font-weight-bold);
-      color: var(--color-text); margin: 0;
-    }
-    .cp-editor__header-actions {
-      display: flex; align-items: center; gap: var(--space-3);
-    }
-
-    .cp-editor__section {
-      margin-bottom: var(--space-5);
-      padding-bottom: var(--space-5);
-      border-bottom: 1px solid var(--color-border);
-    }
-    .cp-editor__section:last-child { border-bottom: none; margin-bottom: 0; }
-    .cp-editor__section-header {
-      display: flex; align-items: center; justify-content: space-between;
-      margin-bottom: var(--space-3);
-    }
-    .cp-editor__section-title {
-      font-size: var(--font-size-base); font-weight: var(--font-weight-semibold);
-      color: var(--color-text); margin: 0;
-    }
-    .cp-editor__row {
-      display: flex; gap: var(--space-3); flex-wrap: wrap;
-    }
-    .cp-editor__row > * { flex: 1; min-width: 200px; }
-    .cp-editor__row--mt { margin-top: var(--space-3); }
-
-    .cp-editor__empty {
-      text-align: center; padding: var(--space-6);
-      color: var(--color-text-secondary); font-size: var(--font-size-sm);
-    }
-
-    /* Items table */
-    .cp-editor__items {
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-md);
-      overflow: hidden;
-    }
-    .cp-editor__items-header {
-      display: grid;
-      grid-template-columns: 1fr 100px 100px 70px 80px 110px 40px;
-      padding: var(--space-2) var(--space-3);
-      background: var(--color-bg-secondary);
-      border-bottom: 1px solid var(--color-border);
-      font-size: var(--font-size-xs); font-weight: 700;
-      text-transform: uppercase; letter-spacing: 0.05em;
-      color: var(--color-text-secondary);
-    }
-    .cp-editor__th--price, .cp-editor__th--markup,
-    .cp-editor__th--qty, .cp-editor__th--total { text-align: right; }
-
-    .cp-editor__item-row {
-      display: grid;
-      grid-template-columns: 1fr 100px 100px 70px 80px 110px 40px;
-      padding: var(--space-2) var(--space-3);
-      border-bottom: 1px solid var(--color-border);
-      transition: background 0.15s;
-    }
-    .cp-editor__item-row:last-child { border-bottom: none; }
-    .cp-editor__item-row:hover { background: var(--color-bg-secondary); }
-
-    .cp-editor__td { display: flex; align-items: center; }
-    .cp-editor__td--price, .cp-editor__td--markup,
-    .cp-editor__td--qty, .cp-editor__td--total { justify-content: flex-end; }
-
-    .cp-editor__product-name {
-      font-size: var(--font-size-sm); font-weight: 600;
-      color: var(--color-text); line-height: 1.3;
-    }
-    .cp-editor__product-unit {
-      font-size: var(--font-size-xs); color: var(--color-text-secondary); margin-top: 1px;
-    }
-    .cp-editor__sku-badge {
-      padding: 2px 6px; border-radius: 4px;
-      background: var(--color-bg); border: 1px solid var(--color-border);
-      font-family: 'Courier New', monospace;
-      font-size: var(--font-size-xs); color: var(--color-text-secondary);
-    }
-    .cp-editor__input-num {
-      width: 80px; padding: 4px 6px;
-      border: 1px solid var(--color-border); border-radius: var(--radius-sm);
-      font-size: var(--font-size-sm); text-align: right;
-      color: var(--color-text); background: var(--color-bg);
-      transition: border-color 0.15s;
-    }
-    .cp-editor__input-num--small { width: 55px; }
-    .cp-editor__input-num:focus {
-      outline: none; border-color: var(--color-primary);
-      box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-primary) 20%, transparent);
-    }
-    .cp-editor__total {
-      font-size: var(--font-size-sm); font-weight: 700; color: var(--color-text);
-    }
-    .cp-editor__remove-btn {
-      width: 28px; height: 28px; border: none; border-radius: var(--radius-sm);
-      background: transparent; cursor: pointer;
-      font-size: 0.85rem; color: var(--color-text-secondary);
-      display: flex; align-items: center; justify-content: center;
-      transition: all 0.15s;
-    }
-    .cp-editor__remove-btn:hover { background: rgba(239,68,68,0.1); color: #ef4444; }
-
-    .cp-editor__summary {
-      display: flex; justify-content: flex-end; align-items: baseline;
-      gap: var(--space-3); margin-top: var(--space-3);
-      padding-top: var(--space-3); border-top: 2px solid var(--color-border);
-    }
-    .cp-editor__summary-label {
-      font-size: var(--font-size-base); font-weight: 600; color: var(--color-text-secondary);
-    }
-    .cp-editor__summary-value {
-      font-size: var(--font-size-xl); font-weight: 800; color: var(--color-primary);
-    }
-
-    /* A4 Preview section */
-    .cp-editor__preview-section {
-      margin-top: var(--space-6);
-      padding-top: var(--space-6);
-      border-top: 1px solid var(--color-border);
-    }
-    .cp-editor__preview-hint {
-      font-size: var(--font-size-xs);
-      color: var(--color-text-secondary);
-      margin: var(--space-2) 0 var(--space-4);
-    }
-    .cp-editor__canvas {
-      border: 1px solid var(--color-border-light);
-      border-radius: var(--radius-md);
-      overflow: hidden;
-    }
-
-    /* Settings dialog */
-    .cp-editor__settings-form {
-      display: flex;
-      flex-direction: column;
-      gap: var(--space-4);
-    }
-    .cp-editor__settings-info {
-      display: flex;
-      justify-content: space-between;
-      padding: var(--space-2) 0;
-      border-bottom: 1px solid var(--color-border-light);
-      font-size: var(--font-size-sm);
-    }
-    .cp-editor__settings-info--discount {
-      color: var(--color-error);
-      font-weight: 600;
-    }
-    .cp-editor__settings-info strong {
-      font-weight: 700;
-    }
-
-    /* Edit dialog */
-    .cp-editor__edit-form {
-      display: flex;
-      flex-direction: column;
-      gap: var(--space-4);
-    }
-    .cp-editor__edit-header {
-      display: flex;
-      gap: var(--space-3);
-    }
-    .cp-editor__edit-header > * { flex: 1; }
-    .cp-editor__edit-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      gap: var(--space-3);
-    }
-    .cp-editor__edit-total {
-      padding: var(--space-3);
-      background: var(--color-primary-subtle);
-      border-radius: var(--radius-md);
-      text-align: center;
-      font-size: var(--font-size-lg);
-      color: var(--color-text);
-      display: flex;
-      justify-content: center;
-      gap: var(--space-2);
-      align-items: baseline;
-    }
-    .cp-editor__edit-total strong {
-      color: var(--color-primary);
-    }
-    .cp-editor__dialog-footer {
-      display: flex;
-      gap: var(--space-3);
-      justify-content: flex-end;
-      flex-wrap: wrap;
-      margin-top: var(--space-4);
-    }
-  `],
+  styleUrl: './proposal-editor.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ProposalEditorComponent implements OnInit {
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private proposalService = inject(CommercialProposalService);
+  private docBuilder = inject(ProposalDocBuilderService);
   private cartService = inject(CartService);
   private orgService = inject(OrganizationService);
   private clientService = inject(ClientService);
@@ -680,145 +480,34 @@ export class ProposalEditorComponent implements OnInit {
 
   /** Generate document blocks from template + proposal items */
   docBlocks = computed<DocBlock[]>(() => {
-    const tmplId = this.editTemplateId();
-    const proposalItems = this.items();
-    const blocks: DocBlock[] = [];
-
-    if (proposalItems.length === 0) return blocks;
-
-    if (!tmplId) {
-      // No template: show basic preview
-      blocks.push({
-        id: 'hdr',
-        type: 'text',
-        order: 0,
-        title: 'Коммерческое предложение',
-        content: 'Предварительный просмотр',
-        settings: { fontSize: '18px', align: 'center' },
-      });
-      blocks.push({
-        id: 'tbl',
-        type: 'table',
-        order: 1,
-        title: `Товары (${proposalItems.length} позиций)`,
-        _inlineRows: proposalItems.map(item => this.proposalItemToRow(item)),
-        _footerRows: [
-          { label: 'Итого:', value: this.grandTotal().toLocaleString('ru-RU') + ' ₽' },
-        ],
-      });
-      return blocks;
-    }
-
-    // Use the selected template
-    const tmpl = this.templates().find(t => t.id === tmplId);
-    if (!tmpl) return blocks;
-
-    // Resolve placeholder data
-    const orgId = this.editOrganizationId();
-    const org = orgId ? this.organizations().find(o => o.id === orgId) : null;
-    const clientId = this.editClientId();
-    const client = clientId ? this.clients().find(c => c.id === clientId) : null;
-    const clientName = client ? [client.lastName, client.firstName, client.patronymic].filter(Boolean).join(' ') : 'Клиент';
-    const orgName = org ? (org.shortName || org.name) : 'Организация';
-    const total = this.grandTotal();
-
-    const placeholders: Record<string, string> = {
-      '{{client.name}}': clientName,
-      '{{org.shortName}}': orgName,
-      '{{org.name}}': org ? org.name : 'Организация',
-      '{{total}}': total.toLocaleString('ru-RU') + ' ₽',
-      '{{date}}': new Date().toLocaleDateString('ru-RU'),
-      '{{items.count}}': String(proposalItems.length),
-    };
-
-    const replace = (text?: string) => {
-      if (!text) return text;
-      let result = text;
-      for (const [key, value] of Object.entries(placeholders)) {
-        result = result.replaceAll(key, value);
-      }
-      return result;
-    };
-
-    // Deep clone all template blocks with placeholder replacement
-    for (const b of tmpl.blocks) {
-      const cloned: DocBlock = {
-        ...b,
-        id: b.id + '-inst',
-        content: replace(b.content),
-        columns: b.columns?.map(c => ({ ...c, content: replace(c.content) || c.content })),
-      };
-      blocks.push(cloned);
-    }
-
-    // Populate the FIRST table block with product data
-    const tableBlock = blocks.find(b => b.type === 'table' && b.tableTemplateId);
-    if (tableBlock) {
-      tableBlock._inlineRows = proposalItems.map(item => this.proposalItemToRow(item));
-
-      const summaries: Record<string, number> = {
-        quantity: proposalItems.reduce((s, i) => s + i.quantity, 0),
-        total: this.grandTotal(),
-        totalAmount: this.grandTotal(),
-        unitPrice: proposalItems.reduce((s, i) => s + i.unitPrice, 0) / proposalItems.length,
-      };
-      tableBlock._columnSummaries = summaries;
-
-      // Footer строки: Итого, НДС, Всего к оплате
-      const vatRate = this.selectedVatRate();
-      const nds = this.ndsAmount();
-      const clientMarkup = this.clientMarkupPercent();
-      const beforeDiscount = this.totalAmount();
-      const discount = this.discountAmount();
-      const footerRows: { label: string; value: string }[] = [];
-
-      if (discount > 0) {
-        footerRows.push({ label: 'Итого (без скидки):', value: beforeDiscount.toLocaleString('ru-RU') + ' ₽' });
-        footerRows.push({ label: `Скидка ${this.discountPercent()}%:`, value: '-' + discount.toLocaleString('ru-RU') + ' ₽' });
-      }
-      footerRows.push({ label: 'Итого:', value: this.grandTotal().toLocaleString('ru-RU') + ' ₽' });
-      if (vatRate > 0) {
-        footerRows.push({ label: `в том числе НДС ${vatRate}%:`, value: nds.toLocaleString('ru-RU') + ' ₽' });
-        footerRows.push({ label: 'Всего к оплате:', value: this.grandTotal().toLocaleString('ru-RU') + ' ₽' });
-      }
-      if (clientMarkup > 0) {
-        const baseTotal = proposalItems.reduce((s, i) => s + (i.unitPrice * i.quantity), 0);
-        const markupAmount = beforeDiscount - baseTotal;
-        footerRows.push({ label: 'Наценка (' + clientMarkup + '%):', value: '+' + markupAmount.toLocaleString('ru-RU') + ' ₽' });
-      }
-      tableBlock._footerRows = footerRows;
-    }
-
-    return blocks;
+    return this.docBuilder.buildDocBlocks({
+      templateId: this.editTemplateId(),
+      templates: this.templates(),
+      items: this.items(),
+      organizationId: this.editOrganizationId(),
+      organizations: this.organizations(),
+      clientId: this.editClientId(),
+      clients: this.clients(),
+      grandTotal: this.grandTotal(),
+      discountPercent: this.discountPercent(),
+      discountAmount: this.discountAmount(),
+      totalBeforeDiscount: this.totalAmount(),
+      vatRate: this.selectedVatRate(),
+      vatAmount: this.ndsAmount(),
+      clientMarkup: this.clientMarkupPercent(),
+      itemType: 'proposal',
+    });
   });
 
   /** Сформировать строку таблицы из ProposalItem */
   private proposalItemToRow(item: ProposalItem): Record<string, unknown> {
-    return {
-      name: item.productName,
-      sku: item.productSku,
-      price: item.unitPrice,
-      unitPrice: item.unitPrice,
-      quantity: item.quantity,
-      unit: item.productUnit,
-      total: item.total,
-      totalAmount: item.total,
-      productName: item.productName,
-      productSku: item.productSku,
-      productUnit: item.productUnit,
-      markupPercent: item.markupPercent ?? 0,
-    };
+    return this.docBuilder.proposalItemToRow(item);
   }
 
   /** Background images from selected template */
-  selectedBackgroundImage = computed(() => {
-    const tmplId = this.editTemplateId();
-    if (!tmplId) return '';
-    const tmpl = this.templates().find(t => t.id === tmplId);
-    const images = tmpl?.backgroundImages;
-    if (images && images.length > 0) return images[0];
-    return (tmpl as unknown as Record<string, unknown>)['backgroundImage'] as string ?? '';
-  });
+  selectedBackgroundImage = computed(() =>
+    this.docBuilder.getBackgroundImage(this.editTemplateId(), this.templates())
+  );
 
   async ngOnInit() {
     this.loading.set(true);
@@ -1101,7 +790,7 @@ export class ProposalEditorComponent implements OnInit {
         await firstValueFrom(this.proposalService.updateProposal(this.proposalId()!, {
           ...data,
           items: this.items(),
-          totalAmount: this.totalAmount(),
+          totalAmount: this.grandTotal(),
         }));
         this.notification.success('Коммерческое предложение сохранено');
       }

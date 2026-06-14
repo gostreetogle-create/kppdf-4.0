@@ -6,13 +6,16 @@ import { KpCardComponent } from '../../shared/ui/kp-card.component';
 import { KpBreadcrumbComponent } from '../../shared/ui/kp-breadcrumb.component';
 import { KpTableComponent, TableColumn } from '../../shared/ui/kp-table.component';
 import { KpToastComponent } from '../../shared/ui/kp-toast.component';
+import { KpConfirmDialogComponent } from '../../shared/ui/kp-confirm-dialog.component';
+import { NotificationService } from '../../core/notification.service';
 import { InventorFileService } from '../../core/inventor-file.service';
+import { ConfirmationService } from 'primeng/api';
 import type { InventorFile } from '../../../../shared/types/index.js';
 
 @Component({
   selector: 'app-inventor-file-list',
   standalone: true,
-  imports: [CommonModule, KpCardComponent, KpBreadcrumbComponent, KpTableComponent, KpToastComponent],
+  imports: [CommonModule, KpCardComponent, KpBreadcrumbComponent, KpTableComponent, KpToastComponent  ],
   template: `
     <kp-toast />
     <kp-card>
@@ -21,11 +24,13 @@ import type { InventorFile } from '../../../../shared/types/index.js';
       <kp-table storageKey="cad-files" [data]="rows()" [columns]="columns" [rows]="20" emptyMessage="Файлы не найдены" [showActions]="true" (rowDelete)="onDelete($event)" />
     </kp-card>
   `,
-  styles: [`:host { display: block; padding: var(--space-6); } .page__title { font-size: var(--font-size-xl); font-weight: var(--font-weight-bold); margin: var(--space-4) 0; }`],
+  styleUrl: './inventor-file-list.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class InventorFileListComponent implements OnInit {
   private svc = inject(InventorFileService);
+  private notification = inject(NotificationService);
+  private confirmationService = inject(ConfirmationService);
   rows = signal<InventorFile[]>([]);
   breadcrumbs: MenuItem[] = [{ label: '⚙️ Администрирование' }, { label: 'CAD-файлы' }];
   columns: TableColumn[] = [
@@ -43,5 +48,5 @@ export class InventorFileListComponent implements OnInit {
     const r = await firstValueFrom(this.svc.getAll());
     this.rows.set(r.data);
   }
-  async onDelete(row: unknown) { const f = row as InventorFile; if (confirm(`Удалить «${f.fileName}»?`)) { await firstValueFrom(this.svc.delete(f.id)); this.load(); } }
+  async onDelete(row: unknown) { const f = row as InventorFile; KpConfirmDialogComponent.confirm(this.confirmationService, { header: 'Удаление', message: `Удалить «${f.fileName}»?`, acceptLabel: 'Удалить', rejectLabel: 'Отмена', accept: async () => { await firstValueFrom(this.svc.delete(f.id)); this.notification.success('Файл удалён'); this.load(); } }); }
 }

@@ -30,7 +30,7 @@ import { inject } from '@angular/core';
     KpButtonComponent, KpInputComponent, KpSelectComponent,
     KpCardComponent, KpTableComponent, KpDialogComponent,
     KpBadgeComponent, KpBreadcrumbComponent,
-    KpToastComponent, KpConfirmDialogComponent,
+    KpToastComponent,
     KpAvatarComponent, KpToggleComponent,
     KpFieldGroupComponent,
     KpFileUploadComponent, KpDatepickerComponent,
@@ -39,7 +39,6 @@ import { inject } from '@angular/core';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <kp-toast />
-    <kp-confirm-dialog />
 
     <div class="uikit">
       <div class="uikit__header">

@@ -6,7 +6,10 @@ import { KpCardComponent } from '../../shared/ui/kp-card.component';
 import { KpBreadcrumbComponent } from '../../shared/ui/kp-breadcrumb.component';
 import { KpTableComponent, TableColumn } from '../../shared/ui/kp-table.component';
 import { KpToastComponent } from '../../shared/ui/kp-toast.component';
+import { KpConfirmDialogComponent } from '../../shared/ui/kp-confirm-dialog.component';
+import { NotificationService } from '../../core/notification.service';
 import { RoleService } from '../../core/role.service';
+import { ConfirmationService } from 'primeng/api';
 import type { RoleDef } from '../../../../shared/types/index.js';
 
 const SECTION_LABELS: Record<string, string> = { sales: 'Продажи', production: 'Производство', warehouse: 'Склад', finance: 'Бухгалтерия', references: 'Справочники', admin: 'Администрирование' };
@@ -14,7 +17,7 @@ const SECTION_LABELS: Record<string, string> = { sales: 'Продажи', produc
 @Component({
   selector: 'app-role-list',
   standalone: true,
-  imports: [CommonModule, KpCardComponent, KpBreadcrumbComponent, KpTableComponent, KpToastComponent],
+  imports: [CommonModule, KpCardComponent, KpBreadcrumbComponent, KpTableComponent, KpToastComponent  ],
   template: `
     <kp-toast />
     <kp-card>
@@ -23,11 +26,13 @@ const SECTION_LABELS: Record<string, string> = { sales: 'Продажи', produc
       <kp-table storageKey="roles" [data]="rows()" [columns]="columns" [rows]="20" emptyMessage="Роли не найдены" [showActions]="true" (rowDelete)="onDelete($event)" />
     </kp-card>
   `,
-  styles: [`:host { display: block; padding: var(--space-6); } .page__title { font-size: var(--font-size-xl); font-weight: var(--font-weight-bold); margin: var(--space-4) 0; }`],
+  styleUrl: './role-list.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class RoleListComponent implements OnInit {
   private svc = inject(RoleService);
+  private notification = inject(NotificationService);
+  private confirmationService = inject(ConfirmationService);
   rows = signal<RoleDef[]>([]);
   breadcrumbs: MenuItem[] = [{ label: '⚙️ Администрирование' }, { label: 'Пользователи и роли' }];
   columns: TableColumn[] = [
@@ -42,5 +47,5 @@ export class RoleListComponent implements OnInit {
     const r = await firstValueFrom(this.svc.getAll());
     this.rows.set(r.data.map(role => ({ ...role, sectionsStr: role.sectionIds.map(s => SECTION_LABELS[s] || s).join(', ') } as RoleDef & { sectionsStr: string })));
   }
-  async onDelete(row: unknown) { const r = row as RoleDef; if (confirm(`Удалить «${r.name}»?`)) { await firstValueFrom(this.svc.delete(r.id)); this.load(); } }
+  async onDelete(row: unknown) { const r = row as RoleDef; KpConfirmDialogComponent.confirm(this.confirmationService, { header: 'Удаление', message: `Удалить «${r.name}»?`, acceptLabel: 'Удалить', rejectLabel: 'Отмена', accept: async () => { await firstValueFrom(this.svc.delete(r.id)); this.notification.success('Роль удалена'); this.load(); } }); }
 }

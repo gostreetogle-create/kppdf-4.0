@@ -6,13 +6,16 @@ import { KpCardComponent } from '../../shared/ui/kp-card.component';
 import { KpBreadcrumbComponent } from '../../shared/ui/kp-breadcrumb.component';
 import { KpTableComponent, TableColumn } from '../../shared/ui/kp-table.component';
 import { KpToastComponent } from '../../shared/ui/kp-toast.component';
+import { KpConfirmDialogComponent } from '../../shared/ui/kp-confirm-dialog.component';
+import { NotificationService } from '../../core/notification.service';
 import { StatusWorkflowService } from '../../core/status-workflow.service';
+import { ConfirmationService } from 'primeng/api';
 import type { StatusWorkflow } from '../../../../shared/types/index.js';
 
 @Component({
   selector: 'app-status-workflow-list',
   standalone: true,
-  imports: [CommonModule, KpCardComponent, KpBreadcrumbComponent, KpTableComponent, KpToastComponent],
+  imports: [CommonModule, KpCardComponent, KpBreadcrumbComponent, KpTableComponent, KpToastComponent  ],
   template: `
     <kp-toast />
     <kp-card>
@@ -21,11 +24,13 @@ import type { StatusWorkflow } from '../../../../shared/types/index.js';
       <kp-table storageKey="status-workflows" [data]="rows()" [columns]="columns" [rows]="20" emptyMessage="Модели не найдены" [showActions]="true" (rowDelete)="onDelete($event)" />
     </kp-card>
   `,
-  styles: [`:host { display: block; padding: var(--space-6); } .page__title { font-size: var(--font-size-xl); font-weight: var(--font-weight-bold); margin: var(--space-4) 0; }`],
+  styleUrl: './status-workflow-list.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class StatusWorkflowListComponent implements OnInit {
   private svc = inject(StatusWorkflowService);
+  private notification = inject(NotificationService);
+  private confirmationService = inject(ConfirmationService);
   rows = signal<StatusWorkflow[]>([]);
   breadcrumbs: MenuItem[] = [{ label: '⚙️ Администрирование' }, { label: 'Статусные модели' }];
   columns: TableColumn[] = [
@@ -40,5 +45,5 @@ export class StatusWorkflowListComponent implements OnInit {
     const r = await firstValueFrom(this.svc.getAll());
     this.rows.set(r.data.map(w => ({ ...w, statusCount: w.statuses.length, transitionCount: w.transitions.length } as StatusWorkflow & { statusCount: number; transitionCount: number })));
   }
-  async onDelete(row: unknown) { const w = row as StatusWorkflow; if (confirm(`Удалить «${w.name}»?`)) { await firstValueFrom(this.svc.delete(w.id)); this.load(); } }
+  async onDelete(row: unknown) { const w = row as StatusWorkflow; KpConfirmDialogComponent.confirm(this.confirmationService, { header: 'Удаление', message: `Удалить «${w.name}»?`, acceptLabel: 'Удалить', rejectLabel: 'Отмена', accept: async () => { await firstValueFrom(this.svc.delete(w.id)); this.notification.success('Модель удалена'); this.load(); } }); }
 }

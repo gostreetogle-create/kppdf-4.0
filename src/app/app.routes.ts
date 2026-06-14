@@ -83,10 +83,6 @@ export const routes: Routes = [
             path: 'monitor',
             loadComponent: () => import('./features/admin/monitor-dashboard.component').then(m => m.MonitorDashboardComponent)
           },
-          {
-            path: 'one-c',
-            loadComponent: () => import('./features/admin/one-c-integration.component').then(m => m.OneCIntegrationComponent)
-          },
         ]
       },
 
@@ -171,6 +167,10 @@ export const routes: Routes = [
             loadComponent: () => import('./features/proposals/proposal-editor.component').then(m => m.ProposalEditorComponent)
           },
           {
+            path: 'proposals/:id',
+            loadComponent: () => import('./features/proposals/proposal-view.component').then(m => m.ProposalViewComponent)
+          },
+          {
             path: 'proposals/:id/edit',
             loadComponent: () => import('./features/proposals/proposal-editor.component').then(m => m.ProposalEditorComponent)
           },
@@ -181,6 +181,10 @@ export const routes: Routes = [
           {
             path: 'contracts/new',
             loadComponent: () => import('./features/contracts/contract-editor.component').then(m => m.ContractEditorComponent)
+          },
+          {
+            path: 'contracts/:id',
+            loadComponent: () => import('./features/contracts/contract-view.component').then(m => m.ContractViewComponent)
           },
           {
             path: 'contracts/:id/edit',

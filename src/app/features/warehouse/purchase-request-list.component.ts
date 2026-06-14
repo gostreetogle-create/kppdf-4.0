@@ -29,7 +29,6 @@ interface RequestRow extends PurchaseRequest {
     KpButtonComponent, KpBreadcrumbComponent, KpCardComponent,
     KpTableComponent, KpToastComponent,
   ],
-  providers: [ConfirmationService],
   template: `
     <kp-toast />
 
@@ -67,11 +66,7 @@ interface RequestRow extends PurchaseRequest {
       </kp-card>
     </div>
   `,
-  styles: [`
-    :host { display: block; max-width: 1100px; margin: 0 auto; padding: var(--space-6); }
-    .pr-list__header { display: flex; align-items: center; justify-content: space-between; margin: var(--space-4) 0; }
-    .pr-list__title { font-size: var(--font-size-xl); font-weight: var(--font-weight-bold); color: var(--color-text); margin: 0; }
-  `],
+  styleUrl: './purchase-request-list.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PurchaseRequestListComponent implements OnInit {

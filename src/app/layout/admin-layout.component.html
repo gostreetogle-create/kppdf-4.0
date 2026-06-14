@@ -1,49 +1,11 @@
 <kp-toast />
-
-<!-- Mobile sidebar overlay -->
-<kp-drawer
-  [(visible)]="mobileSidebarVisible"
-  position="left"
-  width="260px"
-  [closable]="true"
->
-  <div class="sidebar-mobile-header">
-    <span class="sidebar-logo-text">Project Core</span>
-  </div>
-  <div class="sidebar-mobile-nav">      @for (item of navItems(); track item.id || item.label) {
-        @if (!item.separator && !item.items) {
-          <a
-            [routerLink]="item.routerLink"
-            routerLinkActive="p-menuitem-link-active"
-            class="sidebar-mobile-item"
-            (click)="mobileSidebarVisible.set(false)"
-          >
-            @if (item.icon) { <svg [lucideIcon]="item.icon"></svg> }
-            <span>{{ item.label }}</span>
-          </a>
-        } @else if (item.items) {
-          <div class="sidebar-mobile-group-label">{{ item.label }}</div>
-          @for (child of item.items; track child.id || child.label) {
-            <a
-              [routerLink]="child.routerLink"
-              routerLinkActive="p-menuitem-link-active"
-              class="sidebar-mobile-item sidebar-mobile-item--child"
-              (click)="mobileSidebarVisible.set(false)"
-            >
-              @if (child.icon) { <svg [lucideIcon]="child.icon"></svg> }
-              <span>{{ child.label }}</span>
-            </a>
-          }
-        }
-      }
-  </div>
-</kp-drawer>
+<kp-confirm-dialog />
 
 <div class="layout" [class.layout--collapsed]="!sidebarVisible()">
   <!-- Desktop sidebar -->
   <aside class="layout__sidebar" [class.sidebar--hidden]="!sidebarVisible()">
     <div class="sidebar__header">
-      @if (sidebarVisible()) { <span class="sidebar__logo">Project Core</span> }
+      @if (sidebarVisible()) { <span class="sidebar__logo">КППДФ 4.0</span> }
       <kp-button
         [text]="true"
         [lucideIcon]="sidebarVisible() ? 'chevron-left' : 'chevron-right'"
@@ -114,16 +76,6 @@
   <div class="layout__main-area">
     <!-- Top bar -->
     <header class="topbar">
-      <div class="topbar__left">
-      <kp-button
-        [text]="true"
-        size="small"
-        label="Меню"
-        lucideIcon="menu"
-        styleClass="topbar__mobile-menu"
-        (buttonClick)="toggleMobileSidebar()"
-      />
-      </div>
 
       @if (pageTitle()) {
         <span class="topbar__title">{{ pageTitle() }}</span>
@@ -135,7 +87,6 @@
           [(ngModel)]="demoRole"
           placeholder="Роль"
           styleClass="topbar__role-select"
-          (ngModelChange)="mobileSidebarVisible.set(false)"
         />
         <kp-button
           [text]="true"

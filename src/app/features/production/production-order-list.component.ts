@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed, ChangeDetectionStrategy, OnInit } from '@angular/core';
+import { Component, inject, signal, viewChild, ChangeDetectionStrategy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MenuItem } from 'primeng/api';
@@ -10,15 +10,17 @@ import { KpTableComponent, TableColumn, TableExtraAction } from '../../shared/ui
 import { KpDialogComponent } from '../../shared/ui/kp-dialog.component';
 import { KpSelectComponent } from '../../shared/ui/kp-select.component';
 import { KpInputComponent } from '../../shared/ui/kp-input.component';
-import { KpDatepickerComponent } from '../../shared/ui/kp-datepicker.component';
 import { KpToastComponent } from '../../shared/ui/kp-toast.component';
 import { KpBadgeComponent } from '../../shared/ui/kp-badge.component';
+import { KpConfirmDialogComponent } from '../../shared/ui/kp-confirm-dialog.component';
+import { CreateOrderDialogComponent } from './create-order-dialog.component';
 import { NotificationService } from '../../core/notification.service';
 import { ProductionOrderService } from '../../core/production-order.service';
 import { OrderTaskService } from '../../core/order-task.service';
 import { ProductService } from '../../core/product.service';
 import { OrganizationService } from '../../core/organization.service';
 import type { ProductionOrder, ProductionOrderStatus, Product, Organization, MissingDataIssue } from '../../../../shared/types/index.js';
+import { ConfirmationService } from 'primeng/api';
 const STATUS_LABELS: Record<ProductionOrderStatus, string> = { accepted: 'Принят', in_design: 'Проектирование', in_production: 'В производстве', ready: 'Готов', shipped: 'Отгружен', closed: 'Закрыт' };
 const STATUS_BADGE = { accepted: 'info', in_design: 'warn', in_production: 'info', ready: 'success', shipped: 'info', closed: 'secondary' } as const;
 const NEXT_STATUS: Partial<Record<ProductionOrderStatus, ProductionOrderStatus>> = { accepted: 'in_design', in_design: 'in_production', in_production: 'ready', ready: 'shipped', shipped: 'closed' };
@@ -32,7 +34,7 @@ const DOC_TEMPLATES = [
 @Component({
   selector: 'app-production-order-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, KpButtonComponent, KpBreadcrumbComponent, KpCardComponent, KpTableComponent, KpDialogComponent, KpSelectComponent, KpInputComponent, KpDatepickerComponent, KpToastComponent, KpBadgeComponent],
+  imports: [CommonModule, FormsModule, KpButtonComponent, KpBreadcrumbComponent, KpCardComponent, KpTableComponent, KpDialogComponent, KpSelectComponent, KpInputComponent, KpToastComponent, KpBadgeComponent, CreateOrderDialogComponent  ],
   template: `
     <kp-toast />
     <kp-card>
@@ -44,23 +46,11 @@ const DOC_TEMPLATES = [
       <kp-table storageKey="production-orders" [data]="rows()" [columns]="columns" [rows]="20" [paginator]="true" [sortField]="'number'" [sortOrder]="-1" emptyMessage="Заказы не найдены" [showActions]="true" [extraActions]="statusActions" (rowClick)="onRowClick($event)" (rowEdit)="onEdit($event)" (rowDelete)="onDelete($event)" (rowExtraAction)="onStatusChange($event)" />
     </kp-card>
 
-    <!-- Диалог: создание заказа -->
-    <kp-dialog header="📋 Новый производственный заказ" [(visible)]="createDialogVisible" width="520px" (dialogHide)="closeCreateDialog()">
-      <div class="po-form">
-        <kp-select label="Товар" [options]="productOptions()" [(ngModel)]="formProductId" placeholder="Выберите товар..." [filter]="true" [showClear]="true" />
-        <kp-select label="Заказчик" [options]="orgOptions()" [(ngModel)]="formOrgId" placeholder="Выберите организацию..." [filter]="true" [showClear]="true" />
-        <div class="po-form__row">
-          <kp-input label="Количество" type="number" [(ngModel)]="formQuantity" />
-          <kp-datepicker label="Старт" [(selectedDate)]="formStartDate" />
-          <kp-datepicker label="Финиш" [(selectedDate)]="formEndDate" />
-        </div>
-        <kp-input label="Примечание" [(ngModel)]="formNotes" placeholder="Опционально..." />
-      </div>
-      <div class="po-actions">
-        <kp-button label="Отмена" severity="secondary" size="small" (buttonClick)="closeCreateDialog()" />
-        <kp-button label="Создать" lucideIcon="plus" severity="info" size="small" [loading]="formSubmitting()" [disabled]="!formProductId() || !formOrgId() || formQuantity() < 1" (buttonClick)="createOrder()" />
-      </div>
-    </kp-dialog>
+    <app-create-order-dialog
+      [products]="cachedProducts()"
+      [organizations]="cachedOrganizations()"
+      (orderCreated)="onOrderCreated($event)"
+    />
 
     <!-- Диалог: детали заказа -->
     <kp-dialog header="📄 {{ detailOrder()?.number }} — {{ detailOrder()?.productName }}" [(visible)]="detailDialogVisible" width="640px" (dialogHide)="detailOrder.set(null)">
@@ -130,7 +120,7 @@ const DOC_TEMPLATES = [
       }
     </kp-dialog>
   `,
-  styles: [`:host { display: block; max-width: 100%; margin: 0; padding: var(--space-6); } .page__title { font-size: var(--font-size-xl); font-weight: var(--font-weight-bold); margin: var(--space-4) 0; } .po-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--space-3); } .po-form { display: flex; flex-direction: column; gap: var(--space-4); } .po-form__row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: var(--space-3); } .po-actions { display: flex; justify-content: flex-end; gap: var(--space-3); padding-top: var(--space-4); border-top: 1px solid var(--color-border-light); margin-top: var(--space-4); } .po-missing { display: flex; flex-direction: column; gap: var(--space-3); max-height: 400px; overflow-y: auto; } .po-missing__item { display: flex; gap: var(--space-3); padding: var(--space-3); background: var(--color-surface); border-radius: var(--radius-md); border: 1px solid var(--color-border); } .po-missing__icon { font-size: 1.5rem; flex-shrink: 0; } .po-missing__body p { margin: var(--space-1) 0 0; color: var(--color-text-secondary); font-size: var(--font-size-sm); } .po-detail { display: flex; flex-direction: column; gap: var(--space-4); } .po-detail__info { display: flex; flex-direction: column; gap: var(--space-3); } .po-detail__row { display: flex; align-items: center; gap: var(--space-3); font-size: var(--font-size-sm); } .po-detail__row--notes { flex-direction: column; align-items: flex-start; padding: var(--space-3); background: var(--color-surface-alt); border-radius: var(--radius-md); } .po-detail__label { color: var(--color-text-muted); min-width: 100px; flex-shrink: 0; font-weight: var(--font-weight-medium); } .po-detail__actions { display: flex; gap: var(--space-2); flex-wrap: wrap; }`],
+  styleUrl: './production-order-list.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ProductionOrderListComponent implements OnInit {
@@ -139,6 +129,7 @@ export class ProductionOrderListComponent implements OnInit {
   private productSvc = inject(ProductService);
   private orgSvc = inject(OrganizationService);
   private notification = inject(NotificationService);
+  private confirmationService = inject(ConfirmationService);
 
   rows = signal<ProductionOrder[]>([]);
   cachedProducts = signal<Product[]>([]);
@@ -151,21 +142,9 @@ export class ProductionOrderListComponent implements OnInit {
   docTemplates = DOC_TEMPLATES;
 
   // ─── Диалог создания ───
-  createDialogVisible = signal(false);
-  formProductId = signal<string | null>(null);
-  formOrgId = signal<string | null>(null);
-  formQuantity = signal<number>(1);
-  formStartDate = signal<Date | null>(new Date());
-  formEndDate = signal<Date | null>(new Date(Date.now() + 7 * 86400000));
-  formNotes = signal('');
-  formSubmitting = signal(false);
+  createDialog = viewChild.required(CreateOrderDialogComponent);
 
-  productOptions = computed(() => this.cachedProducts()
-    .filter(p => p.productType === 'manufactured' && p.isActive)
-    .map(p => ({ label: `${p.sku} — ${p.name}`, value: p.id })));
-  orgOptions = computed(() => this.cachedOrganizations()
-    .filter(o => o.isActive)
-    .map(o => ({ label: o.shortName || o.name, value: o.id })));
+  openCreateDialog() { this.createDialog().open(); }
 
   // ─── Диалог отгрузки ───
   shipmentDialogVisible = signal(false);
@@ -216,40 +195,8 @@ export class ProductionOrderListComponent implements OnInit {
 
   // ═══ Создание заказа ═══
 
-  openCreateDialog() { this.createDialogVisible.set(true); }
-  closeCreateDialog() {
-    this.createDialogVisible.set(false);
-    this.formProductId.set(null); this.formOrgId.set(null);
-    this.formQuantity.set(1); this.formNotes.set('');
-    this.formStartDate.set(new Date());
-    this.formEndDate.set(new Date(Date.now() + 7 * 86400000));
-  }
-
-  async createOrder() {
-    const productId = this.formProductId();
-    const orgId = this.formOrgId();
-    const qty = this.formQuantity();
-    if (!productId || !orgId || qty < 1) return;
-    this.formSubmitting.set(true);
-    try {
-      const product = this.cachedProducts().find(p => p.id === productId);
-      if (!product) return;
-      const sd = this.formStartDate() || new Date();
-      const ed = this.formEndDate() || new Date(Date.now() + 7 * 86400000);
-      const data = {
-        contractId: '', productId: product.id, productName: product.name,
-        productSku: product.sku, quantity: qty, status: 'accepted' as const,
-        plannedStartDate: sd.toISOString().substring(0, 10),
-        plannedEndDate: ed.toISOString().substring(0, 10),
-        notes: this.formNotes(),
-      };
-      const res = await firstValueFrom(this.svc.createOrder(data));
-      if (res.success) {
-        this.closeCreateDialog();
-        this.notification.success(`Заказ ${res.data.number} создан`);
-        this.loadRows();
-      }
-    } finally { this.formSubmitting.set(false); }
+  onOrderCreated(_order: ProductionOrder) {
+    this.loadRows();
   }
 
   // ═══ Статусы и экшены ═══
@@ -318,11 +265,18 @@ export class ProductionOrderListComponent implements OnInit {
   onEdit(row: unknown) { this.onRowClick(row); }
   onDelete(row: unknown) {
     const o = row as ProductionOrder;
-    if (confirm(`Удалить «${o.number}»?`)) {
-      firstValueFrom(this.svc.delete(o.id)).then(() => {
-        this.notification.success(`Заказ ${o.number} удалён`);
-        this.loadRows();
-      });
-    }
+    KpConfirmDialogComponent.confirm(this.confirmationService, {
+      header: 'Удаление заказа',
+      message: `Удалить «${o.number}»?`,
+      acceptLabel: 'Удалить',
+      rejectLabel: 'Отмена',
+      accept: async () => {
+        const res = await firstValueFrom(this.svc.delete(o.id));
+        if (res.success) {
+          this.notification.success(`Заказ ${o.number} удалён`);
+          this.loadRows();
+        }
+      },
+    });
   }
 }

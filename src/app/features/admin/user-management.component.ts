@@ -28,7 +28,6 @@ import type { User, RoleDef } from '../../../../shared/types/index.js';
     KpTableComponent, KpDialogComponent, KpSelectComponent,
     KpInputComponent, KpToastComponent,
   ],
-  providers: [ConfirmationService],
   template: `
     <kp-toast />
     <kp-card>

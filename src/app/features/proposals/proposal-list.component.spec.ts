@@ -116,11 +116,12 @@ describe('ProposalListComponent', () => {
     expect(c.tableColumns.length).toBe(5);
     expect(c.tableColumns[0].field).toBe('number');
     expect(c.tableColumns[1].field).toBe('statusLabel');
-    expect(c.statusActions.length).toBe(4);
+    expect(c.statusActions.length).toBe(5);
     expect(c.statusActions[0].icon).toBe('send');
     expect(c.statusActions[1].icon).toBe('thumbs-up');
     expect(c.statusActions[2].icon).toBe('thumbs-down');
     expect(c.statusActions[3].icon).toBe('file-signature');
+    expect(c.statusActions[4].icon).toBe('copy');
   });
 
   // ─────── Загрузка КП ───────
@@ -196,10 +197,15 @@ describe('ProposalListComponent', () => {
     expect(c.statusActions[3].visible!(row)).toBe(true);    // file-signature
   });
 
-  it('statusActions: rejected не показывает кнопок', async () => {
+  it('statusActions: rejected показывает только Дублировать', async () => {
     const c = createComponent();
     const row = { status: 'rejected' } as CommercialProposal;
-    expect(c.statusActions.every(a => !a.visible!(row))).toBe(true);
+    // send, thumbs-up, thumbs-down, file-signature — не видны; copy — видна всегда
+    expect(c.statusActions[0].visible!(row)).toBe(false);
+    expect(c.statusActions[1].visible!(row)).toBe(false);
+    expect(c.statusActions[2].visible!(row)).toBe(false);
+    expect(c.statusActions[3].visible!(row)).toBe(false);
+    expect(c.statusActions[4].visible!(row)).toBe(true);
   });
 
   // ─────── Навигация ───────

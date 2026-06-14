@@ -33,124 +33,128 @@
       </div>
     </div>
 
-    <!-- Колонки: drag-and-drop -->
-    <div class="tt-editor__columns">
-      <div class="tt-editor__columns-header">
-        <h3 class="tt-editor__columns-title">Колонки таблицы</h3>
-        <div class="tt-editor__columns-header-actions">
-          <kp-button
-            lucideIcon="eye"
-            severity="info"
-            size="small"
-            [text]="true"
-            pTooltip="Предпросмотр таблицы"
-            tooltipPosition="top"
-            [disabled]="columns().length === 0"
-            (buttonClick)="openPreview()"
-          />
-          <kp-button
-            label="+ Добавить колонку"
-            lucideIcon="plus"
-            size="small"
-            severity="secondary"
-            [disabled]="!selectedTable()"
-            (buttonClick)="addColumn()"
-          />
-        </div>
-      </div>
-
-      @if (columns().length === 0) {
-        <div class="tt-editor__empty">
-          @if (!selectedTable()) {
-            Сначала выберите таблицу, затем добавьте колонки.
-          } @else {
-            Нет колонок. Нажмите «+ Добавить колонку» чтобы начать.
-          }
-        </div>
-      }
-
-      <div
-        cdkDropList
-        cdkDropListOrientation="horizontal"
-        class="tt-editor__columns-list"
-        (cdkDropListDropped)="onColumnDrop($event)"
-      >
-        @for (col of columns(); track col.uid; let i = $index) {
-          <div
-            class="tt-editor__column-card"
-            [class.tt-editor__column-card--error]="col.errors['fieldName']"
-            cdkDrag
-            cdkDragBoundary=".tt-editor__columns-list"
-          >
-            <div class="tt-editor__card-header">
-              <div class="tt-editor__drag-handle" cdkDragHandle>
-                <svg lucideIcon="grip-vertical"></svg>
-              </div>
-              <span class="tt-editor__card-title">Колонка {{ i + 1 }}</span>
-              <kp-button
-                lucideIcon="trash-2"
-                severity="danger"
-                [text]="true"
-                [rounded]="true"
-                size="small"
-                pTooltip="Удалить колонку"
-                tooltipPosition="top"
-                (buttonClick)="removeColumn(i)"
-              />
-            </div>
-
-            <div class="tt-editor__column-fields">
-              <kp-select
-                label="Поле"
-                placeholder="Выберите поле"
-                [options]="fieldOptions()"
-                [ngModel]="col.fieldName"
-                (ngModelChange)="onFieldChange(i, $event)"
-                [error]="col.errors['fieldName'] || ''"
-              />
-              <kp-input
-                label="Заголовок"
-                placeholder="Введите заголовок"
-                [(ngModel)]="columns()[i].label"
-              />
-              <kp-input
-                label="Ширина"
-                placeholder="120px"
-                [(ngModel)]="columns()[i].width"
-              />
-              <small class="tt-editor__column-hint">px, %, rem — если пусто, ширина auto</small>
-            </div>
-          </div>
-        }
-      </div>
+    <!-- Живая таблица -->
+    <div class="tt-editor__live-header">
+      <h3 class="tt-editor__columns-title">Колонки таблицы</h3>
+      <kp-button
+        label="+ Добавить колонку"
+        lucideIcon="plus"
+        size="small"
+        severity="secondary"
+        [disabled]="!selectedTable()"
+        (buttonClick)="addColumn()"
+      />
     </div>
 
-    <!-- Предпросмотр таблицы (загружается, когда браузер свободен) -->
-    @defer (on idle) {
-    <kp-dialog
-      header="Предпросмотр таблицы: {{ templateName() || 'Новый шаблон' }}"
-      [(visible)]="previewVisible"
-      width="1100px"
-    >
-      <kp-table
-        [data]="previewData()"
-        [columns]="previewColumns()"
-        [paginator]="false"
-        [showActions]="false"
-        [resizable]="true"
-        [storageKey]="'tt-editor-' + (templateId() || 'new')"
-        (columnResized)="onColumnResized($event)"
-      />
-      <div class="tt-editor__preview-footer">
-        <kp-button
-          label="Закрыть"
-          lucideIcon="x"
-          severity="secondary"
-          (buttonClick)="previewVisible.set(false)"
-        />
+    @if (columns().length === 0) {
+      <div class="tt-editor__empty">
+        @if (!selectedTable()) {
+          Сначала выберите таблицу, затем добавьте колонки.
+        } @else {
+          Нет колонок. Нажмите «+ Добавить колонку» чтобы начать.
+        }
       </div>
-    </kp-dialog>
+    } @else {
+      <div class="live-table-wrapper">
+        <div class="live-table">
+          <!-- Заголовки -->
+          <div
+            cdkDropList
+            cdkDropListOrientation="horizontal"
+            (cdkDropListDropped)="onColumnDrop($event)"
+            class="live-row live-header"
+          >
+            @for (col of columns(); track col.uid; let i = $index) {
+              <div
+                cdkDrag
+                class="live-th"
+                [class.live-th--error]="col.errors['fieldName']"
+                [class.live-th--active]="editingColumnIndex() === i"
+                [style.width]="col.width || '150px'"
+                [style.minWidth]="'20px'"
+              >
+                <!-- Драг превью -->
+                <div *cdkDragPreview class="col-drag-preview">{{ col.label || getFieldLabel(col.fieldName) || 'Колонка ' + (i + 1) }}</div>
+
+                <div class="th-content" (click)="openColumnEditor(i)">
+                  <div class="th-drag-handle" cdkDragHandle (click)="$event.stopPropagation()">
+                    <svg lucideIcon="grip-vertical"></svg>
+                  </div>
+                  <span class="th-label">{{ col.label || getFieldLabel(col.fieldName) || '—' }}</span>
+                  @if (col.errors['fieldName']) {
+                    <span class="th-error-icon" title="Не выбрано поле">⚠️</span>
+                  }
+                </div>
+
+                <!-- Ручка ресайза -->
+                <div class="live-resizer" (mousedown)="initResize($event, i)"></div>
+              </div>
+            }
+          </div>
+
+          <!-- Строки данных -->
+          @for (row of previewData(); track $index) {
+            <div class="live-row live-data-row">
+              @for (col of columns(); track col.uid) {
+                <div
+                  class="live-td"
+                  [style.width]="col.width || '150px'"
+                  [style.minWidth]="'20px'"
+                >{{ row[col.fieldName] || '—' }}</div>
+              }
+            </div>
+          }
+        </div>
+      </div>
     }
+
+    <!-- Меню колонки (попап-диалог) -->
+    <kp-dialog
+      [header]="'Колонка «' + (editingColumn()?.label || getFieldLabel(editingColumn()?.fieldName || '') || 'Новая') + '»'"
+      [(visible)]="columnEditorVisible"
+      width="420px"
+      (dialogHide)="editingColumnIndex.set(-1)"
+    >
+      @if (editingColumn(); as col) {
+        <div class="col-editor">
+          <kp-select
+            label="Поле"
+            [options]="fieldOptions()"
+            [ngModel]="col.fieldName"
+            (ngModelChange)="onFieldChange(editingColumnIndex(), $event)"
+            placeholder="Выберите поле..."
+            [appendTo]="'body'"
+          />
+          <kp-input
+            label="Заголовок"
+            [ngModel]="col.label"
+            (ngModelChange)="updateLabel(editingColumnIndex(), $event)"
+            placeholder="Наименование"
+          />
+          <kp-input
+            label="Ширина"
+            [ngModel]="col.width"
+            (ngModelChange)="updateWidth(editingColumnIndex(), $event)"
+            placeholder="150px / 20% / auto"
+          />
+          <small class="col-editor__hint">px, %, rem — если пусто, ширина auto</small>
+
+          <div class="col-editor__actions">
+            <kp-button
+              label="Удалить колонку"
+              lucideIcon="trash-2"
+              severity="danger"
+              (buttonClick)="removeColumn(editingColumnIndex()); columnEditorVisible = false"
+            />
+            <kp-button
+              label="Закрыть"
+              severity="secondary"
+              (buttonClick)="columnEditorVisible = false"
+            />
+          </div>
+        </div>
+      }
+    </kp-dialog>
 
     <!-- Футер -->
     <div class="tt-editor__footer">

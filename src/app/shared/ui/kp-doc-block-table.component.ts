@@ -109,10 +109,36 @@ function tableNameToApiPath(name: string): string {
       transition: border-color 0.15s ease;
     }
     .table-block__title { font-weight: 600; margin-bottom: 2mm; }
-    .table-block__preview { width: 100%; border-collapse: collapse; font-size: 11px; }
+
+    .table-block__preview {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      font-size: 11px;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      overflow: hidden;
+    }
     .table-block__preview th,
-    .table-block__preview td { border: 1px solid #d1d5db; padding: 2mm 3mm; text-align: left; }
-    .table-block__preview th { background: #f3f4f6; font-weight: 600; }
+    .table-block__preview td {
+      border-bottom: 1px solid #d1d5db;
+      border-right: 1px solid #d1d5db;
+      padding: 2mm 3mm;
+      text-align: left;
+    }
+    .table-block__preview th:last-child,
+    .table-block__preview td:last-child {
+      border-right: none;
+    }
+    .table-block__preview th {
+      background: transparent;
+      font-weight: 700;
+      border-bottom: 2px solid #94a3b8;
+    }
+    .table-block__preview tbody tr:last-child td {
+      border-bottom: none;
+    }
+
     .table-block__placeholder { color: #9ca3af; font-style: italic; }
     .table-block__empty {
       text-align: center; padding: 8mm; color: #9ca3af;
@@ -127,22 +153,27 @@ function tableNameToApiPath(name: string): string {
 
     .table-block__td-num { text-align: right; font-variant-numeric: tabular-nums; }
 
+    /* Строка итогов (суммы по колонкам) */
     .table-block__footer-row {
       font-weight: 700;
-      background: #f8fafc;
+      background: transparent;
     }
     .table-block__footer-row td {
       border-top: 2px solid #94a3b8;
       padding: 2mm 3mm;
     }
+
+    /* Дополнительные строки подвала (Итого, НДС, К оплате) — прозрачный фон, правое выравнивание */
     .table-block__footer-row--extra td {
       border-top: none;
-      padding-top: 1mm;
+      border-bottom: none;
+      padding: 1mm 3mm;
       font-weight: 600;
     }
     .table-block__footer-label {
       color: #64748b;
       font-weight: 600;
+      margin-right: 6px;
     }
     .table-block__footer-extra-cell {
       text-align: right;
@@ -150,7 +181,7 @@ function tableNameToApiPath(name: string): string {
       border: none !important;
     }
     .table-block__footer-extra-cell .table-block__footer-label {
-      margin-right: 4px;
+      margin-right: 6px;
     }
 
     .table-block__data-row {
@@ -158,10 +189,10 @@ function tableNameToApiPath(name: string): string {
       transition: background 0.12s ease;
     }
     .table-block__data-row:hover {
-      background: #f0f4ff;
+      background: rgba(148, 163, 184, 0.1);
     }
     .table-block__data-row:active {
-      background: #e2e8f0;
+      background: rgba(148, 163, 184, 0.18);
     }
   `]
 })

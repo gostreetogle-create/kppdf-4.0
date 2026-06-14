@@ -29,6 +29,7 @@ import {
   LucideUser, LucidePieChart, LucideLogOut, LucideSettings,
   LucidePackageCheck, LucideThumbsUp, LucideThumbsDown,
   LucideActivity, LucideRefreshCw,
+  LucideArrowLeft,
 } from '@lucide/angular';
 import Aura from '@primeuix/themes/aura';
 
@@ -79,6 +80,7 @@ export const appConfig: ApplicationConfig = {
       LucideUser, LucidePieChart, LucideLogOut, LucideSettings,
       LucidePackageCheck, LucideThumbsUp, LucideThumbsDown,
       LucideActivity, LucideRefreshCw,
+      LucideArrowLeft,
     ),
   ]
 };

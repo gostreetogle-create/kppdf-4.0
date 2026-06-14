@@ -6,8 +6,10 @@ import { KpCardComponent } from '../../shared/ui/kp-card.component';
 import { KpBreadcrumbComponent } from '../../shared/ui/kp-breadcrumb.component';
 import { KpTableComponent, TableColumn } from '../../shared/ui/kp-table.component';
 import { KpToastComponent } from '../../shared/ui/kp-toast.component';
+import { KpConfirmDialogComponent } from '../../shared/ui/kp-confirm-dialog.component';
 import { NotificationService } from '../../core/notification.service';
 import { TenderService } from '../../core/tender.service';
+import { ConfirmationService } from 'primeng/api';
 import type { Tender, TenderStatus } from '../../../../shared/types/index.js';
 
 const STATUS_LABELS: Record<TenderStatus, string> = { draft: 'Черновик', published: 'Опубликован', submission: 'Приём заявок', evaluation: 'Оценка', won: '✅ Выигран', lost: '❌ Проигран', cancelled: 'Отменён' };
@@ -15,7 +17,7 @@ const STATUS_LABELS: Record<TenderStatus, string> = { draft: 'Черновик',
 @Component({
   selector: 'app-tender-list',
   standalone: true,
-  imports: [CommonModule, KpCardComponent, KpBreadcrumbComponent, KpTableComponent, KpToastComponent],
+  imports: [CommonModule, KpCardComponent, KpBreadcrumbComponent, KpTableComponent, KpToastComponent  ],
   template: `
     <kp-toast />
     <kp-card>
@@ -24,12 +26,13 @@ const STATUS_LABELS: Record<TenderStatus, string> = { draft: 'Черновик',
       <kp-table storageKey="tenders" [data]="rows()" [columns]="columns" [rows]="20" [paginator]="true" emptyMessage="Тендеры не найдены" [showActions]="true" (rowDelete)="onDelete($event)" />
     </kp-card>
   `,
-  styles: [`:host { display: block; padding: var(--space-6); } .page__title { font-size: var(--font-size-xl); font-weight: var(--font-weight-bold); margin: var(--space-4) 0; }`],
+  styleUrl: './tender-list.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TenderListComponent implements OnInit {
   private svc = inject(TenderService);
   private notification = inject(NotificationService);
+  private confirmationService = inject(ConfirmationService);
   rows = signal<Tender[]>([]);
   breadcrumbs: MenuItem[] = [{ label: '⚙️ Администрирование' }, { label: 'Тендеры' }];
   columns: TableColumn[] = [
@@ -47,5 +50,5 @@ export class TenderListComponent implements OnInit {
     const r = await firstValueFrom(this.svc.getAll());
     this.rows.set(r.data.map(t => ({ ...t, typeLabel: t.type === '44fz' ? '44-ФЗ' : t.type === '223fz' ? '223-ФЗ' : 'Комм.', statusLabel: STATUS_LABELS[t.status] })));
   }
-  async onDelete(row: unknown) { const t = row as Tender; if (confirm(`Удалить «${t.title}»?`)) { await firstValueFrom(this.svc.delete(t.id)); this.load(); } }
+  async onDelete(row: unknown) { const t = row as Tender; KpConfirmDialogComponent.confirm(this.confirmationService, { header: 'Удаление', message: `Удалить «${t.title}»?`, acceptLabel: 'Удалить', rejectLabel: 'Отмена', accept: async () => { await firstValueFrom(this.svc.delete(t.id)); this.notification.success('Тендер удалён'); this.load(); } }); }
 }

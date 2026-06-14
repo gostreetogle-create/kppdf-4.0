@@ -6,8 +6,10 @@ import { KpCardComponent } from '../../shared/ui/kp-card.component';
 import { KpBreadcrumbComponent } from '../../shared/ui/kp-breadcrumb.component';
 import { KpTableComponent, TableColumn, TableExtraAction } from '../../shared/ui/kp-table.component';
 import { KpToastComponent } from '../../shared/ui/kp-toast.component';
+import { KpConfirmDialogComponent } from '../../shared/ui/kp-confirm-dialog.component';
 import { NotificationService } from '../../core/notification.service';
 import { ReconciliationActService } from '../../core/reconciliation-act.service';
+import { ConfirmationService } from 'primeng/api';
 import type { ReconciliationAct } from '../../../../shared/types/index.js';
 
 const STATUS_LABELS: Record<string, string> = { draft: 'Черновик', sent: 'Отправлен', signed: '✅ Подписан', disputed: '⚠️ Оспорен' };
@@ -15,7 +17,7 @@ const STATUS_LABELS: Record<string, string> = { draft: 'Черновик', sent:
 @Component({
   selector: 'app-reconciliation-act-list',
   standalone: true,
-  imports: [CommonModule, KpCardComponent, KpBreadcrumbComponent, KpTableComponent, KpToastComponent],
+  imports: [CommonModule, KpCardComponent, KpBreadcrumbComponent, KpTableComponent, KpToastComponent  ],
   template: `
     <kp-toast />
     <kp-card>
@@ -24,12 +26,13 @@ const STATUS_LABELS: Record<string, string> = { draft: 'Черновик', sent:
       <kp-table storageKey="reconciliation-acts" [data]="rows()" [columns]="columns" [rows]="20" [paginator]="true" emptyMessage="Акты не найдены" [showActions]="true" [extraActions]="statusActions" (rowDelete)="onDelete($event)" (rowExtraAction)="onSign($event)" />
     </kp-card>
   `,
-  styles: [`:host { display: block; padding: var(--space-6); } .page__title { font-size: var(--font-size-xl); font-weight: var(--font-weight-bold); margin: var(--space-4) 0; }`],
+  styleUrl: './reconciliation-act-list.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ReconciliationActListComponent implements OnInit {
   private svc = inject(ReconciliationActService);
   private notification = inject(NotificationService);
+  private confirmationService = inject(ConfirmationService);
   rows = signal<ReconciliationAct[]>([]);
   breadcrumbs: MenuItem[] = [{ label: '💰 Бухгалтерия' }, { label: 'Акты сверки' }];
   columns: TableColumn[] = [
@@ -57,5 +60,5 @@ export class ReconciliationActListComponent implements OnInit {
     this.notification.success(`Подписан: ${a.number}`);
     this.load();
   }
-  async onDelete(row: unknown) { const a = row as ReconciliationAct; if (confirm(`Удалить «${a.number}»?`)) { await firstValueFrom(this.svc.delete(a.id)); this.load(); } }
+  async onDelete(row: unknown) { const a = row as ReconciliationAct; KpConfirmDialogComponent.confirm(this.confirmationService, { header: 'Удаление', message: `Удалить «${a.number}»?`, acceptLabel: 'Удалить', rejectLabel: 'Отмена', accept: async () => { await firstValueFrom(this.svc.delete(a.id)); this.notification.success('Акт удалён'); this.load(); } }); }
 }

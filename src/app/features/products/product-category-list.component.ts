@@ -32,7 +32,6 @@ interface CategoryRow extends ProductCategory {
     KpTableComponent, KpDialogComponent, KpInputComponent,
     KpToggleComponent, KpToastComponent,
   ],
-  providers: [ConfirmationService],
   template: `
     <kp-toast />
 
@@ -78,13 +77,7 @@ interface CategoryRow extends ProductCategory {
       </div>
     </kp-dialog>
   `,
-  styles: [`
-    :host { display: block; max-width: 900px; margin: 0 auto; padding: var(--space-6); }
-    .pc-list__header { display: flex; align-items: center; justify-content: space-between; margin: var(--space-4) 0; }
-    .pc-list__title { font-size: var(--font-size-xl); font-weight: var(--font-weight-bold); color: var(--color-text); margin: 0; }
-    .pc-list__form { display: flex; flex-direction: column; gap: var(--space-4); }
-    .pc-list__dialog-footer { display: flex; gap: var(--space-3); justify-content: flex-end; margin-top: var(--space-4); }
-  `],
+  styleUrl: './product-category-list.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ProductCategoryListComponent {

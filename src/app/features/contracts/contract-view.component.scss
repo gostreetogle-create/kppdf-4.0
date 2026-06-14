@@ -1,0 +1,41 @@
+:host { display: block; padding: var(--space-6); max-width: 900px; margin: 0 auto; }
+.ct-view__header {
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: var(--space-3); margin: var(--space-4) 0;
+}
+.ct-view__title { font-size: var(--font-size-xl); font-weight: var(--font-weight-bold); color: var(--color-text); margin: 0; }
+.ct-view__header-actions { display: flex; gap: var(--space-2); }
+.ct-view__info { display: flex; flex-direction: column; gap: var(--space-3); }
+.ct-view__info-row { display: flex; align-items: center; gap: var(--space-2); }
+.ct-view__info-row--notes { align-items: flex-start; }
+.ct-view__label { font-weight: var(--font-weight-semibold); color: var(--color-text-muted); min-width: 120px; font-size: var(--font-size-sm); }
+.ct-view__value { color: var(--color-text); font-size: var(--font-size-sm); }
+.ct-view__notes { font-style: italic; color: var(--color-text-secondary); line-height: 1.5; }
+.ct-view__section-title {
+  font-size: var(--font-size-base); font-weight: var(--font-weight-bold);
+  color: var(--color-text); margin: 0 0 var(--space-4);
+}
+.ct-view__items { display: flex; flex-direction: column; gap: 0; }
+.ct-view__items-header {
+  display: grid; grid-template-columns: 1fr 120px 80px 80px;
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-border); border-radius: var(--radius-md) var(--radius-md) 0 0;
+  font-size: var(--font-size-xs); font-weight: 700; text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+.ct-view__item-row {
+  display: grid; grid-template-columns: 1fr 120px 80px 80px;
+  padding: var(--space-3); border-bottom: 1px solid var(--color-border-light);
+}
+.ct-view__item-row:last-child { border-bottom: none; }
+.ct-view__td { font-size: var(--font-size-sm); color: var(--color-text); display: flex; align-items: center; }
+.ct-view__td--name { font-weight: var(--font-weight-medium); }
+.ct-view__sku-badge {
+  font-size: var(--font-size-xs); font-weight: 600; text-transform: uppercase;
+  color: var(--color-text-secondary); background: var(--color-border);
+  padding: 1px 6px; border-radius: var(--radius-sm);
+}
+.ct-view__td--qty { text-align: right; justify-content: flex-end; }
+.ct-view__td--unit { text-align: center; justify-content: center; }
+.ct-view__th--qty { text-align: right; }
+.ct-view__th--unit { text-align: center; }

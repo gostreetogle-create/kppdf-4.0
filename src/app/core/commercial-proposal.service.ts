@@ -3,17 +3,10 @@ import { Observable, of } from 'rxjs';
 import type { ApiResponse, CommercialProposal, ProposalItem, ProposalStatus } from '../../../shared/types/index.js';
 import { ApiService } from './api.service.js';
 
-/** Счётчик номеров КП (клиентский, пока бэкенд не генерирует сам) */
-let cpCounter = 0;
-
-function generateCpNumber(): string {
-  cpCounter++;
-  return `КП-${String(cpCounter).padStart(4, '0')}`;
-}
-
 /**
  * Сервис коммерческих предложений.
  * Все операции — через HTTP (ApiService → реальный бэкенд).
+ * Номер КП генерируется на бэкенде (Counter model).
  */
 @Injectable({ providedIn: 'root' })
 export class CommercialProposalService {
@@ -42,7 +35,6 @@ export class CommercialProposalService {
     const totalAmount = items.reduce((sum, i) => sum + i.total, 0);
     return this.api.post<CommercialProposal>(this.basePath, {
       ...data,
-      number: generateCpNumber(),
       items,
       totalAmount,
     });
