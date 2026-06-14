@@ -282,14 +282,14 @@ import { inject } from '@angular/core';
         <div class="uikit__demo">
           <kp-field-group>
             <kp-input label="Название" placeholder="Введите название" />
-            <div style="display:flex;align-items:flex-end;gap:8px">
-              <kp-select style="flex:1;min-width:0" label="Тип" [options]="statusOptions" placeholder="Выберите тип" />
-              <kp-button lucideIcon="plus" size="small" severity="secondary" [text]="true" [rounded]="true" style="width:36px;height:36px;min-width:36px;border:2px solid #f59e0b;border-radius:6px;color:#f59e0b" />
+            <div class="uikit__field-row">
+              <kp-select class="uikit__field-select" label="Тип" [options]="statusOptions" placeholder="Выберите тип" />
+              <kp-button lucideIcon="plus" size="small" severity="secondary" [text]="true" [rounded]="true" class="uikit__field-plus-btn" />
             </div>
             <kp-input label="Описание" placeholder="Необязательное описание" />
-            <div style="display:flex;align-items:flex-end;gap:8px">
-              <kp-select style="flex:1;min-width:0" label="Организация" [options]="cityOptions" placeholder="Выберите организацию" />
-              <kp-button lucideIcon="plus" size="small" severity="secondary" [text]="true" [rounded]="true" style="width:36px;height:36px;min-width:36px;border:2px solid #f59e0b;border-radius:6px;color:#f59e0b" />
+            <div class="uikit__field-row">
+              <kp-select class="uikit__field-select" label="Организация" [options]="cityOptions" placeholder="Выберите организацию" />
+              <kp-button lucideIcon="plus" size="small" severity="secondary" [text]="true" [rounded]="true" class="uikit__field-plus-btn" />
             </div>
           </kp-field-group>
         </div>
@@ -388,8 +388,8 @@ import { inject } from '@angular/core';
 
     </div>
     } @placeholder {
-      <div style="display:flex;align-items:center;justify-content:center;min-height:60vh">
-        <p style="color:var(--color-text-secondary);font-size:var(--font-size-lg)">🎨 Загрузка UI Kit...</p>
+      <div class="uikit__placeholder">
+        <p class="uikit__placeholder-text">🎨 Загрузка UI Kit...</p>
       </div>
     }
   `,
@@ -535,6 +535,37 @@ import { inject } from '@angular/core';
       word-break: break-all;
       line-height: 1.2;
       max-width: 100%;
+    }
+
+    /* KP-FGP demo: field row with select + action button */
+    .uikit__field-row {
+      display: flex;
+      align-items: flex-end;
+      gap: var(--space-2);
+    }
+    .uikit__field-select {
+      flex: 1;
+      min-width: 0;
+    }
+    .uikit__field-plus-btn {
+      width: 36px;
+      height: 36px;
+      min-width: 36px;
+      border: 2px solid #f59e0b;
+      border-radius: var(--radius-md);
+      color: #f59e0b;
+    }
+
+    /* @defer placeholder */
+    .uikit__placeholder {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 60vh;
+    }
+    .uikit__placeholder-text {
+      color: var(--color-text-secondary);
+      font-size: var(--font-size-lg);
     }
   `]
 })
