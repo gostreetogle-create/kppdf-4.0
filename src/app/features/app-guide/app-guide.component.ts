@@ -8,6 +8,7 @@ import { APP_PHASES, DEPENDANCY_LEVELS } from './app-guide.data';
   standalone: true,
   imports: [CommonModule, RouterLink],
   template: `
+    @defer (on idle) {
     <div class="ag__page">
       <!-- Header -->
       <header class="ag__header">
@@ -272,6 +273,11 @@ import { APP_PHASES, DEPENDANCY_LEVELS } from './app-guide.data';
         </p>
       </footer>
     </div>
+    } @placeholder {
+      <div style="display:flex;align-items:center;justify-content:center;min-height:60vh">
+        <p style="color:var(--color-text-secondary);font-size:var(--font-size-lg)">🗺️ Загрузка карты приложения...</p>
+      </div>
+    }
   `,
   styles: [`
     :host { display: block; }

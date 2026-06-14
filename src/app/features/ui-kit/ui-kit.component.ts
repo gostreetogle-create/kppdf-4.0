@@ -40,6 +40,7 @@ import { inject } from '@angular/core';
   template: `
     <kp-toast />
 
+    @defer (on idle) {
     <div class="uikit">
       <div class="uikit__header">
         <h1 class="uikit__title">UI Kit</h1>
@@ -386,6 +387,11 @@ import { inject } from '@angular/core';
       </section>
 
     </div>
+    } @placeholder {
+      <div style="display:flex;align-items:center;justify-content:center;min-height:60vh">
+        <p style="color:var(--color-text-secondary);font-size:var(--font-size-lg)">🎨 Загрузка UI Kit...</p>
+      </div>
+    }
   `,
   styles: [`
     .uikit {

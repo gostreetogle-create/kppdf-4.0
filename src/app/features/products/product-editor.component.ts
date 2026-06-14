@@ -33,6 +33,7 @@ import type { ProductCategory, ProductPhoto, ProductComponent, ComponentMaterial
   template: `
     <kp-toast />
 
+    @defer (on idle) {
     <div class="pe-page">
       <kp-breadcrumb [items]="breadcrumbs()" />
 
@@ -246,7 +247,13 @@ import type { ProductCategory, ProductPhoto, ProductComponent, ComponentMaterial
         </div>
       </div>
     </div>
+    } @placeholder {
+      <div style="display:flex;align-items:center;justify-content:center;min-height:60vh">
+        <p style="color:var(--color-text-secondary);font-size:var(--font-size-lg)">📦 Загрузка редактора товара...</p>
+      </div>
+    }
 
+    @defer (on idle) {
     <!-- Диалог добавления фото -->
     <kp-dialog
       header="Добавить фотографию"
@@ -328,6 +335,9 @@ import type { ProductCategory, ProductPhoto, ProductComponent, ComponentMaterial
         <kp-button label="Отмена" lucideIcon="x" severity="secondary" (buttonClick)="compDialogVisible.set(false)" />
       </div>
     </kp-dialog>
+    } @placeholder {
+      <!-- dialogs don't need placeholder -->
+    }
   `,
   styleUrl: './product-editor.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

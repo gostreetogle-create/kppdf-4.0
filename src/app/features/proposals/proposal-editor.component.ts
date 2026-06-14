@@ -14,7 +14,6 @@ import { KpToastComponent } from '../../shared/ui/kp-toast.component';
 import { KpDialogComponent } from '../../shared/ui/kp-dialog.component';
 import { KpDocCanvasComponent } from '../../shared/ui/kp-doc-canvas.component';
 import { KpDocPreviewDialogComponent } from '../../shared/ui/kp-doc-preview-dialog.component';
-import { LucideDynamicIcon } from '@lucide/angular';
 import { NotificationService } from '../../core/notification.service';
 import { CommercialProposalService } from '../../core/commercial-proposal.service';
 import { ProposalDocBuilderService } from '../../core/proposal-doc-builder.service';
@@ -41,12 +40,12 @@ const STATUS_OPTIONS: SelectOption[] = [
     KpInputComponent, KpSelectComponent, KpButtonComponent,
     KpBreadcrumbComponent, KpCardComponent, KpToastComponent,
     KpDialogComponent, KpDocCanvasComponent, KpDocPreviewDialogComponent,
-    LucideDynamicIcon,
   ],
 
   template: `
     <kp-toast />
 
+    @defer (on idle) {
     <div class="cp-editor">
       <kp-breadcrumb [items]="breadcrumbs" />
 
@@ -348,6 +347,11 @@ const STATUS_OPTIONS: SelectOption[] = [
       <!-- PDF preview dialog -->
       <kp-doc-preview-dialog />
     </div>
+    } @placeholder {
+      <div style="display:flex;align-items:center;justify-content:center;min-height:60vh">
+        <p style="color:var(--color-text-secondary);font-size:var(--font-size-lg)">📄 Загрузка редактора КП...</p>
+      </div>
+    }
   `,
   styleUrl: './proposal-editor.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

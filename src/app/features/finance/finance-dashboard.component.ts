@@ -65,6 +65,7 @@ function statusBreakdown<T extends { status: string }>(
   imports: [CommonModule, RouterLink, KpCardComponent, KpBreadcrumbComponent],
   template: `
     <kp-card>
+      @defer (on idle) {
       <kp-breadcrumb [items]="breadcrumbs()" />
       <h2 class="dash-title">💰 Бухгалтерия — сводка</h2>
       <p class="dash-subtitle">Состояние заказов, КП, договоров, закрытий и сверок</p>
@@ -243,6 +244,9 @@ function statusBreakdown<T extends { status: string }>(
         </div>
       } @else {
         <p class="dash-loading">Загрузка данных...</p>
+      }
+      } @placeholder {
+        <p class="dash-loading">Загрузка дашборда...</p>
       }
     </kp-card>
   `,

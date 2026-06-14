@@ -10,7 +10,6 @@ import { KpCardComponent } from '../../shared/ui/kp-card.component';
 import { KpToastComponent } from '../../shared/ui/kp-toast.component';
 import { KpDocCanvasComponent } from '../../shared/ui/kp-doc-canvas.component';
 import { KpDocPreviewDialogComponent } from '../../shared/ui/kp-doc-preview-dialog.component';
-import { LucideDynamicIcon } from '@lucide/angular';
 import { NotificationService } from '../../core/notification.service';
 import { CommercialProposalService } from '../../core/commercial-proposal.service';
 import { ProposalDocBuilderService } from '../../core/proposal-doc-builder.service';
@@ -33,7 +32,6 @@ const STATUS_LABELS: Record<string, string> = {
     CommonModule,
     KpButtonComponent, KpBreadcrumbComponent, KpCardComponent,
     KpToastComponent, KpDocCanvasComponent, KpDocPreviewDialogComponent,
-    LucideDynamicIcon,
   ],
   template: `
     <kp-toast />
