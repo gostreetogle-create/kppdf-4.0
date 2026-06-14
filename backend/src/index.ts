@@ -67,8 +67,7 @@ app.use(express.json({ limit: '1mb' }));
 
 // Rate limiting for auth routes
 const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 5,
+  windowMs: 15 * 60 * 1000,    max: 20,
   standardHeaders: true,
   legacyHeaders: false,
   message: { success: false, data: null, message: 'Слишком много запросов. Попробуйте позже.' },
