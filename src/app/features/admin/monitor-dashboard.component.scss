@@ -231,3 +231,13 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* === @defer placeholder === */
+.monitor-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 50vh;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-lg);
+}

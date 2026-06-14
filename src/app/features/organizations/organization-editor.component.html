@@ -1,5 +1,6 @@
 <kp-toast />
 
+@defer (on idle) {
 <kp-card styleClass="org-editor">
   <kp-breadcrumb [items]="breadcrumbs" />
 
@@ -254,3 +255,6 @@
     </div>
   }
 </kp-card>
+} @placeholder {
+  <div class="org-editor__placeholder"><p>Загрузка редактора...</p></div>
+}

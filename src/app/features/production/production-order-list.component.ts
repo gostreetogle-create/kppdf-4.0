@@ -37,6 +37,7 @@ const DOC_TEMPLATES = [
   imports: [CommonModule, FormsModule, KpButtonComponent, KpBreadcrumbComponent, KpCardComponent, KpTableComponent, KpDialogComponent, KpSelectComponent, KpInputComponent, KpToastComponent, KpBadgeComponent, CreateOrderDialogComponent  ],
   template: `
     <kp-toast />
+    @defer (on idle) {
     <kp-card>
       <kp-breadcrumb [items]="breadcrumbs" />
       <div class="po-header">
@@ -119,6 +120,9 @@ const DOC_TEMPLATES = [
         </div>
       }
     </kp-dialog>
+    } @placeholder {
+      <div class="po-placeholder"><p>Загрузка заказов...</p></div>
+    }
   `,
   styleUrl: './production-order-list.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -6,6 +6,33 @@
 
 ---
 
+## [1.18.0] — 2026-06-14 — @defer на все тяжёлые компоненты, инлайн-стили ui-kit, тесты 470/470
+
+### Added
+- **@defer (on idle) на 10 тяжёлых lazy-компонентах** — каждый с `@placeholder`:
+  - app-guide (128KB), product-editor (125KB), proposal-editor (92KB), proposal-showcase (71KB)
+  - ui-kit (84KB), gantt-chart (81KB), organization-editor (58KB), finance-dashboard (51KB)
+  - production-order-list (44KB), monitor-dashboard (38KB)
+- **Placeholder-стили:** `@placeholder` во всех 10 компонентах с центрированным текстом загрузки (min-height: 50vh)
+
+### Changed
+- **ui-kit: инлайн-стили → CSS-классы:** 8 `style="..."` атрибутов заменены на 6 семантических классов
+  - `uikit__field-row`, `uikit__field-select`, `uikit__field-plus-btn` — для демо KP-FGP
+  - `uikit__placeholder`, `uikit__placeholder-text` — для @defer placeholder
+
+### Fixed
+- **3 skip-теста → pass:** client-list (1) + doc-type-list (2). Корень: `await Promise.resolve()` после `httpMock.flush()` для правильной очерёдности микрозадач
+- **NG8113 ×2:** удалён неиспользуемый `LucideDynamicIcon` из proposal-editor и proposal-view
+
+### Infrastructure
+- **ChromaDB переиндексирован:** 617 документов в 10 коллекциях (все .ts/.html/.scss + .md + config)
+- **Чек-лист:** добавлена секция P11 (9 пунктов), итог — 224 ✅, 2 ⊘
+
+### Tests
+- **470 тестов** (pass: 470, fail: 0, skip: 0) — +3 починенных, 0 пропущенных
+
+---
+
 ## [1.17.0] — 2026-06-14 — Мониторинг, 1С-интеграция, Zoneless, многостраничные фоны, flex-редизайн редактора таблиц
 
 ### Added

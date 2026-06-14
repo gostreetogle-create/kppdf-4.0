@@ -159,3 +159,13 @@
   padding-top: var(--space-4);
   border-top: 1px solid var(--color-border-light);
 }
+
+/* === @defer placeholder === */
+.org-editor__placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 50vh;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-lg);
+}
