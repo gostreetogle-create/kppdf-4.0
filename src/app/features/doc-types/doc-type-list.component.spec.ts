@@ -90,36 +90,50 @@ describe('DocTypeListComponent', () => {
     expect(c.dialogVisible()).toBe(true);
   });
 
-  it.skip('save создаёт тип документа', async () => {
+  it('save создаёт тип документа', async () => {
     const c = await createComponent();
     const notifySpy = vi.spyOn(notification, 'success');
     c.openAddDialog();
     c.editName.set('Акт выполненных работ'); c.editSlug.set('act');
+
+    // save() создаёт POST синхронно при вызове
     const savePromise = c.save();
-    await new Promise(r => setTimeout(r, 0));
+
     const req = httpMock.expectOne('/api/v1/doc-types');
     expect(req.request.method).toBe('POST');
     req.flush({ success: true, data: { id: 'dt-new', name: 'Акт выполненных работ', slug: 'act', description: '', isActive: true, createdAt: '', updatedAt: '' } });
-    // save() вызывает load() после успеха
+
+    // flush() ставит микрозадачу на возобновление save() → load() → GET.
+    await Promise.resolve();
+
+    // После успешного POST save() вызывает load() → GET запрос
     httpMock.expectOne('/api/v1/doc-types').flush({ success: true, data: [...SEED_DOC_TYPES, { id: 'dt-new', name: 'Акт выполненных работ', slug: 'act', description: '', isActive: true, createdAt: '', updatedAt: '' }] });
+
     await savePromise;
     expect(notifySpy).toHaveBeenCalledWith('Тип документа создан');
     expect(c.dialogVisible()).toBe(false);
   });
 
-  it.skip('save обновляет существующий тип документа', async () => {
+  it('save обновляет существующий тип документа', async () => {
     const c = await createComponent();
     const notifySpy = vi.spyOn(notification, 'success');
     const seedDoc = c.rows()[0];
     c.onEditRow(seedDoc);
     c.editName.set('Коммерческое предложение (обновлено)');
+
+    // save() создаёт PUT синхронно при вызове
     const savePromise = c.save();
-    await new Promise(r => setTimeout(r, 0));
+
     const req = httpMock.expectOne(`/api/v1/doc-types/${seedDoc.id}`);
     expect(req.request.method).toBe('PUT');
     req.flush({ success: true, data: { ...seedDoc, name: 'Коммерческое предложение (обновлено)' } });
-    // save() вызывает load() после успеха
+
+    // flush() ставит микрозадачу на возобновление save() → load() → GET.
+    await Promise.resolve();
+
+    // После успешного PUT save() вызывает load() → GET запрос
     httpMock.expectOne('/api/v1/doc-types').flush({ success: true, data: SEED_DOC_TYPES });
+
     await savePromise;
     expect(notifySpy).toHaveBeenCalledWith('Тип документа обновлён');
     expect(c.dialogVisible()).toBe(false);

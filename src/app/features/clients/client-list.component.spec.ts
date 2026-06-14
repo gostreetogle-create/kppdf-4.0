@@ -105,27 +105,27 @@ describe('ClientListComponent', () => {
     expect(c.phoneError()).toBe('Телефон обязателен');
   });
 
-  it.skip('save создаёт клиента', async () => {
+  it('save создаёт клиента', async () => {
     const c = await createComponent();
     const notifySpy = vi.spyOn(notification, 'success');
     c.openAddDialog();
     c.editLastName.set('Новиков'); c.editFirstName.set('Сергей'); c.editPhone.set('+7 (918) 555-99-99');
 
-    // save() — асинхронный, запускаем без await
+    // save() создаёт POST синхронно при вызове
     const savePromise = c.save();
-    // Даём макрозадачу чтобы async save() дошёл до HTTP-запроса
-    await new Promise(r => setTimeout(r, 0));
 
     // Перехватываем POST запрос
     const req = httpMock.expectOne('/api/v1/clients');
     expect(req.request.method).toBe('POST');
     req.flush({ success: true, data: { id: 'cli-new', lastName: 'Новиков', firstName: 'Сергей', patronymic: '', phone: '+7 (918) 555-99-99', isActive: true, personalMarkupPercent: 0, createdAt: '', updatedAt: '' } });
 
-    // save() вызывает load() после POST → ждём GET запросы
-    const getClientsReq = httpMock.expectOne('/api/v1/clients');
-    getClientsReq.flush({ success: true, data: [...SEED_CLIENTS, { id: 'cli-new', lastName: 'Новиков', firstName: 'Сергей', patronymic: '', phone: '+7 (918) 555-99-99', isActive: true, personalMarkupPercent: 0, createdAt: '', updatedAt: '' }] });
-    const getOrgsReq = httpMock.expectOne('/api/v1/organizations');
-    getOrgsReq.flush({ success: true, data: [] });
+    // flush() ставит микрозадачу на возобновление save() → load() → GET-ы.
+    // Нужно дать микротаскам выполниться перед expectOne для GET.
+    await Promise.resolve();
+
+    // После успешного POST save() вызывает load() → GET запросы
+    httpMock.expectOne('/api/v1/clients').flush({ success: true, data: [...SEED_CLIENTS, { id: 'cli-new', lastName: 'Новиков', firstName: 'Сергей', patronymic: '', phone: '+7 (918) 555-99-99', isActive: true, personalMarkupPercent: 0, createdAt: '', updatedAt: '' }] });
+    httpMock.expectOne('/api/v1/organizations').flush({ success: true, data: [] });
 
     await savePromise;
     expect(notifySpy).toHaveBeenCalledWith('Клиент создан');
