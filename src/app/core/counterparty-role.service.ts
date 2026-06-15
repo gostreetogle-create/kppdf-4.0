@@ -1,6 +1,5 @@
-import { Injectable, inject } from '@angular/core';
-import { Observable } from 'rxjs';
-import { first } from 'rxjs/operators';
+import { Injectable, inject, signal } from '@angular/core';
+import { Observable, first } from 'rxjs';
 import type { ApiResponse, CounterpartyRoleDef } from '../../../shared/types/index.js';
 import { ApiService } from './api.service.js';
 
@@ -9,8 +8,9 @@ export class CounterpartyRoleService {
   private api = inject(ApiService);
   private basePath = '/counterparty-roles';
 
-  /** Локальный кеш для синхронных методов (getRoleBySlug, getRoleIdBySlug) */
-  private cachedRoles: CounterpartyRoleDef[] | null = null;
+  /** Локальный кеш для синхронных методов */
+  private cachedRoles = signal<CounterpartyRoleDef[] | null>(null);
+  private loadAttempted = false;
 
   getRoles(): Observable<ApiResponse<CounterpartyRoleDef[]>> {
     return this.api.get<CounterpartyRoleDef[]>(this.basePath);
@@ -45,15 +45,25 @@ export class CounterpartyRoleService {
     return this.getCachedRoles().find(r => r.slug === slug)?.id;
   }
 
+  /** Принудительно обновить кеш */
+  refreshCache(): void {
+    this.loadAttempted = false;
+    this.cachedRoles.set(null);
+    this.ensureLoaded();
+  }
+
   private getCachedRoles(): CounterpartyRoleDef[] {
-    if (!this.cachedRoles) {
-      // Асинхронно загружаем при первом обращении
-      this.api.get<CounterpartyRoleDef[]>(this.basePath).pipe(first()).subscribe({
-        next: res => { if (res.success) this.cachedRoles = res.data; },
-        error: () => { this.cachedRoles = []; },
-      });
-      return [];
-    }
-    return this.cachedRoles;
+    this.ensureLoaded();
+    return this.cachedRoles() ?? [];
+  }
+
+  private ensureLoaded(): void {
+    if (this.loadAttempted) return;
+    this.loadAttempted = true;
+
+    this.api.get<CounterpartyRoleDef[]>(this.basePath).pipe(first()).subscribe({
+      next: res => { if (res.success) this.cachedRoles.set(res.data); },
+      error: () => { this.cachedRoles.set([]); },
+    });
   }
 }

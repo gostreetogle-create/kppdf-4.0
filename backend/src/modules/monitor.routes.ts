@@ -3,6 +3,7 @@ import mongoose from 'mongoose';
 import os from 'os';
 import { env } from '../config/env.js';
 import { logger } from '../utils/logger.js';
+import { authMiddleware, requireRole } from '../middleware/auth.js';
 
 const router = Router();
 const log = logger.child({ module: 'monitor' });
@@ -33,9 +34,9 @@ function formatUptime(seconds: number): string {
 /**
  * GET /api/v1/monitor
  * Полная информация о состоянии системы.
- * Доступен только админам (проверка роли — на фронте через /admin/monitor + RoleGuard).
+ * Доступен только админам (серверная проверка роли).
  */
-router.get('/', async (_req, res) => {
+router.get('/', authMiddleware, requireRole('admin'), async (_req, res) => {
   try {
     // MongoDB status
     const dbState = mongoose.connection.readyState;

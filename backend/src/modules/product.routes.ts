@@ -9,6 +9,7 @@ import { Product } from './product.model.js';
 const router = createCrudRouter(Product, {
   searchFields: ['name', 'sku', 'description', 'material'],
   sortFields: ['name', 'sku', 'createdAt', 'updatedAt', 'basePrice', 'unit'],
+  allowedFields: ['name', 'sku', 'description', 'material', 'unit', 'basePrice', 'categoryId', 'photoUrl', 'isActive'],
 });
 
 export default router;

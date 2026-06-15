@@ -51,3 +51,33 @@ export function optionalAuth(req: Request, _res: Response, next: NextFunction): 
   }
   next();
 }
+
+/** Проверка роли пользователя (серверная авторизация) */
+export function requireRole(...roles: string[]) {
+  return (req: Request, res: Response, next: NextFunction): void => {
+    if (!req.user) {
+      res.status(401).json(apiError('Требуется авторизация'));
+      return;
+    }
+    if (!roles.includes(req.user.role)) {
+      res.status(403).json(apiError('Недостаточно прав'));
+      return;
+    }
+    next();
+  };
+}
+
+/** Проверка наличия конкретного разрешения */
+export function requirePermission(permission: string) {
+  return (req: Request, res: Response, next: NextFunction): void => {
+    if (!req.user) {
+      res.status(401).json(apiError('Требуется авторизация'));
+      return;
+    }
+    if (req.user.permissions.includes('*') || req.user.permissions.includes(permission)) {
+      next();
+    } else {
+      res.status(403).json(apiError('Недостаточно прав'));
+    }
+  };
+}

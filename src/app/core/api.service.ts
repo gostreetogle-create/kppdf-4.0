@@ -32,8 +32,10 @@ export class ApiService {
     );
   }
 
-  post<T>(path: string, body: unknown): Observable<ApiResponse<T>> {
-    return this.http.post<ApiResponse<T>>(`${this.apiUrl}${path}`, body).pipe(
+  post<T>(path: string, body: unknown, options?: { withCredentials?: boolean }): Observable<ApiResponse<T>> {
+    return this.http.post<ApiResponse<T>>(`${this.apiUrl}${path}`, body, {
+      withCredentials: options?.withCredentials ?? false,
+    }).pipe(
       timeout(DEFAULT_TIMEOUT)
     );
   }

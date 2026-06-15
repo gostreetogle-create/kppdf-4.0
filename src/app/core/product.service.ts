@@ -54,10 +54,4 @@ export class ProductService {
   deleteProduct(id: string): Observable<ApiResponse<void>> {
     return this.delete(id);
   }
-
-  /** Получить превью артикула для категории (бэкенд отдаст следующий) */
-  previewSku(_categoryId: string): string {
-    // Пока заглушка — при реальной необходимости вызовем API
-    return '***';
-  }
 }

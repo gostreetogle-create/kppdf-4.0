@@ -496,7 +496,7 @@ export class ProductEditorComponent {
 
   onCategoryChange() {
     if (this.isNew() && this.categoryId()) {
-      this.sku.set(this.productService.previewSku(this.categoryId()));
+      this.sku.set('');
     }
   }
 

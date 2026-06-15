@@ -7,6 +7,7 @@ import multer from 'multer';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { env } from '../config/env.js';
+import { authMiddleware } from '../middleware/auth.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -40,6 +41,9 @@ const upload = multer({
 });
 
 const router = Router();
+
+// Все эндпоинты загрузки требуют авторизации
+router.use(authMiddleware);
 
 /**
  * POST /api/v1/upload

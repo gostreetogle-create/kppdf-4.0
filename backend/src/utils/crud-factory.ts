@@ -32,6 +32,8 @@ interface CrudOptions {
   sortFields?: string[];
   /** Поля для автозаполнения (population) */
   populate?: PopulateOption[];
+  /** Поля, разрешённые для обновления через PUT (защита от mass-assignment) */
+  allowedFields?: string[];
   /** Кастомные валидации для создания */
   createValidations?: ValidationChain[];
   /** Кастомные валидации для обновления */
@@ -46,6 +48,11 @@ interface CrudOptions {
   allowGuest?: boolean;
 }
 
+/** Экранирует спецсимволы регулярных выражений для безопасного поиска */
+function escapeRegex(str: string): string {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 export function createCrudRouter<T extends Document>(
   model: Model<T>,
   options: CrudOptions = {}
@@ -55,6 +62,7 @@ export function createCrudRouter<T extends Document>(
     searchFields = ['name', 'title'],
     sortFields = ['createdAt', 'updatedAt', 'name', 'title'],
     populate,
+    allowedFields,
     createValidations = [],
     updateValidations = [],
     beforeCreate,
@@ -79,9 +87,10 @@ export function createCrudRouter<T extends Document>(
       // Фильтр
       const filter: FilterQuery<unknown> = { ...(listFilter?.(req) || {}) };
 
-      // Поиск по тексту
+      // Поиск по тексту (с экранированием спецсимволов regex)
       if (search && searchFields.length > 0) {
-        const searchRegex = new RegExp(search, 'i');
+        const safeSearch = escapeRegex(search);
+        const searchRegex = new RegExp(safeSearch, 'i');
         filter.$or = searchFields.map(field => ({ [field]: searchRegex }));
       }
 
@@ -144,7 +153,7 @@ export function createCrudRouter<T extends Document>(
     }
   });
 
-  // PUT /:id — обновление
+  // PUT /:id — обновление (с защитой от mass-assignment)
   router.put('/:id', updateValidations, async (req: Request, res: Response, next: NextFunction) => {
     try {
       const errors = validationResult(req);
@@ -152,9 +161,28 @@ export function createCrudRouter<T extends Document>(
         throw new AppError(errors.array().map(e => e.msg).join('; '));
       }
 
+      // Фильтруем тело запроса: разрешены только указанные поля
+      const updateData: Record<string, unknown> = {};
+      if (allowedFields) {
+        for (const field of allowedFields) {
+          if (field in req.body) {
+            updateData[field] = req.body[field];
+          }
+        }
+      } else {
+        // Если allowedFields не задан — разрешаем все (обратная совместимость)
+        Object.assign(updateData, req.body);
+      }
+
+      // Запрещаем изменение служебных полей
+      delete updateData._id;
+      delete updateData.__v;
+      delete updateData.createdAt;
+      delete updateData.createdBy;
+
       const doc = await model.findByIdAndUpdate(
         req.params.id,
-        { $set: req.body },
+        { $set: updateData },
         { new: true, runValidators: true }
       ).populate(populate || []);
 

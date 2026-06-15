@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { ApiResponse } from '../../../shared/types';
+import type { ApiResponse } from '../../../shared/types';
+import { ApiService } from './api.service.js';
 
 export interface MonitorData {
   status: 'healthy' | 'degraded';
@@ -39,9 +39,9 @@ export interface MonitorData {
 
 @Injectable({ providedIn: 'root' })
 export class MonitorService {
-  private http = inject(HttpClient);
+  private api = inject(ApiService);
 
   getStatus(): Observable<ApiResponse<MonitorData>> {
-    return this.http.get<ApiResponse<MonitorData>>('/api/v1/monitor');
+    return this.api.get<MonitorData>('/monitor');
   }
 }

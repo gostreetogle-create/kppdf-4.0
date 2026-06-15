@@ -82,23 +82,43 @@ router.post('/movements', async (req: Request, res: Response, next: NextFunction
   }
 });
 
-// Вспомогательная функция: обновить или создать остаток
+// Вспомогательная функция: обновить или создать остаток (атомарная операция)
 async function upsertItem(
   warehouseId: string, zoneName: string | undefined,
   entityType: string, entityId: string,
   entityName: string, entitySku: string | undefined,
   entityUnit: string, delta: number,
 ): Promise<void> {
-  const existing = await InventoryItem.findOne({
+  const filter = {
     warehouseId,
     zoneName: zoneName || '',
     entityType,
     entityId,
-  });
+  };
 
   const now = new Date().toISOString();
 
-  if (existing) {
+  if (delta > 0) {
+    // Приход или положительная корректировка — создаём или увеличиваем
+    const result = await InventoryItem.findOneAndUpdate(
+      filter,
+      {
+        $inc: { quantity: delta },
+        $set: { entityName, entitySku: entitySku || '', entityUnit, updatedAt: now },
+        $setOnInsert: { ...filter },
+      },
+      { upsert: true, new: true }
+    );
+
+    // Если после корректировки количество <= 0 — удаляем
+    if (result && result.quantity <= 0) {
+      await InventoryItem.findByIdAndDelete(result._id);
+    }
+  } else {
+    // Расход или отрицательная корректировка
+    const existing = await InventoryItem.findOne(filter);
+    if (!existing) return;
+
     const newQty = existing.quantity + delta;
     if (newQty <= 0) {
       await InventoryItem.findByIdAndDelete(existing._id);
@@ -107,18 +127,6 @@ async function upsertItem(
         $set: { quantity: newQty, entityName, entitySku: entitySku || '', entityUnit, updatedAt: now }
       });
     }
-  } else if (delta > 0) {
-    await InventoryItem.create({
-      warehouseId,
-      zoneName: zoneName || '',
-      entityType,
-      entityId,
-      entityName,
-      entitySku: entitySku || '',
-      entityUnit,
-      quantity: delta,
-      updatedAt: now,
-    });
   }
 }
 
